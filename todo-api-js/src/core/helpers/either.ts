@@ -1,6 +1,6 @@
 type Left<L> = { value: L }
 
-type Right<R> = {value: R} 
+type Right<R> = { value: R }
 
 export type Either<L, R> = Left<L> | Right<R>
 
