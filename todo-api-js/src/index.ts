@@ -7,9 +7,9 @@ function something(): E.Either<string, number> {
 function main(): void {
   const foo = something()
   if (E.isLeft(foo)) {
-    console.log(foo.value.at(0))
+    console.log('is string: ', foo.value.concat('hehe'))
   } else {
-    console.log(foo.value.toString())
+    console.log('is number: ', foo.value.toString())
   }
   console.log('todo')
 }
