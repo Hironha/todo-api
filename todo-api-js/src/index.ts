@@ -1,17 +1,7 @@
-import * as E from '@helpers/either'
+import * as Todo from '@functions/todo'
 
-function something(): E.Either<string, number> {
-  return E.right(20)
-}
-
-function main(): void {
-  const foo = something()
-  if (E.isLeft(foo)) {
-    console.log('is string: ', foo.value.concat('hehe'))
-  } else {
-    console.log('is number: ', foo.value.toString())
-  }
-  console.log('todo')
+function main() {
+  Todo.create({ description: 'teste', title: 'teste', todoAt: new Date() })
 }
 
 main()
