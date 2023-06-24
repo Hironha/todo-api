@@ -1,7 +1,7 @@
 import { Todo } from '@models/todo'
 import { TodoRepository } from 'src/core/repositories/todo'
 
-export type CreateTodoInput = {
+export type CreateInput = {
   title: string
   description: string
   todoAt?: Date
@@ -9,7 +9,7 @@ export type CreateTodoInput = {
 
 export type CreateContext = {
   repository: TodoRepository
-  input: CreateTodoInput
+  input: CreateInput
 }
 
 export async function create({ input, repository }: CreateContext): Promise<Todo | null> {
