@@ -1,12 +1,12 @@
-import { right, Either } from '@helpers/either'
+import * as E from '@helpers/either'
 
-function something(): Either<string, number> {
-  return right(20)
+function something(): E.Either<string, number> {
+  return E.right(20)
 }
 
 function main(): void {
   const foo = something()
-  if (foo.isLeft()) {
+  if (E.isLeft(foo)) {
     console.log(foo.value.at(0))
   } else {
     console.log(foo.value.toString())

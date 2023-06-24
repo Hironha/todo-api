@@ -1,33 +1,21 @@
-export type Either<L, R> = Left<L, R> | Right<L, R>
+export type Left<L> = { value: L; state: 'left' }
 
-class Left<L, R> {
-  constructor(public value: L) {}
+export type Right<R> = { value: R; state: 'right' }
 
-  isLeft(): this is Left<L, R> {
-    return true
-  }
+export type Either<L, R> = Left<L> | Right<R>
 
-  isRight(): this is Right<L, R> {
-    return false
-  }
+export function left<L, R = unknown>(val: L): Either<L, R> {
+  return { value: val, state: 'left' }
 }
 
-class Right<L, R> {
-  constructor(public value: R) {}
-
-  isLeft(): this is Left<L, R> {
-    return false
-  }
-
-  isRight(): this is Right<L, R> {
-    return true
-  }
+export function right<R, L = unknown>(val: R): Either<L, R> {
+  return { value: val, state: 'right' }
 }
 
-export function left<L, R>(value: L): Either<L, R> {
-  return new Left(value)
+export function isRight<L = unknown, R = unknown>(either: Either<L, R>): either is Right<R> {
+  return either.state === 'right'
 }
 
-export function right<L, R>(value: R): Either<L, R> {
-  return new Right(value)
+export function isLeft<L = unknown, R = unknown>(either: Either<L, R>): either is Left<L> {
+  return either.state === 'left'
 }
