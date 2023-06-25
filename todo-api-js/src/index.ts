@@ -1,8 +1,14 @@
-import * as Todo from '@functions/todo'
+import express from 'express'
+import dotenv from 'dotenv'
 
-function main() {
-  const input: Todo.CreateInput = { description: 'teste', title: 'teste', todoAt: new Date() }
-  Todo.create({ repository: {} as any, input })
-}
+import { router as todoRouter } from '@presentation/todo'
 
-main()
+dotenv.config()
+const app = express()
+const port = Number(process.env.PORT ?? 3000)
+
+app.use('/todo', todoRouter)
+
+app.listen(port, () => {
+  console.log(`todo API listening on port ${port}`)
+})
