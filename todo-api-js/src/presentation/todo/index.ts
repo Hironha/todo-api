@@ -13,11 +13,11 @@ router.post<'/', never>('/', async (req, res) => {
   }
 
   const output = await create({ repository: {} as any, input: input.value })
-  if (E.isRight(output)) {
-    return res.status(201).json(output.value).end()
+  if (E.isLeft(output)) {
+    return res.status(500).json(output.value).end()
   }
 
-  res.status(400).json(output.value).end()
+  res.status(201).json(output.value).end()
 })
 
 export { router }
