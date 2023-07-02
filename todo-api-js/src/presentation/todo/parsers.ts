@@ -15,7 +15,7 @@ export const parseCreateInput = (input: unknown): E.Either<RequestError<unknown>
   if (validation.success) {
     return E.right(validation.data)
   }
-  return E.right({
+  return E.left({
     code: 'CTD-001',
     message: validation.error.message,
     shortMessage: 'ValidationError',

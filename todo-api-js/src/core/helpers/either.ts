@@ -10,7 +10,7 @@ export function left<L, R = unknown>(val: L): Either<L, R> {
   return either
 }
 
-export function right<R, L = unknown>(val: R): Either<L, R> {
+export function left<R, L = unknown>(val: R): Either<L, R> {
   const either: Either<L, R> = { value: val }
   Object.defineProperty(either, 'state', { configurable: false, value: 'l' })
   return either
