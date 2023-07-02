@@ -19,7 +19,6 @@ export const parseCreateInput = (input: unknown): E.Either<InternalError<unknown
     code: 'CTD-001',
     message: validation.error.message,
     shortMessage: 'ValidationError',
-    status: 400,
     details: validation.error.formErrors.fieldErrors,
   })
 }

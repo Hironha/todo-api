@@ -4,7 +4,6 @@ type BaseInternalError = {
   code: string
   message: string
   shortMessage: string
-  status: number
 }
 
 export type InternalError<D = null> = D extends UnsetDetails
