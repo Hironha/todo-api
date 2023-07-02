@@ -23,7 +23,7 @@ export async function create({ input, repository }: CreateContext): Promise<Crea
       todoAt: input.todoAt,
       description: input.description,
     })
-    return E.left(createdTodo)
+    return E.right(createdTodo)
   } catch (e) {
     console.error(e)
     return E.left({ code: 'todo', message: 'todo', shortMessage: 'todo' })
