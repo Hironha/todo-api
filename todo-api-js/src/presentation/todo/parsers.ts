@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { useZodParser } from 'src/adpters/parser'
+import { useZodParser } from '@adapters/parser'
 
 const createInputSchema = z.object({
   title: z.string(),
