@@ -1,14 +1,14 @@
 type UnsetDetails = undefined | null | void | never
 
-export type RequestError<D = null> = D extends UnsetDetails
-  ? {
-      code: string
-      message: string
-      shortMessage: string
-    }
-  : {
-      code: string
-      message: string
-      shortMessage: string
+type BaseInternalError = {
+  code: string
+  message: string
+  shortMessage: string
+  status: number
+}
+
+export type InternalError<D = null> = D extends UnsetDetails
+  ? BaseInternalError
+  : BaseInternalError & {
       details: D
     }

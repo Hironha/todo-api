@@ -4,13 +4,13 @@ type Right<R> = { value: R }
 
 export type Either<L, R> = Left<L> | Right<R>
 
-export function right<L, R = unknown>(val: L): Either<L, R> {
+export function right<R, L = unknown>(val: R): Either<L, R> {
   const either: Either<L, R> = { value: val }
   Object.defineProperty(either, 'state', { configurable: false, value: 'r' })
   return either
 }
 
-export function left<R, L = unknown>(val: R): Either<L, R> {
+export function left<L, R = unknown>(val: L): Either<L, R> {
   const either: Either<L, R> = { value: val }
   Object.defineProperty(either, 'state', { configurable: false, value: 'l' })
   return either

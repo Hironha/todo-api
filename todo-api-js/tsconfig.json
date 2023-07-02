@@ -36,6 +36,7 @@
       "@functions/*":["./src/core/functions/*"],
       "@models/*":["./src/core/models/*"],
       "@repositories/*": ["./src/core/repositories/*"],
+      "@errors/*": ["./src/core/errors/*"],
       "@presentation/*": ["./src/presentation/*"],
       "@store/*": ["./src/store/*"],
     },                                                   /* Specify a set of entries that re-map imports to additional lookup locations. */

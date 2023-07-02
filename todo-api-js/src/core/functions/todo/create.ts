@@ -1,7 +1,8 @@
 import * as E from '@helpers/either'
-import { type RequestError } from '@helpers/error'
-import { Todo } from '@models/todo'
-import { TodoRepository } from '@repositories/todo'
+import { type InternalError } from '@helpers/error'
+import { type Todo } from '@models/todo'
+import { type TodoRepository } from '@repositories/todo'
+import * as Errors from '@errors/todo/create'
 
 export type CreateInput = {
   title: string
@@ -9,23 +10,17 @@ export type CreateInput = {
   todoAt?: Date
 }
 
-export type CreateOutput = E.Either<RequestError, Todo>
-
 export type CreateContext = {
   repository: TodoRepository
   input: CreateInput
 }
 
-export async function create({ input, repository }: CreateContext): Promise<CreateOutput> {
+export async function create(ctx: CreateContext): Promise<E.Either<InternalError, Todo>> {
   try {
-    const createdTodo = await repository.create({
-      title: input.title,
-      todoAt: input.todoAt,
-      description: input.description,
-    })
+    const createdTodo = await ctx.repository.create(ctx.input)
     return E.right(createdTodo)
   } catch (e) {
     console.error(e)
-    return E.left({ code: 'todo', message: 'todo', shortMessage: 'todo' })
+    return E.left(Errors.general)
   }
 }
