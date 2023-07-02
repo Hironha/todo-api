@@ -2,17 +2,22 @@ import { type Todo } from '@models/todo'
 import { type CreateInput, type TodoRepository } from '@repositories/todo'
 
 export class TodoStore implements TodoRepository {
-  private readonly store = new Set<Todo>()
+  private readonly store = new Map<string, Todo>()
 
   create(input: CreateInput): Promise<Todo> {
     const currentDate = new Date()
+    const id = currentDate.getTime().toString()
     const todo: Todo = {
       ...input,
-      id: currentDate.getTime().toString(),
+      id,
       createdAt: currentDate,
       updatedAt: currentDate,
     }
-    this.store.add(todo)
+    this.store.set(id, todo)
     return Promise.resolve(todo)
+  }
+
+  get(id: string): Promise<Todo | undefined> {
+    return Promise.resolve(this.store.get(id))
   }
 }
