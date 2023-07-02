@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import * as E from '@helpers/either'
-import { RequestError } from '@helpers/error'
+import { type RequestError } from '@helpers/error'
 import { type CreateInput } from '@functions/todo'
 
 const createInputSchema = z.object({
