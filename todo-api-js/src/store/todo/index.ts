@@ -8,8 +8,10 @@ export class TodoStore implements TodoRepository {
     const currentDate = new Date()
     const id = currentDate.getTime().toString()
     const todo: Todo = {
-      ...input,
       id,
+      title: input.title,
+      description: input.description,
+      todoAt: input.todoAt,
       createdAt: currentDate,
       updatedAt: currentDate,
     }
