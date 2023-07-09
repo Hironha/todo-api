@@ -9,9 +9,15 @@ const createInputSchema = z.object({
 })
 
 const getInputSchema = z.object({
-  id: z.string(),
+  todoId: z.string(),
+})
+
+const deleteInputSchema = z.object({
+  todoId: z.string(),
 })
 
 export const parseCreateInput = useZodParser(createInputSchema)
 
 export const parseGetInput = useZodParser(getInputSchema)
+
+export const parseDeleteInput = useZodParser(deleteInputSchema)

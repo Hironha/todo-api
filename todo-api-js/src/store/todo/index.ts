@@ -24,4 +24,14 @@ export class TodoStore implements TodoRepository {
   list(): Promise<Todo[]> {
     return Promise.resolve(Array.from(this.store.values()))
   }
+
+  delete(id: string): Promise<Todo | undefined> {
+    const todo = this.store.get(id)
+    if (!todo) {
+      return Promise.resolve(undefined)
+    }
+
+    this.store.delete(todo.id)
+    return Promise.resolve(todo)
+  }
 }
