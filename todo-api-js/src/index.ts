@@ -7,7 +7,7 @@ dotenv.config()
 const app = express()
 const port = Number(process.env.PORT ?? 3000)
 
-app.use('/todo', todoRouter)
+app.use('/todos', todoRouter)
 
 app.listen(port, () => {
   console.log(`todo API listening on port ${port}`)
