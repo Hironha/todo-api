@@ -20,4 +20,8 @@ export class TodoStore implements TodoRepository {
   get(id: string): Promise<Todo | undefined> {
     return Promise.resolve(this.store.get(id))
   }
+
+  list(): Promise<Todo[]> {
+    return Promise.resolve(Array.from(this.store.values()))
+  }
 }

@@ -1,14 +1,23 @@
 import { Router } from 'express'
 import * as E from '@helpers/either'
 
-import { create } from '@functions/todo/create'
 import { get } from '@functions/todo/get'
+import { create } from '@functions/todo/create'
+import { list } from '@functions/todo/list'
 import { parseCreateInput, parseGetInput } from './parsers'
 import { TodoStore } from '@store/todo'
 
 const router = Router({ strict: true })
 
 const store = new TodoStore()
+
+router.get<'/', never>('/', async (req, res) => {
+  const output = await list({ repository: store })
+  if (E.isLeft(output)) {
+    return res.status(500).json(output.value).end()
+  }
+  return res.status(200).json(output.value).end()
+})
 
 router.post<'/', never>('/', async (req, res) => {
   const input = parseCreateInput(req.body)
