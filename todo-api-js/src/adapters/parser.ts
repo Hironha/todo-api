@@ -25,6 +25,9 @@ class ZodParser<S extends z.ZodSchema> implements Parser<ZodParserError<z.infer<
   }
 }
 
+/**
+ * Adapter function to transform a zod schema into a `Parser<L, R>`. 
+ */
 export function useZodParser<S extends z.ZodSchema>(schema: S): ParserFn<S> {
   const parser = new ZodParser(schema)
   return (input: unknown) => {
