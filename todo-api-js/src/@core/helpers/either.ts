@@ -23,5 +23,5 @@ export function isRight<L = unknown, R = unknown>(either: Either<L, R>): either 
 
 export function isLeft<L = unknown, R = unknown>(either: Either<L, R>): either is Left<L> {
   const state = Object.getOwnPropertyDescriptor(either, 'state')
-  return state?.value === 'L'
+  return state?.value === 'l'
 }
