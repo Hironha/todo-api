@@ -19,14 +19,18 @@ class ZodParser<S extends z.ZodSchema> implements Parser<ZodParserError<z.infer<
   parse(input: unknown): E.Either<ZodParserError<z.infer<S>>, z.infer<S>> {
     const result = this.schema.safeParse(input)
     if (!result.success) {
-      return E.left({ message: result.error.message, details: result.error.formErrors.fieldErrors })
+      const firstMessage = Object.values(result.error.flatten().fieldErrors).at(0)?.at(0)
+      return E.left({
+        message: firstMessage ?? 'Validation error',
+        details: result.error.formErrors.fieldErrors,
+      })
     }
     return E.right(result.data)
   }
 }
 
 /**
- * Adapter function to transform a zod schema into a `Parser<L, R>`. 
+ * Adapter function to transform a zod schema into a `Parser<L, R>`.
  */
 export function useZodParser<S extends z.ZodSchema>(schema: S): ParserFn<S> {
   const parser = new ZodParser(schema)
