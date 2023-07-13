@@ -38,8 +38,6 @@ export class TodoStore implements TodoRepository {
       return Promise.resolve(undefined)
     }
 
-    console.log(this.store.values())
-
     return Promise.resolve(todo)
   }
 }
