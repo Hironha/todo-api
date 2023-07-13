@@ -4,22 +4,22 @@ import { type Todo } from '@models/todo'
 import { type TodoRepository } from '@repositories/todo'
 import * as Errors from '@errors/todo/delete'
 
-export type DeleteInput = {
+export type RemoveInput = {
   id: string
 }
 
-export type DeleteContext = {
+export type RemoveContext = {
   repository: TodoRepository
-  input: DeleteInput
+  input: RemoveInput
 }
 
-export async function create(ctx: DeleteContext): Promise<E.Either<InternalError, Todo>> {
+export async function remove(ctx: RemoveContext): Promise<E.Either<InternalError, Todo>> {
   try {
-    const deletedTodo = await ctx.repository.delete(ctx.input.id)
-    if (!deletedTodo) {
+    const removedTodo = await ctx.repository.remove(ctx.input.id)
+    if (!removedTodo) {
       return E.left(Errors.notFound)
     }
-    return E.right(deletedTodo)
+    return E.right(removedTodo)
   } catch (e) {
     console.error(e)
     return E.left(Errors.general)

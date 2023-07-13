@@ -6,5 +6,5 @@ export interface TodoRepository {
   create(input: CreateInput): Promise<Todo>
   get(id: string): Promise<Todo | undefined>
   list(): Promise<Todo[]>
-  delete(id: string): Promise<Todo | undefined>
+  remove(id: string): Promise<Todo | undefined>
 }

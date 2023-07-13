@@ -12,7 +12,7 @@ const getInputSchema = z.object({
   todoId: z.string(),
 })
 
-const deleteInputSchema = z.object({
+const removeInputSchema = z.object({
   todoId: z.string(),
 })
 
@@ -20,4 +20,4 @@ export const parseCreateInput = useZodParser(createInputSchema)
 
 export const parseGetInput = useZodParser(getInputSchema)
 
-export const parseDeleteInput = useZodParser(deleteInputSchema)
+export const parseRemoveInput = useZodParser(removeInputSchema)

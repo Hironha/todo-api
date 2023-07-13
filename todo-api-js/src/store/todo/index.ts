@@ -27,13 +27,19 @@ export class TodoStore implements TodoRepository {
     return Promise.resolve(Array.from(this.store.values()))
   }
 
-  delete(id: string): Promise<Todo | undefined> {
+  remove(id: string): Promise<Todo | undefined> {
     const todo = this.store.get(id)
     if (!todo) {
       return Promise.resolve(undefined)
     }
 
-    this.store.delete(todo.id)
+    const deleted = this.store.delete(todo.id)
+    if (!deleted) {
+      return Promise.resolve(undefined)
+    }
+
+    console.log(this.store.values())
+
     return Promise.resolve(todo)
   }
 }
