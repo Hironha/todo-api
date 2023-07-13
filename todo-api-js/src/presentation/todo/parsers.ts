@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { useZodParser } from '@adapters/parser'
 
 const createInputSchema = z.object({
-  title: z.string(),
-  description: z.string(),
+  title: z.string({ required_error: 'Field title is required' }),
+  description: z.string({ required_error: 'Field description is required' }),
   todoAt: z.coerce.date().optional(),
 })
 
