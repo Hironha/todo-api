@@ -8,10 +8,15 @@ export type ListContext = {
   repository: TodoRepository
 }
 
-export async function list(ctx: ListContext): Promise<E.Either<InternalError, Todo[]>> {
+export type ListOutput = {
+  count: number
+  items: Todo[]
+}
+
+export async function list(ctx: ListContext): Promise<E.Either<InternalError, ListOutput>> {
   try {
     const todos = await ctx.repository.list()
-    return E.right(todos)
+    return E.right({ count: todos.length, items: todos })
   } catch (e) {
     console.error(e)
     return E.left(Errors.general)
