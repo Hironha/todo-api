@@ -7,7 +7,7 @@ export const general: InternalError = {
 }
 
 export const notFound: InternalError = {
-  code: 'GTD-002',
+  code: 'DTD-002',
   message: 'Todo not found',
   shortMessage: 'NotFound',
 }
