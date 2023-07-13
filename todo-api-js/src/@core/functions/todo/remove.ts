@@ -2,7 +2,7 @@ import * as E from '@helpers/either'
 import { type InternalError } from '@helpers/error'
 import { type Todo } from '@models/todo'
 import { type TodoRepository } from '@repositories/todo'
-import * as Errors from '@errors/todo/delete'
+import * as Errors from '@errors/todo/remove'
 
 export type RemoveInput = {
   id: string

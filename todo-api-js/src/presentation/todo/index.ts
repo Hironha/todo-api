@@ -7,7 +7,7 @@ import { list } from '@functions/todo/list'
 import { remove } from '@functions/todo/remove'
 import { TodoStore } from '@store/todo'
 import * as GetErrors from '@errors/todo/get'
-import * as DeleteErrors from '@errors/todo/delete'
+import * as DeleteErrors from '@errors/todo/remove'
 import { parseCreateInput, parseGetInput, parseRemoveInput } from './parsers'
 
 const router = Router({ strict: true })
