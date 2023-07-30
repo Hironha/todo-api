@@ -6,6 +6,6 @@ pub struct Todo {
     pub title: String,
     pub description: Option<String>,
     pub todo_at: Option<String>,
-    pub updated_at: String,
     pub created_at: String,
+    pub updated_at: String,
 }

@@ -1,15 +1,16 @@
-mod app;
-mod core;
+mod adapters;
+mod application;
+mod domain;
+mod presentation;
 
 use axum::Router;
+use presentation::rest_api::todo;
 use std::net::SocketAddr;
-
-use crate::app::todo;
 
 #[tokio::main]
 async fn main() {
     // initialize all app routes
-    let routes = Router::new().merge(todo::functions::create_router());
+    let routes = Router::new().merge(todo::create_router());
 
     // Creates an IPv4 socket address for the server
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
