@@ -6,6 +6,7 @@ use crate::application::functions::todo::CreatePayload;
 pub struct CreateTodoInput {
     title: Option<String>,
     description: Option<String>,
+    #[serde(rename(deserialize = "todoAt"))]
     todo_at: Option<String>,
 }
 
