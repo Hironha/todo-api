@@ -1,9 +1,11 @@
 mod create;
+mod list;
 
 use crate::adapters::todo::store::TodoStore;
 
 use axum::{extract::FromRef, routing::post, Router};
 use create::create_todo;
+use list::list_todos;
 
 #[derive(Clone, FromRef)]
 pub struct TodoState {
@@ -16,6 +18,6 @@ pub fn create_router() -> Router {
     };
 
     Router::new()
-        .route("/todos", post(create_todo))
+        .route("/todos", post(create_todo).get(list_todos))
         .with_state(state)
 }

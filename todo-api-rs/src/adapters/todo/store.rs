@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
-    application::functions::todo::{CreatePayload, TodoCreator},
+    application::functions::todo::{CreatePayload, TodoCreator, TodoLister},
     domain::todo::Todo,
 };
 
@@ -34,10 +34,10 @@ impl TodoCreator for TodoStore {
     }
 }
 
-// impl TodoLister for TodoStore {
-//     fn list(&self) -> Result<Vec<Todo>, String> {
-//         let store = self.todos.lock().unwrap();
-//         let todos = store.clone();
-//         Ok(todos)
-//     }
-// }
+impl TodoLister for TodoStore {
+    fn list(&self) -> Result<Vec<Todo>, String> {
+        let store = self.todos.lock().unwrap();
+        let todos = store.clone();
+        Ok(todos)
+    }
+}
