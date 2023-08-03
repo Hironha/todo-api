@@ -1,5 +1,6 @@
-use crate::domain::todo::Todo;
 use serde::{Deserialize, Serialize};
+
+use crate::domain::todo::Todo;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreatePayload {

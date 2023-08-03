@@ -1,8 +1,8 @@
-use crate::adapters::todo::create_input::CreateTodoInput;
-use crate::application::functions::todo;
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
 use super::TodoState;
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use crate::adapters::todo::create_input::CreateTodoInput;
+use crate::application::functions::todo;
 
 pub async fn create_todo(
     State(state): State<TodoState>,

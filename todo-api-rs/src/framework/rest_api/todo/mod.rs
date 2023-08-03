@@ -1,11 +1,11 @@
 mod create;
 mod list;
 
-use crate::adapters::todo::store::TodoStore;
-
 use axum::{extract::FromRef, routing::post, Router};
 use create::create_todo;
 use list::list_todos;
+
+use crate::framework::store::TodoStore;
 
 #[derive(Clone, FromRef)]
 pub struct TodoState {
