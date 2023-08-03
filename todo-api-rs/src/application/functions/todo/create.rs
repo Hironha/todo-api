@@ -13,12 +13,12 @@ pub trait TodoCreator {
 }
 
 pub struct CreateContext<T: TodoCreator> {
-    pub creator: T,
+    pub store: T,
 }
 
 pub async fn create_todo<T: TodoCreator>(
     mut ctx: CreateContext<T>,
     payload: CreatePayload,
 ) -> Result<Todo, String> {
-    ctx.creator.create(payload)
+    ctx.store.create(payload)
 }

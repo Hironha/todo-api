@@ -13,7 +13,7 @@ pub async fn create_todo(
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
     };
     let ctx = todo::CreateContext {
-        creator: state.todo_creator,
+        store: state.todo_store,
     };
 
     let result = todo::create_todo(ctx, payload).await;
