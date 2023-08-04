@@ -1,7 +1,7 @@
 use super::TodoState;
 use crate::{adapters::todo::get_input::GetTodoInput, application::functions::todo};
 use axum::{
-    extract::{Query, State},
+    extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
     Json,
@@ -9,7 +9,7 @@ use axum::{
 
 pub async fn get_todo(
     State(state): State<TodoState>,
-    Query(input): Query<GetTodoInput>,
+    Path(input): Path<GetTodoInput>,
 ) -> impl IntoResponse {
     let payload = match input.into_payload() {
         Ok(payload) => payload,
