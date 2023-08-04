@@ -1,8 +1,6 @@
-use serde::{Deserialize, Serialize};
-
 use crate::domain::todo::Todo;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct CreatePayload {
     pub title: String,
     pub description: Option<String>,
