@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::application::functions::todo::GetTodoPayload;
+use crate::application::functions::todo::GetPayload;
 
 #[derive(Debug, Deserialize)]
 pub struct GetTodoInput {
@@ -8,12 +8,12 @@ pub struct GetTodoInput {
 }
 
 impl GetTodoInput {
-    pub fn into_payload(self) -> Result<GetTodoPayload, String> {
+    pub fn into_payload(self) -> Result<GetPayload, String> {
         let id = self.id.ok_or("id is required".to_string())?;
         if id.is_empty() {
             return Err("id should not be empty".to_string());
         }
 
-        Ok(GetTodoPayload { id })
+        Ok(GetPayload { id })
     }
 }
