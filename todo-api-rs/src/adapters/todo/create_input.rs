@@ -17,6 +17,7 @@ impl CreateTodoInput {
             return Err("title should not be empty".to_string());
         }
 
+        // parses empty String to None
         let description = self.description.filter(|d| !d.is_empty());
 
         Ok(CreatePayload {
