@@ -12,11 +12,12 @@ pub async fn create_todo(
         Ok(payload) => payload,
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
     };
-    let ctx = todo::CreateContext {
+
+    let mut ctx = todo::CreateContext {
         store: state.todo_store,
     };
+    let result = todo::create_todo(&mut ctx, payload).await;
 
-    let result = todo::create_todo(ctx, payload).await;
     match result {
         Ok(todo) => (StatusCode::CREATED, Json(todo)).into_response(),
         Err(message) => (StatusCode::INTERNAL_SERVER_ERROR, message).into_response(),

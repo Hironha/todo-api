@@ -18,9 +18,8 @@ pub async fn get_todo(
 
     let ctx = todo::GetContext {
         store: state.todo_store,
-        payload,
     };
-    let result = todo::get_todo(ctx).await;
+    let result = todo::get_todo(ctx, &payload).await;
 
     let todo = match result {
         Ok(todo) => todo,

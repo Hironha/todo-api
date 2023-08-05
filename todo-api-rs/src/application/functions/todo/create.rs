@@ -16,7 +16,7 @@ pub struct CreateContext<T: TodoCreator> {
 }
 
 pub async fn create_todo<T: TodoCreator>(
-    mut ctx: CreateContext<T>,
+    ctx: &mut CreateContext<T>,
     payload: CreatePayload,
 ) -> Result<Todo, String> {
     ctx.store.create(payload)

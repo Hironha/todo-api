@@ -11,9 +11,11 @@ pub trait TodoGetter {
 
 pub struct GetContext<T: TodoGetter> {
     pub store: T,
-    pub payload: GetTodoPayload,
 }
 
-pub async fn get_todo<T: TodoGetter>(ctx: GetContext<T>) -> Result<Todo, String> {
-    ctx.store.get(&ctx.payload.id)
+pub async fn get_todo<T: TodoGetter>(
+    ctx: GetContext<T>,
+    payload: &GetTodoPayload,
+) -> Result<Todo, String> {
+    ctx.store.get(&payload.id)
 }
