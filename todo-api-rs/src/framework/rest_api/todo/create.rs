@@ -8,6 +8,8 @@ pub async fn create_todo(
     State(state): State<TodoState>,
     Json(input): Json<CreateTodoInput>,
 ) -> impl IntoResponse {
+    println!("CREATE TODO -> input: {input:?}");
+
     let payload = match input.into_payload() {
         Ok(payload) => payload,
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
