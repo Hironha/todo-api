@@ -1,7 +1,9 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
-    application::functions::todo::{CreatePayload, TodoCreator, TodoLister, TodoGetter},
+    application::functions::todo::{
+        CreatePayload, TodoCreator, TodoDeleter, TodoGetter, TodoLister,
+    },
     domain::todo::Todo,
 };
 
@@ -45,7 +47,22 @@ impl TodoLister for TodoStore {
 impl TodoGetter for TodoStore {
     fn get(&self, id: &str) -> Result<Todo, String> {
         let store = self.todos.lock().unwrap();
-        let todo = store.iter().find_map(|t| if t.id == id { Some(t.clone()) } else { None });
-        todo.ok_or("todo not found".to_string())
+        store
+            .iter()
+            .find_map(|t| if t.id == id { Some(t.clone()) } else { None })
+            .ok_or(format!("Todo with id {id} not found"))
+    }
+}
+
+impl TodoDeleter for TodoStore {
+    fn delete(&mut self, id: &str) -> Result<Todo, String> {
+        let mut store = self.todos.lock().unwrap();
+
+        if let Some(index) = store.iter().position(|t| t.id == id) {
+            let deleted_todo = store.remove(index);
+            Ok(deleted_todo)
+        } else {
+            Err(format!("Todo with id {id} not found"))
+        }
     }
 }

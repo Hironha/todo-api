@@ -1,4 +1,5 @@
 mod create;
+mod delete;
 mod get;
 mod list;
 
@@ -8,6 +9,7 @@ use axum::{
     Router,
 };
 use create::create_todo;
+use delete::delete_todo;
 use get::get_todo;
 use list::list_todos;
 
@@ -25,6 +27,6 @@ pub fn create_router() -> Router {
 
     Router::new()
         .route("/todos", post(create_todo).get(list_todos))
-        .route("/todos/:id", get(get_todo))
+        .route("/todos/:id", get(get_todo).delete(delete_todo))
         .with_state(state)
 }
