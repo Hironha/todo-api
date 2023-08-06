@@ -1,2 +1,2 @@
 pub mod rest_api;
-mod store;
+pub mod storage;

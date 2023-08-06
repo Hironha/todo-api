@@ -1,7 +1,10 @@
+use async_trait::async_trait;
+
 use crate::domain::todo::Todo;
 
+#[async_trait]
 pub trait TodoLister {
-    fn list(&self) -> Result<Vec<Todo>, String>;
+    async fn list(&self) -> Result<Vec<Todo>, String>;
 }
 
 pub struct ListContext<T: TodoLister> {
@@ -9,5 +12,5 @@ pub struct ListContext<T: TodoLister> {
 }
 
 pub async fn list_todo<T: TodoLister>(ctx: &ListContext<T>) -> Result<Vec<Todo>, String> {
-    ctx.store.list()
+    ctx.store.list().await
 }

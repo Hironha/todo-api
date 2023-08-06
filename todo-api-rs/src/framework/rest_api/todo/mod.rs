@@ -9,22 +9,24 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use sqlx::{Pool, Postgres};
+
 use create::create_todo;
 use delete::delete_todo;
 use get::get_todo;
 use list::list_todos;
 use update::update_todo;
 
-use crate::framework::store::TodoStore;
+use crate::framework::storage::TodoStore;
 
 #[derive(Clone, FromRef)]
 pub struct TodoState {
     todo_store: TodoStore,
 }
 
-pub fn create_router() -> Router {
+pub fn create_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
-        todo_store: TodoStore::new(),
+        todo_store: TodoStore::new(pool),
     };
 
     Router::new()

@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::domain::todo::Todo;
 
 #[derive(Clone, Debug)]
@@ -5,8 +7,9 @@ pub struct DeletePayload {
     pub id: String,
 }
 
+#[async_trait]
 pub trait TodoDeleter {
-    fn delete(&mut self, id: &str) -> Result<Todo, String>;
+    async fn delete(&self, id: &str) -> Result<Todo, String>;
 }
 
 pub struct DeleteContext<T: TodoDeleter> {
@@ -14,8 +17,8 @@ pub struct DeleteContext<T: TodoDeleter> {
 }
 
 pub async fn delete_todo<T: TodoDeleter>(
-    ctx: &mut DeleteContext<T>,
+    ctx: &DeleteContext<T>,
     payload: &DeletePayload,
 ) -> Result<Todo, String> {
-    ctx.store.delete(&payload.id)
+    ctx.store.delete(&payload.id).await
 }

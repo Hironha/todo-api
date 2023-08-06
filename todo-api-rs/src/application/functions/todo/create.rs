@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::domain::todo::Todo;
 
 #[derive(Clone, Debug)]
@@ -7,8 +9,9 @@ pub struct CreatePayload {
     pub todo_at: Option<String>,
 }
 
+#[async_trait]
 pub trait TodoCreator {
-    fn create(&mut self, payload: CreatePayload) -> Result<Todo, String>;
+    async fn create(&self, payload: CreatePayload) -> Result<Todo, String>;
 }
 
 pub struct CreateContext<T: TodoCreator> {
@@ -16,8 +19,8 @@ pub struct CreateContext<T: TodoCreator> {
 }
 
 pub async fn create_todo<T: TodoCreator>(
-    ctx: &mut CreateContext<T>,
+    ctx: &CreateContext<T>,
     payload: CreatePayload,
 ) -> Result<Todo, String> {
-    ctx.store.create(payload)
+    ctx.store.create(payload).await
 }
