@@ -10,19 +10,19 @@ use super::TodoState;
 use crate::{adapters::todo::update_input::UpdateTodoInput, application::functions::todo};
 
 #[derive(Deserialize)]
-pub struct UpdateTodoPath {
+pub(super) struct UpdateTodoPath {
   id: Option<String>
 }
 
 #[derive(Deserialize)]
-pub struct UpdateTodoBody {
+pub(super) struct UpdateTodoBody {
     title: Option<String>,
     description: Option<String>,
     #[serde(rename(deserialize="todoAt"))]
     todo_at: Option<String>,
 }
 
-pub async fn update_todo(
+pub(super) async fn update_todo(
     State(state): State<TodoState>,
     Path(path): Path<UpdateTodoPath>,
     Json(body): Json<UpdateTodoBody>,

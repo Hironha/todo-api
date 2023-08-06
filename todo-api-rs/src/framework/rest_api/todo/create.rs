@@ -6,14 +6,14 @@ use crate::adapters::todo::create_input::CreateTodoInput;
 use crate::application::functions::todo;
 
 #[derive(Deserialize)]
-pub struct CreateTodoBody {
+pub(super) struct CreateTodoBody {
     title: Option<String>,
     description: Option<String>,
     #[serde(rename(deserialize = "todoAt"))]
     todo_at: Option<String>,
 }
 
-pub async fn create_todo(
+pub(super) async fn create_todo(
     State(state): State<TodoState>,
     Json(body): Json<CreateTodoBody>,
 ) -> impl IntoResponse {

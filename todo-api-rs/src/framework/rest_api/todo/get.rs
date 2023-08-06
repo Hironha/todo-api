@@ -10,11 +10,11 @@ use super::TodoState;
 use crate::{adapters::todo::get_input::GetTodoInput, application::functions::todo};
 
 #[derive(Deserialize)]
-pub struct GetTodoPath {
+pub(super) struct GetTodoPath {
     id: Option<String>,
 }
 
-pub async fn get_todo(
+pub(super) async fn get_todo(
     State(state): State<TodoState>,
     Path(path): Path<GetTodoPath>,
 ) -> impl IntoResponse {

@@ -9,11 +9,11 @@ use super::TodoState;
 use crate::{adapters::todo::delete_input::DeleteTodoInput, application::functions::todo};
 
 #[derive(Deserialize)]
-pub struct DeleteTodoPath {
+pub(super) struct DeleteTodoPath {
     id: Option<String>,
 }
 
-pub async fn delete_todo(
+pub(super) async fn delete_todo(
     State(state): State<TodoState>,
     Path(path): Path<DeleteTodoPath>,
 ) -> impl IntoResponse {

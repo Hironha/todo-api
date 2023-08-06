@@ -3,7 +3,7 @@ use crate::application::functions::todo;
 use super::TodoState;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
-pub async fn list_todos(State(state): State<TodoState>) -> impl IntoResponse {
+pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoResponse {
     let ctx = todo::ListContext {
         store: state.todo_store,
     };
