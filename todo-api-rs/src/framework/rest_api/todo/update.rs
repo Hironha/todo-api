@@ -10,21 +10,22 @@ use super::TodoState;
 use crate::{adapters::todo::update_input::UpdateTodoInput, application::functions::todo};
 
 #[derive(Deserialize)]
-pub struct PathQuery {
+pub struct UpdateTodoPath {
   id: Option<String>
 }
 
 #[derive(Deserialize)]
-pub struct UpdateBody {
+pub struct UpdateTodoBody {
     title: Option<String>,
     description: Option<String>,
+    #[serde(rename(deserialize="todoAt"))]
     todo_at: Option<String>,
 }
 
 pub async fn update_todo(
     State(state): State<TodoState>,
-    Path(path): Path<PathQuery>,
-    Json(body): Json<UpdateBody>,
+    Path(path): Path<UpdateTodoPath>,
+    Json(body): Json<UpdateTodoBody>,
 ) -> impl IntoResponse {
     let input = UpdateTodoInput {
         id: path.id,

@@ -1,16 +1,27 @@
-use super::TodoState;
-use crate::{adapters::todo::get_input::GetTodoInput, application::functions::todo};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
     Json,
 };
+use serde::Deserialize;
+
+use super::TodoState;
+use crate::{adapters::todo::get_input::GetTodoInput, application::functions::todo};
+
+#[derive(Deserialize)]
+pub struct GetTodoPath {
+    id: Option<String>,
+}
 
 pub async fn get_todo(
     State(state): State<TodoState>,
-    Path(input): Path<GetTodoInput>,
+    Path(path): Path<GetTodoPath>,
 ) -> impl IntoResponse {
+    let input = GetTodoInput { id: path.id };
+
+    println!("GET TODO -> input: {input:?}");
+
     let payload = match input.into_payload() {
         Ok(payload) => payload,
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),

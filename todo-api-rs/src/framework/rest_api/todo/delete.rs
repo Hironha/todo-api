@@ -3,14 +3,22 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
+use serde::Deserialize;
 
 use super::TodoState;
 use crate::{adapters::todo::delete_input::DeleteTodoInput, application::functions::todo};
 
+#[derive(Deserialize)]
+pub struct DeleteTodoPath {
+    id: Option<String>,
+}
+
 pub async fn delete_todo(
     State(state): State<TodoState>,
-    Path(input): Path<DeleteTodoInput>,
+    Path(path): Path<DeleteTodoPath>,
 ) -> impl IntoResponse {
+    let input = DeleteTodoInput { id: path.id };
+
     println!("DELETE TODO -> input {input:?}");
 
     let payload = match input.into_payload() {

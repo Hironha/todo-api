@@ -1,10 +1,8 @@
-use serde::Deserialize;
-
 use crate::application::functions::todo::GetPayload;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct GetTodoInput {
-    id: Option<String>,
+    pub id: Option<String>,
 }
 
 impl GetTodoInput {

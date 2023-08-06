@@ -1,13 +1,10 @@
-use serde::Deserialize;
-
 use crate::application::functions::todo::UpdatePayload;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct UpdateTodoInput {
     pub id: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
-    #[serde(rename(deserialize = "todoAt"))]
     pub todo_at: Option<String>,
 }
 

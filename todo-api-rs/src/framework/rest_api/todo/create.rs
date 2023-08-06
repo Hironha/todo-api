@@ -1,13 +1,28 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::todo::create_input::CreateTodoInput;
 use crate::application::functions::todo;
 
+#[derive(Deserialize)]
+pub struct CreateTodoBody {
+    title: Option<String>,
+    description: Option<String>,
+    #[serde(rename(deserialize = "todoAt"))]
+    todo_at: Option<String>,
+}
+
 pub async fn create_todo(
     State(state): State<TodoState>,
-    Json(input): Json<CreateTodoInput>,
+    Json(body): Json<CreateTodoBody>,
 ) -> impl IntoResponse {
+    let input = CreateTodoInput {
+        title: body.title,
+        description: body.description,
+        todo_at: body.todo_at,
+    };
+
     println!("CREATE TODO -> input: {input:?}");
 
     let payload = match input.into_payload() {

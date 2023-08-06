@@ -1,10 +1,8 @@
-use serde::Deserialize;
-
 use crate::application::functions::todo::DeletePayload;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct DeleteTodoInput {
-    id: Option<String>,
+    pub id: Option<String>,
 }
 
 impl DeleteTodoInput {
@@ -30,20 +28,21 @@ mod test {
 
     #[test]
     fn parse_fail() {
-      let none_id = super::DeleteTodoInput {
-        id: None
-      };
-      let none_id_payload = none_id.into_payload();
+        let none_id = super::DeleteTodoInput { id: None };
+        let none_id_payload = none_id.into_payload();
 
-      assert!(none_id_payload.is_err());
-      assert_eq!(none_id_payload.unwrap_err(), "id is required".to_string());
+        assert!(none_id_payload.is_err());
+        assert_eq!(none_id_payload.unwrap_err(), "id is required".to_string());
 
-      let empty_id = super::DeleteTodoInput {
-        id: Some("".to_string())
-      };
-      let empty_id_payload = empty_id.into_payload();
+        let empty_id = super::DeleteTodoInput {
+            id: Some("".to_string()),
+        };
+        let empty_id_payload = empty_id.into_payload();
 
-      assert!(empty_id_payload.is_err());
-      assert_eq!(empty_id_payload.unwrap_err(), "id should not be empty".to_string());
+        assert!(empty_id_payload.is_err());
+        assert_eq!(
+            empty_id_payload.unwrap_err(),
+            "id should not be empty".to_string()
+        );
     }
 }

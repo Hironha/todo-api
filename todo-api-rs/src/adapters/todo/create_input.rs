@@ -1,13 +1,10 @@
-use serde::Deserialize;
-
 use crate::application::functions::todo::CreatePayload;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct CreateTodoInput {
-    title: Option<String>,
-    description: Option<String>,
-    #[serde(rename(deserialize = "todoAt"))]
-    todo_at: Option<String>,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub todo_at: Option<String>,
 }
 
 impl CreateTodoInput {
