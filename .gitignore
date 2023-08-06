@@ -10,3 +10,5 @@ dist
 # RUST
 # ignore rust implementation and dependencies
 target
+
+.vscode
