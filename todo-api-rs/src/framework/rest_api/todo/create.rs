@@ -30,10 +30,10 @@ pub(super) async fn create_todo(
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
     };
 
-    let mut ctx = todo::CreateContext {
+    let ctx = todo::CreateContext {
         store: state.todo_store,
     };
-    let result = todo::create_todo(&mut ctx, payload).await;
+    let result = todo::create_todo(&ctx, payload).await;
 
     match result {
         Ok(todo) => (StatusCode::CREATED, Json(todo)).into_response(),

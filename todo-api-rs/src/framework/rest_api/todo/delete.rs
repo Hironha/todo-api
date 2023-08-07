@@ -26,10 +26,10 @@ pub(super) async fn delete_todo(
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
     };
 
-    let mut ctx = todo::DeleteContext {
+    let ctx = todo::DeleteContext {
         store: state.todo_store,
     };
-    let result = todo::delete_todo(&mut ctx, &payload).await;
+    let result = todo::delete_todo(&ctx, &payload).await;
 
     let todo = match result {
         Ok(todo) => todo,
