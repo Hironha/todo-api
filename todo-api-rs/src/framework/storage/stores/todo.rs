@@ -23,7 +23,15 @@ impl TodoStore {
 #[async_trait]
 impl TodoGetter for TodoStore {
     async fn get(&self, id: &str) -> Result<Todo, String> {
-        todo!()
+        let q = r"SELECT * FROM todos WHERE todos.id = ($1)";
+
+        let model = sqlx::query_as::<_, TodoModel>(q)
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| format!("failed to find todo with id {id}"))?;
+
+        Ok(model.into())
     }
 }
 
@@ -71,32 +79,38 @@ impl TodoLister for TodoStore {
 #[async_trait]
 impl TodoDeleter for TodoStore {
     async fn delete(&self, id: &str) -> Result<Todo, String> {
-        let mut trx = self.pool.begin().await.unwrap();
-
-        let get_q = r"SELECT * FROM todos WHERE todos.id= ($1)";
-        let todo = sqlx::query_as::<_, TodoModel>(get_q)
-            .fetch_one(trx.as_mut())
-            .await
-            .unwrap();
+        let todo = self.get(id).await?;
 
         let delete_q = r"DELETE FROM todos WHERE todos.id = ($1)";
         sqlx::query(delete_q)
             .bind(id)
-            .execute(trx.as_mut())
+            .execute(&self.pool)
             .await
             .unwrap();
 
-        trx.commit()
-            .await
-            .map_err(|_| "failed to delete todo".to_string())?;
-
-        Ok(todo.into())
+        Ok(todo)
     }
 }
 
 #[async_trait]
 impl TodoSetter for TodoStore {
     async fn set(&self, payload: UpdatePayload) -> Result<Todo, String> {
-        todo!()
+        let q = r"
+            UPDATE todos SET title = ($1), description = ($2), todo_at = ($3)
+            WHERE todos.id = ($4) 
+        ";
+
+        sqlx::query(q)
+            .bind(&payload.title)
+            .bind(&payload.description)
+            .bind(&payload.todo_at)
+            .bind(&payload.id)
+            .execute(&self.pool)
+            .await
+            .map_err(|_| "failed to update todo".to_string())?;
+
+        let todo = self.get(&payload.id).await?;
+
+        Ok(todo)
     }
 }
