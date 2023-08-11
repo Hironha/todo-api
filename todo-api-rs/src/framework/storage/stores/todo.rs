@@ -45,16 +45,21 @@ impl TodoCreator for TodoStore {
 
         let model = TodoModel::from(payload);
 
+        println!("CREATING TODO: {model:?}");
+
         sqlx::query(q)
-            .bind(&model.id)
+            .bind(model.id)
             .bind(&model.title)
             .bind(&model.description)
-            .bind(&model.todo_at)
-            .bind(&model.created_at)
-            .bind(&model.updated_at)
+            .bind(model.todo_at)
+            .bind(model.created_at)
+            .bind(model.updated_at)
             .execute(&self.pool)
             .await
-            .map_err(|_| "failed to create todo".to_string())?;
+            .map_err(|err| {
+                println!("{err:?}");
+                "failed to create todo".to_string()
+            })?;
 
         Ok(model.into())
     }
@@ -68,7 +73,10 @@ impl TodoLister for TodoStore {
         let res = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
             .await
-            .map_err(|_| "failed to list todos".to_string())?;
+            .map_err(|err| {
+                println!("{err:?}");
+                "failed to list todos".to_string()
+            })?;
 
         let todos = res.into_iter().map(|r| r.into()).collect::<Vec<Todo>>();
 
