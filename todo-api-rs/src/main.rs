@@ -13,8 +13,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // initialize db connection
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://postgres:password@localhost/test")
-        .await?;
+        .connect("postgres://hironha:rafaelhiro123@0.0.0.0:5432/todo-api")
+        .await
+        .expect("failed to connect into postgres db");
+
+    sqlx::migrate!("./migrations").run(&pool).await?;
 
     // initialize all app routes
     let routes = Router::new().merge(todo::create_router(pool.clone()));
