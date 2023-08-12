@@ -1,4 +1,5 @@
 use crate::application::functions::todo::CreatePayload;
+use time::{macros::format_description, Date};
 
 #[derive(Debug)]
 pub struct CreateTodoInput {
@@ -17,10 +18,17 @@ impl CreateTodoInput {
         // parses empty String to None
         let description = self.description.filter(|d| !d.is_empty());
 
+        let date_format = format_description!("[year]-[month]-[day]");
+        let todo_at = self
+            .todo_at
+            .map(|at| Date::parse(at.as_ref(), date_format))
+            .transpose()
+            .map_err(|_| "todo_at must be a date on the format YYYY-MM-DD".to_string())?;
+
         Ok(CreatePayload {
             title,
             description,
-            todo_at: self.todo_at,
+            todo_at,
         })
     }
 }
@@ -31,7 +39,7 @@ mod tests {
         let expected_input = super::CreateTodoInput {
             title: Some("title".to_string()),
             description: Some("description".to_string()),
-            todo_at: Some("todo_at".to_string()),
+            todo_at: Some("2023-08-11".to_string()),
         };
 
         assert!(expected_input.into_payload().is_ok());

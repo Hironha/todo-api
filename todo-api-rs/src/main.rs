@@ -13,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // initialize db connection
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://hironha:rafaelhiro123@0.0.0.0:5432/todo-api")
+        .connect("postgres://hironha:rafaelhiro123@0.0.0.0:5432/todo_api")
         .await
         .expect("failed to connect into postgres db");
 

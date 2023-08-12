@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use time::Date;
 
 use crate::domain::todo::Todo;
 
@@ -6,7 +7,7 @@ use crate::domain::todo::Todo;
 pub struct CreatePayload {
     pub title: String,
     pub description: Option<String>,
-    pub todo_at: Option<String>,
+    pub todo_at: Option<Date>,
 }
 
 #[async_trait]

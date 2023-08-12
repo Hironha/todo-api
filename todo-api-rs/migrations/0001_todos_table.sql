@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS todos (
-  id UUID PRIMARY KEY,
-  title VARCHAR NOT NULL,
-  description VARCHAR,
-  todo_at DATE,
-  created_at TIMESTAMPTZ NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL
+  id uuid PRIMARY KEY,
+  title varchar NOT NULL,
+  description varchar,
+  todo_at date,
+  created_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL
 );
