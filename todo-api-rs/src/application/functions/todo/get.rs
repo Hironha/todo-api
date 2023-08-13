@@ -1,15 +1,16 @@
 use async_trait::async_trait;
+use uuid::Uuid;
 
 use crate::domain::todo::Todo;
 
 #[derive(Clone, Debug)]
 pub struct GetPayload {
-    pub id: String,
+    pub id: Uuid,
 }
 
 #[async_trait]
 pub trait TodoGetter {
-    async fn get(&self, id: &str) -> Result<Todo, String>;
+    async fn get(&self, id: &Uuid) -> Result<Todo, String>;
 }
 
 pub struct GetContext<T: TodoGetter> {

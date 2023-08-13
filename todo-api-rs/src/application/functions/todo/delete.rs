@@ -1,15 +1,14 @@
 use async_trait::async_trait;
-
-use crate::domain::todo::Todo;
+use uuid::Uuid;
 
 #[derive(Clone, Debug)]
 pub struct DeletePayload {
-    pub id: String,
+    pub id: Uuid,
 }
 
 #[async_trait]
 pub trait TodoDeleter {
-    async fn delete(&self, id: &str) -> Result<Todo, String>;
+    async fn delete(&self, id: &Uuid) -> Result<(), String>;
 }
 
 pub struct DeleteContext<T: TodoDeleter> {
@@ -19,6 +18,6 @@ pub struct DeleteContext<T: TodoDeleter> {
 pub async fn delete_todo<T: TodoDeleter>(
     ctx: &DeleteContext<T>,
     payload: &DeletePayload,
-) -> Result<Todo, String> {
+) -> Result<(), String> {
     ctx.store.delete(&payload.id).await
 }

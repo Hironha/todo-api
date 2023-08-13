@@ -1,3 +1,6 @@
+use time::{macros::format_description, Date};
+use uuid::Uuid;
+
 use crate::application::functions::todo::UpdatePayload;
 
 #[derive(Debug)]
@@ -15,6 +18,8 @@ impl UpdateTodoInput {
             return Err("id should not be empty".to_string());
         }
 
+        let uuid = Uuid::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
+
         let title = self
             .title
             .map(|t| if t.is_empty() { None } else { Some(t) })
@@ -22,11 +27,17 @@ impl UpdateTodoInput {
 
         let description = self.description.filter(|d| !d.is_empty());
 
+        let todo_at = self
+            .todo_at
+            .map(|at| Date::parse(&at, &format_description!("[year]-[month]-[day]")))
+            .transpose()
+            .map_err(|_| format!("todo_at should be a date in the format YYYY-MM-DD"))?;
+
         Ok(UpdatePayload {
-            id,
+            id: uuid,
             title,
             description,
-            todo_at: self.todo_at,
+            todo_at,
         })
     }
 }

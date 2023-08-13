@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 use crate::application::functions::todo::GetPayload;
 
 #[derive(Debug)]
@@ -12,6 +14,8 @@ impl GetTodoInput {
             return Err("id should not be empty".to_string());
         }
 
-        Ok(GetPayload { id })
+        let uuid = Uuid::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
+
+        Ok(GetPayload { id: uuid })
     }
 }

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sqlx::{Pool, Postgres};
+use sqlx::{types::Uuid, Pool, Postgres};
 
 use super::models::todo::TodoModel;
 use crate::{
@@ -22,8 +22,8 @@ impl TodoStore {
 
 #[async_trait]
 impl TodoGetter for TodoStore {
-    async fn get(&self, id: &str) -> Result<Todo, String> {
-        let q = r"SELECT * FROM todos WHERE todos.id = ($1)";
+    async fn get(&self, id: &Uuid) -> Result<Todo, String> {
+        let q = r"SELECT * FROM todos WHERE id = ($1)";
 
         let model = sqlx::query_as::<_, TodoModel>(q)
             .bind(id)
@@ -67,10 +67,7 @@ impl TodoLister for TodoStore {
         let res = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
             .await
-            .map_err(|err| {
-                println!("{err:?}");
-                "failed to list todos".to_string()
-            })?;
+            .map_err(|_| "failed to list todos".to_string())?;
 
         let todos = res
             .into_iter()
@@ -83,17 +80,16 @@ impl TodoLister for TodoStore {
 
 #[async_trait]
 impl TodoDeleter for TodoStore {
-    async fn delete(&self, id: &str) -> Result<Todo, String> {
-        let todo = self.get(id).await?;
+    async fn delete(&self, id: &Uuid) -> Result<(), String> {
+        let delete_q = r"DELETE FROM todos WHERE id = ($1)";
 
-        let delete_q = r"DELETE FROM todos WHERE todos.id = ($1)";
         sqlx::query(delete_q)
             .bind(id)
             .execute(&self.pool)
             .await
-            .unwrap();
+            .map_err(|_| format!("failed to delete todo with id {id}"))?;
 
-        Ok(todo)
+        Ok(())
     }
 }
 
@@ -102,14 +98,14 @@ impl TodoSetter for TodoStore {
     async fn set(&self, payload: UpdatePayload) -> Result<Todo, String> {
         let q = r"
             UPDATE todos SET title = ($1), description = ($2), todo_at = ($3)
-            WHERE todos.id = ($4) 
+            WHERE id = ($4) 
         ";
 
         sqlx::query(q)
             .bind(&payload.title)
             .bind(&payload.description)
-            .bind(&payload.todo_at)
-            .bind(&payload.id)
+            .bind(payload.todo_at)
+            .bind(payload.id)
             .execute(&self.pool)
             .await
             .map_err(|_| "failed to update todo".to_string())?;
