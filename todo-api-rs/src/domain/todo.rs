@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::types::{SerializableDate, SerializableDateTime};
+use super::types::{Date, DateTime};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Todo {
@@ -8,11 +8,11 @@ pub struct Todo {
     pub title: String,
     pub description: Option<String>,
     #[serde(rename(serialize = "todoAt", deserialize = "todoAt"))]
-    pub todo_at: Option<SerializableDate>,
+    pub todo_at: Option<Date>,
     #[serde(rename(serialize = "createdAt", deserialize = "createdAt"))]
-    pub created_at: SerializableDateTime,
+    pub created_at: DateTime,
     #[serde(rename(serialize = "updatedAt", deserialize = "updatedAt"))]
-    pub updated_at: SerializableDateTime,
+    pub updated_at: DateTime,
 }
 
 impl PartialEq for Todo {

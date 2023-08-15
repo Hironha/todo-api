@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::domain::todo::Todo;
 
 #[derive(Clone, Debug)]
-pub struct GetPayload {
+pub struct FindPayload {
     pub id: Uuid,
 }
 
@@ -19,7 +19,7 @@ pub struct GetContext<T: Find> {
 
 pub async fn get_todo<T: Find>(
     ctx: GetContext<T>,
-    payload: &GetPayload,
+    payload: &FindPayload,
 ) -> Result<Todo, String> {
     ctx.store.find(&payload.id).await
 }

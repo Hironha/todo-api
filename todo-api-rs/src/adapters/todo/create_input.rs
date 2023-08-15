@@ -15,13 +15,11 @@ impl CreateTodoInput {
             return Err("title should not be empty".to_string());
         }
 
-        // parses empty String to None
         let description = self.description.filter(|d| !d.is_empty());
 
-        let date_format = format_description!("[year]-[month]-[day]");
         let todo_at = self
             .todo_at
-            .map(|at| Date::parse(at.as_ref(), date_format))
+            .map(|at| Date::parse(at.as_ref(), format_description!("[year]-[month]-[day]")))
             .transpose()
             .map_err(|_| "todo_at must be a date on the format YYYY-MM-DD".to_string())?;
 

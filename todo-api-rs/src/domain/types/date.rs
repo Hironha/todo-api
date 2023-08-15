@@ -1,12 +1,10 @@
-use time::{
-    format_description::well_known::Rfc3339, macros::format_description, Date, OffsetDateTime,
-};
+use time::{format_description::well_known::Rfc3339, macros::format_description};
 
 #[derive(Clone, Debug)]
-pub struct SerializableDate(Date);
+pub struct Date(time::Date);
 
-impl SerializableDate {
-    pub fn to_date(&self) -> Date {
+impl Date {
+    pub fn to_date(&self) -> time::Date {
         self.0
     }
 
@@ -16,19 +14,25 @@ impl SerializableDate {
     }
 }
 
-impl AsRef<Date> for SerializableDate {
-    fn as_ref(&self) -> &Date {
+impl PartialEq for Date {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl AsRef<time::Date> for Date {
+    fn as_ref(&self) -> &time::Date {
         &self.0
     }
 }
 
-impl From<Date> for SerializableDate {
-    fn from(date: Date) -> Self {
+impl From<time::Date> for Date {
+    fn from(date: time::Date) -> Self {
         Self(date)
     }
 }
 
-impl serde::Serialize for SerializableDate {
+impl serde::Serialize for Date {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -38,21 +42,27 @@ impl serde::Serialize for SerializableDate {
 }
 
 #[derive(Clone, Debug)]
-pub struct SerializableDateTime(OffsetDateTime);
+pub struct DateTime(time::OffsetDateTime);
 
-impl SerializableDateTime {
-    pub const fn to_date_time(&self) -> OffsetDateTime {
+impl DateTime {
+    pub const fn to_date_time(&self) -> time::OffsetDateTime {
         self.0
     }
 }
 
-impl From<OffsetDateTime> for SerializableDateTime {
-    fn from(date_time: OffsetDateTime) -> Self {
+impl PartialEq for DateTime {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl From<time::OffsetDateTime> for DateTime {
+    fn from(date_time: time::OffsetDateTime) -> Self {
         Self(date_time)
     }
 }
 
-impl serde::Serialize for SerializableDateTime {
+impl serde::Serialize for DateTime {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
