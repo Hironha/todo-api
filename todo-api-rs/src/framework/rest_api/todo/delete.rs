@@ -31,12 +31,9 @@ pub(super) async fn delete_todo(
     };
     let result = todo::delete_todo(&ctx, &payload).await;
 
-    let todo = match result {
-        Ok(todo) => todo,
-        Err(message) => return (StatusCode::NOT_FOUND, message).into_response(),
-    };
-
-    println!("DELETE TODO -> deleted: {todo:?}");
-
-    (StatusCode::NO_CONTENT).into_response()
+    if let Err(message) = result {
+        (StatusCode::NOT_FOUND, message).into_response()
+    } else {
+        (StatusCode::NO_CONTENT).into_response()
+    }
 }

@@ -31,7 +31,7 @@ impl UpdateTodoInput {
             .todo_at
             .map(|at| Date::parse(&at, &format_description!("[year]-[month]-[day]")))
             .transpose()
-            .map_err(|_| format!("todo_at should be a date in the format YYYY-MM-DD"))?;
+            .map_err(|_| "todo_at should be a date in the format YYYY-MM-DD".to_string())?;
 
         Ok(UpdatePayload {
             id: uuid,
