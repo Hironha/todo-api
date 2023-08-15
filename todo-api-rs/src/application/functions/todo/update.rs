@@ -13,15 +13,15 @@ pub struct UpdatePayload {
 }
 
 #[async_trait]
-pub trait TodoSetter {
+pub trait Update {
     async fn set(&self, payload: UpdatePayload) -> Result<Todo, String>;
 }
 
-pub struct UpdateContext<T: TodoSetter> {
+pub struct UpdateContext<T: Update> {
     pub store: T,
 }
 
-pub async fn update_todo<T: TodoSetter>(
+pub async fn update_todo<T: Update>(
     ctx: &UpdateContext<T>,
     payload: UpdatePayload,
 ) -> Result<Todo, String> {

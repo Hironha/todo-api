@@ -4,7 +4,7 @@ use sqlx::{types::Uuid, Pool, Postgres};
 use super::models::todo::TodoModel;
 use crate::{
     application::functions::todo::{
-        CreatePayload, TodoCreator, TodoDeleter, TodoGetter, TodoLister, TodoSetter, UpdatePayload,
+        Create, CreatePayload, Delete, Find, List, Update, UpdatePayload,
     },
     domain::todo::Todo,
 };
@@ -21,8 +21,8 @@ impl TodoStore {
 }
 
 #[async_trait]
-impl TodoGetter for TodoStore {
-    async fn get(&self, id: &Uuid) -> Result<Todo, String> {
+impl Find for TodoStore {
+    async fn find(&self, id: &Uuid) -> Result<Todo, String> {
         let q = r"SELECT * FROM todos WHERE id = ($1)";
 
         let model = sqlx::query_as::<_, TodoModel>(q)
@@ -36,7 +36,7 @@ impl TodoGetter for TodoStore {
 }
 
 #[async_trait]
-impl TodoCreator for TodoStore {
+impl Create for TodoStore {
     async fn create(&self, payload: CreatePayload) -> Result<Todo, String> {
         let q = r"
             INSERT INTO todos (id, title, description, todo_at, created_at, updated_at)
@@ -60,7 +60,7 @@ impl TodoCreator for TodoStore {
 }
 
 #[async_trait]
-impl TodoLister for TodoStore {
+impl List for TodoStore {
     async fn list(&self) -> Result<Vec<Todo>, String> {
         let q = "SELECT * FROM todos";
 
@@ -79,7 +79,7 @@ impl TodoLister for TodoStore {
 }
 
 #[async_trait]
-impl TodoDeleter for TodoStore {
+impl Delete for TodoStore {
     async fn delete(&self, id: &Uuid) -> Result<(), String> {
         let delete_q = r"DELETE FROM todos WHERE id = ($1)";
 
@@ -94,7 +94,7 @@ impl TodoDeleter for TodoStore {
 }
 
 #[async_trait]
-impl TodoSetter for TodoStore {
+impl Update for TodoStore {
     async fn set(&self, payload: UpdatePayload) -> Result<Todo, String> {
         let q = r"
             UPDATE todos SET title = ($1), description = ($2), todo_at = ($3)
@@ -110,7 +110,7 @@ impl TodoSetter for TodoStore {
             .await
             .map_err(|_| "failed to update todo".to_string())?;
 
-        let todo = self.get(&payload.id).await?;
+        let todo = self.find(&payload.id).await?;
 
         Ok(todo)
     }

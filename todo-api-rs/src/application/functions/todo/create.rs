@@ -11,15 +11,15 @@ pub struct CreatePayload {
 }
 
 #[async_trait]
-pub trait TodoCreator {
+pub trait Create {
     async fn create(&self, payload: CreatePayload) -> Result<Todo, String>;
 }
 
-pub struct CreateContext<T: TodoCreator> {
+pub struct CreateContext<T: Create> {
     pub store: T,
 }
 
-pub async fn create_todo<T: TodoCreator>(
+pub async fn create_todo<T: Create>(
     ctx: &CreateContext<T>,
     payload: CreatePayload,
 ) -> Result<Todo, String> {

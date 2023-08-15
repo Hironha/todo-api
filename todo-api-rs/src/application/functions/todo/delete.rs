@@ -7,15 +7,15 @@ pub struct DeletePayload {
 }
 
 #[async_trait]
-pub trait TodoDeleter {
+pub trait Delete {
     async fn delete(&self, id: &Uuid) -> Result<(), String>;
 }
 
-pub struct DeleteContext<T: TodoDeleter> {
+pub struct DeleteContext<T: Delete> {
     pub store: T,
 }
 
-pub async fn delete_todo<T: TodoDeleter>(
+pub async fn delete_todo<T: Delete>(
     ctx: &DeleteContext<T>,
     payload: &DeletePayload,
 ) -> Result<(), String> {
