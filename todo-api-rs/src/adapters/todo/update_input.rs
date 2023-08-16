@@ -12,7 +12,7 @@ pub struct UpdateTodoInput {
 }
 
 impl UpdateTodoInput {
-    pub fn into_payload(self) -> Result<UpdatePayload, String> {
+    pub fn parse(self) -> Result<UpdatePayload, String> {
         let id = self.id.ok_or("id is required".to_string())?;
         if id.is_empty() {
             return Err("id should not be empty".to_string());

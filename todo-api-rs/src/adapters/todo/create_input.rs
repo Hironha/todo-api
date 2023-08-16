@@ -9,7 +9,7 @@ pub struct CreateTodoInput {
 }
 
 impl CreateTodoInput {
-    pub fn into_payload(self) -> Result<CreatePayload, String> {
+    pub fn parse(self) -> Result<CreatePayload, String> {
         let title = self.title.ok_or("title is required".to_string())?;
         if title.is_empty() {
             return Err("title should not be empty".to_string());
@@ -40,7 +40,7 @@ mod tests {
             todo_at: Some("2023-08-11".to_string()),
         };
 
-        assert!(expected_input.into_payload().is_ok());
+        assert!(expected_input.parse().is_ok());
     }
 
     #[test]
@@ -51,7 +51,7 @@ mod tests {
             todo_at: None,
         };
 
-        let payload = input.into_payload();
+        let payload = input.parse();
 
         assert!(payload.is_ok());
         assert_eq!(payload.unwrap().description, None);
@@ -64,7 +64,7 @@ mod tests {
             description: Some("description".to_string()),
             todo_at: None,
         };
-        let none_title_payload = none_title.into_payload();
+        let none_title_payload = none_title.parse();
 
         assert!(none_title_payload.is_err());
         assert_eq!(
@@ -77,7 +77,7 @@ mod tests {
             description: None,
             todo_at: None,
         };
-        let empty_title_payload = empty_title.into_payload();
+        let empty_title_payload = empty_title.parse();
 
         assert!(empty_title_payload.is_err());
         assert_eq!(
@@ -94,7 +94,7 @@ mod tests {
             todo_at: Some("2023-2023-2023".to_string()),
         };
 
-        let invalid_todo_at_payload = invalid_todo_at.into_payload();
+        let invalid_todo_at_payload = invalid_todo_at.parse();
 
         assert!(invalid_todo_at_payload.is_err());
         assert_eq!(

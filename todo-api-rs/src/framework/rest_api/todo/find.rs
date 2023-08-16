@@ -22,7 +22,7 @@ pub(super) async fn find_todo(
 
     println!("GET TODO -> input: {input:?}");
 
-    let payload = match input.into_payload() {
+    let payload = match input.parse() {
         Ok(payload) => payload,
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
     };

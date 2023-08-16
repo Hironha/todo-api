@@ -36,7 +36,7 @@ pub(super) async fn update_todo(
 
     println!("UPDATE TODO -> input: {input:?}");
 
-    let payload = match input.into_payload() {
+    let payload = match input.parse() {
         Ok(payload) => payload,
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
     };

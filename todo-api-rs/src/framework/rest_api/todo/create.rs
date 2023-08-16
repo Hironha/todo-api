@@ -25,7 +25,7 @@ pub(super) async fn create_todo(
 
     println!("CREATE TODO -> input: {input:?}");
 
-    let payload = match input.into_payload() {
+    let payload = match input.parse() {
         Ok(payload) => payload,
         Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
     };
