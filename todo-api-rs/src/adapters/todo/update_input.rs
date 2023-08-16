@@ -14,17 +14,10 @@ pub struct UpdateTodoInput {
 impl UpdateTodoInput {
     pub fn parse(self) -> Result<UpdatePayload, String> {
         let id = self.id.ok_or("id is required".to_string())?;
-        if id.is_empty() {
-            return Err("id should not be empty".to_string());
-        }
 
         let uuid = Uuid::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
 
-        let title = self
-            .title
-            .map(|t| if t.is_empty() { None } else { Some(t) })
-            .ok_or("title should not be empty".to_string())?;
-
+        let title = self.title.filter(|t| t.is_empty());
         let description = self.description.filter(|d| !d.is_empty());
 
         let todo_at = self
@@ -39,5 +32,56 @@ impl UpdateTodoInput {
             description,
             todo_at,
         })
+    }
+}
+
+mod tests {
+    #[test]
+    fn parse_success() {
+        let input = super::UpdateTodoInput {
+            id: Some(uuid::Uuid::new_v4().to_string()),
+            title: Some("title".to_string()),
+            description: Some("description".to_string()),
+            todo_at: Some("2023-08-12".to_string()),
+        };
+
+        assert!(input.parse().is_ok());
+    }
+
+    #[test]
+    fn parse_id_fail() {
+        let none_id = super::UpdateTodoInput {
+            id: None,
+            title: Some("title".to_string()),
+            description: Some("description".to_string()),
+            todo_at: Some("2023-08-12".to_string()),
+        };
+        let none_id_payload = none_id.parse();
+
+        assert!(none_id_payload.is_err_and(|e| e == "id is required"));
+
+        let invalid_id = super::UpdateTodoInput {
+            id: Some("invalid-id".to_string()),
+            title: None,
+            description: None,
+            todo_at: None,
+        };
+        let invalid_id_payload = invalid_id.parse();
+
+        assert!(invalid_id_payload.is_err_and(|e| e == "id should be a valid uuid"));
+    }
+
+    #[test]
+    fn parse_todo_at_fail() {
+        let invalid_todo_at = super::UpdateTodoInput {
+            id: Some(uuid::Uuid::new_v4().to_string()),
+            title: None,
+            description: None,
+            todo_at: Some("todo_at".to_string()),
+        };
+        let invalid_todo_at_payload = invalid_todo_at.parse();
+
+        assert!(invalid_todo_at_payload
+            .is_err_and(|e| e == "todo_at should be a date in the format YYYY-MM-DD"))
     }
 }
