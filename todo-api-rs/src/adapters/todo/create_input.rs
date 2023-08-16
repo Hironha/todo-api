@@ -85,4 +85,21 @@ mod tests {
             "title should not be empty".to_string()
         );
     }
+
+    #[test]
+    fn parse_todo_at_fail() {
+        let invalid_todo_at = super::CreateTodoInput {
+            title: Some("title".to_string()),
+            description: None,
+            todo_at: Some("2023-2023-2023".to_string()),
+        };
+
+        let invalid_todo_at_payload = invalid_todo_at.into_payload();
+
+        assert!(invalid_todo_at_payload.is_err());
+        assert_eq!(
+            invalid_todo_at_payload.unwrap_err(),
+            "todo_at must be a date on the format YYYY-MM-DD".to_string()
+        );
+    }
 }
