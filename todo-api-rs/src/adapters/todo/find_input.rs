@@ -32,18 +32,13 @@ mod tests {
         let none_id = super::FindTodoInput { id: None };
         let none_id_payload = none_id.parse();
 
-        assert!(none_id_payload.is_err());
-        assert_eq!(none_id_payload.unwrap_err(), "id is required".to_string());
+        assert!(none_id_payload.is_err_and(|e| e == "id is required"));
 
         let invalid_id = super::FindTodoInput {
             id: Some("invalid-id".to_string()),
         };
         let invalid_id_payload = invalid_id.parse();
 
-        assert!(invalid_id_payload.is_err());
-        assert_eq!(
-            invalid_id_payload.unwrap_err(),
-            "id should be a valid uuid".to_string()
-        );
+        assert!(invalid_id_payload.is_err_and(|e| e == "id should be a valid uuid"));
     }
 }

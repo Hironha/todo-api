@@ -50,11 +50,9 @@ mod tests {
             description: Some("".to_string()),
             todo_at: None,
         };
-
         let payload = input.parse();
 
-        assert!(payload.is_ok());
-        assert_eq!(payload.unwrap().description, None);
+        assert!(payload.is_ok_and(|p| p.description.is_none()));
     }
 
     #[test]
@@ -66,11 +64,7 @@ mod tests {
         };
         let none_title_payload = none_title.parse();
 
-        assert!(none_title_payload.is_err());
-        assert_eq!(
-            none_title_payload.unwrap_err(),
-            "title is required".to_string()
-        );
+        assert!(none_title_payload.is_err_and(|e| e == "title is required"));
 
         let empty_title = super::CreateTodoInput {
             title: Some("".to_string()),
@@ -79,11 +73,7 @@ mod tests {
         };
         let empty_title_payload = empty_title.parse();
 
-        assert!(empty_title_payload.is_err());
-        assert_eq!(
-            empty_title_payload.unwrap_err(),
-            "title should not be empty".to_string()
-        );
+        assert!(empty_title_payload.is_err_and(|e| e == "title should not be empty"));
     }
 
     #[test]
@@ -96,10 +86,7 @@ mod tests {
 
         let invalid_todo_at_payload = invalid_todo_at.parse();
 
-        assert!(invalid_todo_at_payload.is_err());
-        assert_eq!(
-            invalid_todo_at_payload.unwrap_err(),
-            "todo_at must be a date on the format YYYY-MM-DD".to_string()
-        );
+        assert!(invalid_todo_at_payload
+            .is_err_and(|e| e == "todo_at must be a date on the format YYYY-MM-DD"));
     }
 }
