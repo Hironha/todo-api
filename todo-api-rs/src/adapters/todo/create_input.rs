@@ -10,10 +10,10 @@ pub struct CreateTodoInput {
 
 impl CreateTodoInput {
     pub fn parse(self) -> Result<CreatePayload, String> {
-        let title = self.title.ok_or("title is required".to_string())?;
-        if title.is_empty() {
-            return Err("title should not be empty".to_string());
-        }
+        let title = self
+            .title
+            .filter(|t| !t.is_empty())
+            .ok_or("title is required".to_string())?;
 
         let description = self.description.filter(|d| !d.is_empty());
 
@@ -73,7 +73,7 @@ mod tests {
         };
         let empty_title_payload = empty_title.parse();
 
-        assert!(empty_title_payload.is_err_and(|e| e == "title should not be empty"));
+        assert!(empty_title_payload.is_err_and(|e| e == "title is required"));
     }
 
     #[test]
