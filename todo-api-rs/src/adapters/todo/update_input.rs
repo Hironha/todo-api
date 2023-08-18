@@ -17,12 +17,16 @@ impl UpdateTodoInput {
 
         let uuid = Uuid::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
 
-        let title = self.title.filter(|t| t.is_empty());
+        let title = self
+            .title
+            .filter(|t| !t.is_empty())
+            .ok_or("title is required".to_string())?;
+
         let description = self.description.filter(|d| !d.is_empty());
 
         let todo_at = self
             .todo_at
-            .map(|at| Date::parse(&at, &format_description!("[year]-[month]-[day]")))
+            .map(|at| Date::parse(at.as_ref(), &format_description!("[year]-[month]-[day]")))
             .transpose()
             .map_err(|_| "todo_at should be a date in the format YYYY-MM-DD".to_string())?;
 
@@ -62,7 +66,7 @@ mod tests {
 
         let invalid_id = super::UpdateTodoInput {
             id: Some("invalid-id".to_string()),
-            title: None,
+            title: Some("title".to_string()),
             description: None,
             todo_at: None,
         };
@@ -72,10 +76,33 @@ mod tests {
     }
 
     #[test]
+    fn parse_title_fail() {
+        let none_title = super::UpdateTodoInput {
+            id: Some(uuid::Uuid::new_v4().to_string()),
+            title: None,
+            description: None,
+            todo_at: None,
+        };
+        let none_title_payload = none_title.parse();
+
+        assert!(none_title_payload.is_err_and(|e| e == "title is required"));
+
+        let empty_title = super::UpdateTodoInput {
+            id: Some(uuid::Uuid::new_v4().to_string()),
+            title: Some("".to_string()),
+            description: None,
+            todo_at: None,
+        };
+        let empty_title_payload = empty_title.parse();
+
+        assert!(empty_title_payload.is_err_and(|e| e == "title is required"));
+    }
+
+    #[test]
     fn parse_todo_at_fail() {
         let invalid_todo_at = super::UpdateTodoInput {
             id: Some(uuid::Uuid::new_v4().to_string()),
-            title: None,
+            title: Some("title".to_string()),
             description: None,
             todo_at: Some("todo_at".to_string()),
         };

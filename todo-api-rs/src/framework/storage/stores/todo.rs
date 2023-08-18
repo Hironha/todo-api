@@ -29,7 +29,10 @@ impl Find for TodoStore {
             .bind(id)
             .fetch_one(&self.pool)
             .await
-            .map_err(|_| format!("failed to find todo with id {id}"))?;
+            .map_err(|err| {
+                println!("{err:?}");
+                format!("failed to find todo with id {id}")
+            })?;
 
         Ok(model.into_entity())
     }
@@ -62,12 +65,15 @@ impl Create for TodoStore {
 #[async_trait]
 impl List for TodoStore {
     async fn list(&self) -> Result<Vec<Todo>, String> {
-        let q = "SELECT * FROM todos";
+        let q = r"SELECT * FROM todos";
 
         let res = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
             .await
-            .map_err(|_| "failed to list todos".to_string())?;
+            .map_err(|err| {
+                println!("{err:?}");
+                "failed to list todos".to_string()
+            })?;
 
         let todos = res
             .into_iter()
@@ -97,18 +103,23 @@ impl Delete for TodoStore {
 impl Update for TodoStore {
     async fn set(&self, payload: UpdatePayload) -> Result<Todo, String> {
         let q = r"
-            UPDATE todos SET title = ($1), description = ($2), todo_at = ($3)
-            WHERE id = ($4) 
+            UPDATE todos 
+            SET title, description, todo_at
+            VALUES ($1), ($2), ($3)
+            WHERE id = ($4)
         ";
 
         sqlx::query(q)
-            .bind(&payload.title)
-            .bind(&payload.description)
+            .bind(payload.title)
+            .bind(payload.description)
             .bind(payload.todo_at)
             .bind(payload.id)
             .execute(&self.pool)
             .await
-            .map_err(|_| "failed to update todo".to_string())?;
+            .map_err(|err| {
+                println!("{err:?}");
+                "failed to update todo".to_string()
+            })?;
 
         let todo = self.find(&payload.id).await?;
 

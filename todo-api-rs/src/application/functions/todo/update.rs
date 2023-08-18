@@ -7,7 +7,7 @@ use crate::domain::todo::Todo;
 #[derive(Clone, Debug)]
 pub struct UpdatePayload {
     pub id: Uuid,
-    pub title: Option<String>,
+    pub title: String,
     pub description: Option<String>,
     pub todo_at: Option<Date>,
 }
