@@ -6,7 +6,7 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::{adapters::todo::delete_input::DeleteTodoInput, application::functions::todo};
+use crate::{adapters::todo::delete::DeleteInput, application::functions::todo};
 
 #[derive(Deserialize)]
 pub(super) struct DeleteTodoPath {
@@ -17,7 +17,7 @@ pub(super) async fn delete_todo(
     State(state): State<TodoState>,
     Path(path): Path<DeleteTodoPath>,
 ) -> impl IntoResponse {
-    let input = DeleteTodoInput { id: path.id };
+    let input = DeleteInput { id: path.id };
 
     println!("DELETE TODO -> input {input:?}");
 

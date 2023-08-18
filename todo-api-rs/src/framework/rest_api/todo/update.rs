@@ -7,18 +7,18 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::{adapters::todo::update_input::UpdateTodoInput, application::functions::todo};
+use crate::{adapters::todo::update::UpdateInput, application::functions::todo};
 
 #[derive(Deserialize)]
 pub(super) struct UpdateTodoPath {
-  id: Option<String>
+    id: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub(super) struct UpdateTodoBody {
     title: Option<String>,
     description: Option<String>,
-    #[serde(rename(deserialize="todoAt"))]
+    #[serde(rename(deserialize = "todoAt"))]
     todo_at: Option<String>,
 }
 
@@ -27,7 +27,7 @@ pub(super) async fn update_todo(
     Path(path): Path<UpdateTodoPath>,
     Json(body): Json<UpdateTodoBody>,
 ) -> impl IntoResponse {
-    let input = UpdateTodoInput {
+    let input = UpdateInput {
         id: path.id,
         description: body.description,
         title: body.title,

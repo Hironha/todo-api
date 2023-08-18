@@ -4,14 +4,14 @@ use uuid::Uuid;
 use crate::application::functions::todo::UpdatePayload;
 
 #[derive(Debug)]
-pub struct UpdateTodoInput {
+pub struct UpdateInput {
     pub id: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
     pub todo_at: Option<String>,
 }
 
-impl UpdateTodoInput {
+impl UpdateInput {
     pub fn parse(self) -> Result<UpdatePayload, String> {
         let id = self.id.ok_or("id is required".to_string())?;
 
@@ -42,7 +42,7 @@ impl UpdateTodoInput {
 mod tests {
     #[test]
     fn parse_success() {
-        let input = super::UpdateTodoInput {
+        let input = super::UpdateInput {
             id: Some(uuid::Uuid::new_v4().to_string()),
             title: Some("title".to_string()),
             description: Some("description".to_string()),
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn parse_id_fail() {
-        let none_id = super::UpdateTodoInput {
+        let none_id = super::UpdateInput {
             id: None,
             title: Some("title".to_string()),
             description: Some("description".to_string()),
@@ -64,7 +64,7 @@ mod tests {
 
         assert!(none_id_payload.is_err_and(|e| e == "id is required"));
 
-        let invalid_id = super::UpdateTodoInput {
+        let invalid_id = super::UpdateInput {
             id: Some("invalid-id".to_string()),
             title: Some("title".to_string()),
             description: None,
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn parse_title_fail() {
-        let none_title = super::UpdateTodoInput {
+        let none_title = super::UpdateInput {
             id: Some(uuid::Uuid::new_v4().to_string()),
             title: None,
             description: None,
@@ -87,7 +87,7 @@ mod tests {
 
         assert!(none_title_payload.is_err_and(|e| e == "title is required"));
 
-        let empty_title = super::UpdateTodoInput {
+        let empty_title = super::UpdateInput {
             id: Some(uuid::Uuid::new_v4().to_string()),
             title: Some("".to_string()),
             description: None,
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn parse_todo_at_fail() {
-        let invalid_todo_at = super::UpdateTodoInput {
+        let invalid_todo_at = super::UpdateInput {
             id: Some(uuid::Uuid::new_v4().to_string()),
             title: Some("title".to_string()),
             description: None,

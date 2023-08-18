@@ -7,7 +7,7 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::{adapters::todo::find_input::FindTodoInput, application::functions::todo};
+use crate::{adapters::todo::find::FindInput, application::functions::todo};
 
 #[derive(Deserialize)]
 pub(super) struct GetTodoPath {
@@ -18,7 +18,7 @@ pub(super) async fn find_todo(
     State(state): State<TodoState>,
     Path(path): Path<GetTodoPath>,
 ) -> impl IntoResponse {
-    let input = FindTodoInput { id: path.id };
+    let input = FindInput { id: path.id };
 
     println!("GET TODO -> input: {input:?}");
 

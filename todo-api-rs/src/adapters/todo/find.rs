@@ -3,11 +3,11 @@ use uuid::Uuid;
 use crate::application::functions::todo::FindPayload;
 
 #[derive(Debug)]
-pub struct FindTodoInput {
+pub struct FindInput {
     pub id: Option<String>,
 }
 
-impl FindTodoInput {
+impl FindInput {
     pub fn parse(self) -> Result<FindPayload, String> {
         let id = self.id.ok_or("id is required".to_string())?;
 
@@ -20,7 +20,7 @@ impl FindTodoInput {
 mod tests {
     #[test]
     fn parse_success() {
-        let input = super::FindTodoInput {
+        let input = super::FindInput {
             id: Some(uuid::Uuid::new_v4().to_string()),
         };
 
@@ -29,12 +29,12 @@ mod tests {
 
     #[test]
     fn parse_fail() {
-        let none_id = super::FindTodoInput { id: None };
+        let none_id = super::FindInput { id: None };
         let none_id_payload = none_id.parse();
 
         assert!(none_id_payload.is_err_and(|e| e == "id is required"));
 
-        let invalid_id = super::FindTodoInput {
+        let invalid_id = super::FindInput {
             id: Some("invalid-id".to_string()),
         };
         let invalid_id_payload = invalid_id.parse();

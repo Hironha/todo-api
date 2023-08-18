@@ -2,7 +2,7 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::todo::create_input::CreateTodoInput;
+use crate::adapters::todo::create::CreateInput;
 use crate::application::functions::todo;
 
 #[derive(Deserialize)]
@@ -17,7 +17,7 @@ pub(super) async fn create_todo(
     State(state): State<TodoState>,
     Json(body): Json<CreateTodoBody>,
 ) -> impl IntoResponse {
-    let input = CreateTodoInput {
+    let input = CreateInput {
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
