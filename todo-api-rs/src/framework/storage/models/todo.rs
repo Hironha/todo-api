@@ -36,7 +36,7 @@ impl TodoModel {
 impl TodoModel {
     pub fn into_entity(self) -> Todo {
         Todo {
-            id: self.id.to_string(),
+            id: self.id.into(),
             title: self.title,
             description: self.description,
             todo_at: self.todo_at.map(|at| at.into()),

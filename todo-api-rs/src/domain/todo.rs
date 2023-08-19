@@ -1,10 +1,10 @@
 use serde::Serialize;
 
-use super::types::{Date, DateTime};
+use super::types::{Date, DateTime, Id};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Todo {
-    pub id: String,
+    pub id: Id,
     pub title: String,
     pub description: Option<String>,
     #[serde(rename(serialize = "todoAt", deserialize = "todoAt"))]
