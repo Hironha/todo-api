@@ -8,11 +8,10 @@ pub struct DeleteInput {
 
 impl DeleteInput {
     pub fn parse(self) -> Result<DeletePayload, String> {
-        let id = self.id.ok_or("id is required".to_string())?;
+        let id_source = self.id.ok_or("id is required".to_string())?;
+        let id = Id::parse_str(&id_source).map_err(|_| "id should be a valid uuid".to_string())?;
 
-        let uuid = Id::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
-
-        Ok(DeletePayload { id: uuid })
+        Ok(DeletePayload { id })
     }
 }
 
