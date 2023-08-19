@@ -1,4 +1,4 @@
-use time::{format_description::well_known::Rfc3339, macros::format_description};
+use time::{error, format_description::well_known::Rfc3339, macros::format_description};
 
 #[derive(Clone, Debug)]
 pub struct Date(time::Date);
@@ -9,8 +9,13 @@ impl Date {
     }
 
     pub fn to_ymd(&self) -> String {
-        let ymd_format = format_description!("[year]-[month]-[day]");
-        self.to_date().format(ymd_format).unwrap()
+        let ydm_description = format_description!("[year]-[month]-[day]");
+        self.to_date().format(ydm_description).unwrap()
+    }
+
+    pub fn parse(input: &str) -> Result<Self, error::Parse> {
+        let ymd_description = format_description!("[year]-[month]-[day]");
+        time::Date::parse(input, ymd_description).map(Self)
     }
 }
 

@@ -112,7 +112,7 @@ impl Update for TodoStore {
         sqlx::query(q)
             .bind(payload.title)
             .bind(payload.description)
-            .bind(payload.todo_at)
+            .bind(payload.todo_at.map(|at| at.to_date()))
             .bind(payload.id)
             .execute(&self.pool)
             .await

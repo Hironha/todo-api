@@ -1,5 +1,5 @@
 use crate::application::functions::todo::CreatePayload;
-use time::{macros::format_description, Date};
+use crate::domain::types::Date;
 
 #[derive(Debug)]
 pub struct CreateInput {
@@ -19,7 +19,7 @@ impl CreateInput {
 
         let todo_at = self
             .todo_at
-            .map(|at| Date::parse(at.as_ref(), format_description!("[year]-[month]-[day]")))
+            .map(|at| Date::parse(&at))
             .transpose()
             .map_err(|_| "todo_at must be a date on the format YYYY-MM-DD".to_string())?;
 

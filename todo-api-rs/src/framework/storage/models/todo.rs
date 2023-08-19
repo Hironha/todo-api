@@ -26,7 +26,7 @@ impl TodoModel {
             id: Uuid::new_v4(),
             title: payload.title,
             description: payload.description,
-            todo_at: payload.todo_at,
+            todo_at: payload.todo_at.map(|at| at.to_date()),
             created_at: current_date_time,
             updated_at: current_date_time,
         }
