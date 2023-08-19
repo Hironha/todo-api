@@ -1,12 +1,12 @@
 use async_trait::async_trait;
-use sqlx::{types::Uuid, Pool, Postgres};
+use sqlx::{Pool, Postgres};
 
 use super::models::todo::TodoModel;
 use crate::{
     application::functions::todo::{
         Create, CreatePayload, Delete, Find, List, Update, UpdatePayload,
     },
-    domain::todo::Todo,
+    domain::{todo::Todo, types::Id},
 };
 
 #[derive(Clone)]
@@ -22,16 +22,16 @@ impl TodoStore {
 
 #[async_trait]
 impl Find for TodoStore {
-    async fn find(&self, id: &Uuid) -> Result<Todo, String> {
+    async fn find(&self, id: &Id) -> Result<Todo, String> {
         let q = r"SELECT * FROM todos WHERE id = ($1)";
 
         let model = sqlx::query_as::<_, TodoModel>(q)
-            .bind(id)
+            .bind(id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| {
                 println!("{err:?}");
-                format!("failed to find todo with id {id}")
+                format!("failed to find todo with id {id:?}")
             })?;
 
         Ok(model.into_entity())
@@ -86,14 +86,14 @@ impl List for TodoStore {
 
 #[async_trait]
 impl Delete for TodoStore {
-    async fn delete(&self, id: &Uuid) -> Result<(), String> {
+    async fn delete(&self, id: &Id) -> Result<(), String> {
         let delete_q = r"DELETE FROM todos WHERE id = ($1)";
 
         sqlx::query(delete_q)
-            .bind(id)
+            .bind(id.uuid())
             .execute(&self.pool)
             .await
-            .map_err(|_| format!("failed to delete todo with id {id}"))?;
+            .map_err(|_| format!("failed to delete todo with id {id:?}"))?;
 
         Ok(())
     }
@@ -112,8 +112,8 @@ impl Update for TodoStore {
         sqlx::query(q)
             .bind(payload.title)
             .bind(payload.description)
-            .bind(payload.todo_at.map(|at| at.to_date()))
-            .bind(payload.id)
+            .bind(payload.todo_at.map(|at| at.date()))
+            .bind(payload.id.uuid())
             .execute(&self.pool)
             .await
             .map_err(|err| {

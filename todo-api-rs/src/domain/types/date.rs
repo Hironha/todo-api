@@ -4,16 +4,16 @@ use time::{error, format_description::well_known::Rfc3339, macros::format_descri
 pub struct Date(time::Date);
 
 impl Date {
-    pub fn to_date(&self) -> time::Date {
+    pub fn date(&self) -> time::Date {
         self.0
     }
 
     pub fn to_ymd(&self) -> String {
         let ydm_description = format_description!("[year]-[month]-[day]");
-        self.to_date().format(ydm_description).unwrap()
+        self.date().format(ydm_description).unwrap()
     }
 
-    pub fn parse(input: &str) -> Result<Self, error::Parse> {
+    pub fn parse_str(input: &str) -> Result<Self, error::Parse> {
         let ymd_description = format_description!("[year]-[month]-[day]");
         time::Date::parse(input, ymd_description).map(Self)
     }
@@ -50,7 +50,7 @@ impl serde::Serialize for Date {
 pub struct DateTime(time::OffsetDateTime);
 
 impl DateTime {
-    pub const fn to_date_time(&self) -> time::OffsetDateTime {
+    pub const fn date_time(&self) -> time::OffsetDateTime {
         self.0
     }
 }
@@ -72,7 +72,7 @@ impl serde::Serialize for DateTime {
     where
         S: serde::Serializer,
     {
-        let date_time = self.to_date_time();
+        let date_time = self.date_time();
         let iso_date_time = date_time.format(&Rfc3339).unwrap();
         serializer.serialize_str(&iso_date_time)
     }

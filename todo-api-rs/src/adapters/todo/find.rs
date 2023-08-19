@@ -1,6 +1,5 @@
-use uuid::Uuid;
-
 use crate::application::functions::todo::FindPayload;
+use crate::domain::types::Id;
 
 #[derive(Debug)]
 pub struct FindInput {
@@ -9,19 +8,19 @@ pub struct FindInput {
 
 impl FindInput {
     pub fn parse(self) -> Result<FindPayload, String> {
-        let id = self.id.ok_or("id is required".to_string())?;
+        let id_source = self.id.ok_or("id is required".to_string())?;
+        let id = Id::parse_str(&id_source).map_err(|_| "id should be a valid uuid".to_string())?;
 
-        let uuid = Uuid::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
-
-        Ok(FindPayload { id: uuid })
+        Ok(FindPayload { id })
     }
 }
 
+#[cfg(test)]
 mod tests {
     #[test]
     fn parse_success() {
         let input = super::FindInput {
-            id: Some(uuid::Uuid::new_v4().to_string()),
+            id: Some(super::Id::new().as_string()),
         };
 
         assert!(input.parse().is_ok());

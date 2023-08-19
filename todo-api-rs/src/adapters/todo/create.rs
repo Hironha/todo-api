@@ -19,7 +19,7 @@ impl CreateInput {
 
         let todo_at = self
             .todo_at
-            .map(|at| Date::parse(&at))
+            .map(|at| Date::parse_str(&at))
             .transpose()
             .map_err(|_| "todo_at must be a date on the format YYYY-MM-DD".to_string())?;
 
@@ -31,6 +31,7 @@ impl CreateInput {
     }
 }
 
+#[cfg(test)]
 mod tests {
     #[test]
     fn parse_success() {

@@ -1,7 +1,5 @@
-use uuid::Uuid;
-
 use crate::application::functions::todo::UpdatePayload;
-use crate::domain::types::Date;
+use crate::domain::types::{Date, Id};
 
 #[derive(Debug)]
 pub struct UpdateInput {
@@ -13,9 +11,8 @@ pub struct UpdateInput {
 
 impl UpdateInput {
     pub fn parse(self) -> Result<UpdatePayload, String> {
-        let id = self.id.ok_or("id is required".to_string())?;
-
-        let uuid = Uuid::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
+        let id_source = self.id.ok_or("id is required".to_string())?;
+        let id = Id::parse_str(&id_source).map_err(|_| "id should be a valid uuid".to_string())?;
 
         let title = self
             .title
@@ -26,12 +23,12 @@ impl UpdateInput {
 
         let todo_at = self
             .todo_at
-            .map(|at| Date::parse(&at))
+            .map(|at| Date::parse_str(&at))
             .transpose()
             .map_err(|_| "todo_at should be a date in the format YYYY-MM-DD".to_string())?;
 
         Ok(UpdatePayload {
-            id: uuid,
+            id,
             title,
             description,
             todo_at,
@@ -39,11 +36,12 @@ impl UpdateInput {
     }
 }
 
+#[cfg(test)]
 mod tests {
     #[test]
     fn parse_success() {
         let input = super::UpdateInput {
-            id: Some(uuid::Uuid::new_v4().to_string()),
+            id: Some(super::Id::new().as_string()),
             title: Some("title".to_string()),
             description: Some("description".to_string()),
             todo_at: Some("2023-08-12".to_string()),
@@ -78,7 +76,7 @@ mod tests {
     #[test]
     fn parse_title_fail() {
         let none_title = super::UpdateInput {
-            id: Some(uuid::Uuid::new_v4().to_string()),
+            id: Some(super::Id::new().as_string()),
             title: None,
             description: None,
             todo_at: None,
@@ -88,7 +86,7 @@ mod tests {
         assert!(none_title_payload.is_err_and(|e| e == "title is required"));
 
         let empty_title = super::UpdateInput {
-            id: Some(uuid::Uuid::new_v4().to_string()),
+            id: Some(super::Id::new().as_string()),
             title: Some("".to_string()),
             description: None,
             todo_at: None,
@@ -101,7 +99,7 @@ mod tests {
     #[test]
     fn parse_todo_at_fail() {
         let invalid_todo_at = super::UpdateInput {
-            id: Some(uuid::Uuid::new_v4().to_string()),
+            id: Some(super::Id::new().as_string()),
             title: Some("title".to_string()),
             description: None,
             todo_at: Some("todo_at".to_string()),

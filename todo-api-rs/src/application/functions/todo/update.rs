@@ -1,11 +1,13 @@
 use async_trait::async_trait;
-use uuid::Uuid;
 
-use crate::domain::{todo::Todo, types::Date};
+use crate::domain::{
+    todo::Todo,
+    types::{Date, Id},
+};
 
 #[derive(Clone, Debug)]
 pub struct UpdatePayload {
-    pub id: Uuid,
+    pub id: Id,
     pub title: String,
     pub description: Option<String>,
     pub todo_at: Option<Date>,

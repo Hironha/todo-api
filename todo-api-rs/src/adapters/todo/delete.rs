@@ -1,6 +1,5 @@
-use uuid::Uuid;
-
 use crate::application::functions::todo::DeletePayload;
+use crate::domain::types::Id;
 
 #[derive(Debug)]
 pub struct DeleteInput {
@@ -11,17 +10,18 @@ impl DeleteInput {
     pub fn parse(self) -> Result<DeletePayload, String> {
         let id = self.id.ok_or("id is required".to_string())?;
 
-        let uuid = Uuid::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
+        let uuid = Id::parse_str(&id).map_err(|_| "id should be a valid uuid".to_string())?;
 
         Ok(DeletePayload { id: uuid })
     }
 }
 
+#[cfg(test)]
 mod test {
     #[test]
     fn parse_success() {
         let input = super::DeleteInput {
-            id: Some(uuid::Uuid::new_v4().to_string()),
+            id: Some(super::Id::new().as_string()),
         };
 
         assert!(input.parse().is_ok())

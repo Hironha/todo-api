@@ -1,14 +1,15 @@
 use async_trait::async_trait;
-use uuid::Uuid;
+
+use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
 pub struct DeletePayload {
-    pub id: Uuid,
+    pub id: Id,
 }
 
 #[async_trait]
 pub trait Delete {
-    async fn delete(&self, id: &Uuid) -> Result<(), String>;
+    async fn delete(&self, id: &Id) -> Result<(), String>;
 }
 
 pub struct DeleteContext<T: Delete> {

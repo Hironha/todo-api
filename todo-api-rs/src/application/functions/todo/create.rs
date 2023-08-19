@@ -1,8 +1,6 @@
 use async_trait::async_trait;
 
-use crate::domain::types::Date;
-
-use crate::domain::todo::Todo;
+use crate::domain::{todo::Todo, types::Date};
 
 #[derive(Clone, Debug)]
 pub struct CreatePayload {
