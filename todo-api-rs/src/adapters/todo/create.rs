@@ -1,6 +1,32 @@
 use crate::application::functions::todo::CreatePayload;
 use crate::domain::types::Date;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParseError {
+    Title,
+    TodoAt,
+}
+
+impl ParseError {
+    pub fn description(&self) -> String {
+        match self {
+            Self::Title => "required".to_string(),
+            Self::TodoAt => {
+                "optional, but if defined, must be a date on format YYYY-MM-DD".to_string()
+            }
+        }
+    }
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Title => write!(f, "ParseError::Title {}", self.description()),
+            Self::TodoAt => write!(f, "ParseError::TodoAt {}", self.description()),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct CreateInput {
     pub title: Option<String>,
@@ -9,11 +35,11 @@ pub struct CreateInput {
 }
 
 impl CreateInput {
-    pub fn parse(self) -> Result<CreatePayload, String> {
+    pub fn parse(self) -> Result<CreatePayload, ParseError> {
         let title = self
             .title
             .filter(|t| !t.is_empty())
-            .ok_or("title is required".to_string())?;
+            .ok_or(ParseError::Title)?;
 
         let description = self.description.filter(|d| !d.is_empty());
 
@@ -21,7 +47,7 @@ impl CreateInput {
             .todo_at
             .map(|at| Date::parse_str(&at))
             .transpose()
-            .map_err(|_| "todo_at must be a date on the format YYYY-MM-DD".to_string())?;
+            .map_err(|_| ParseError::TodoAt)?;
 
         Ok(CreatePayload {
             title,
@@ -65,7 +91,7 @@ mod tests {
         };
         let none_title_payload = none_title.parse();
 
-        assert!(none_title_payload.is_err_and(|e| e == "title is required"));
+        assert!(none_title_payload.is_err_and(|e| e == super::ParseError::Title));
 
         let empty_title = super::CreateInput {
             title: Some("".to_string()),
@@ -74,7 +100,7 @@ mod tests {
         };
         let empty_title_payload = empty_title.parse();
 
-        assert!(empty_title_payload.is_err_and(|e| e == "title is required"));
+        assert!(empty_title_payload.is_err_and(|e| e == super::ParseError::Title));
     }
 
     #[test]
@@ -87,7 +113,6 @@ mod tests {
 
         let invalid_todo_at_payload = invalid_todo_at.parse();
 
-        assert!(invalid_todo_at_payload
-            .is_err_and(|e| e == "todo_at must be a date on the format YYYY-MM-DD"));
+        assert!(invalid_todo_at_payload.is_err_and(|e| e == super::ParseError::TodoAt));
     }
 }

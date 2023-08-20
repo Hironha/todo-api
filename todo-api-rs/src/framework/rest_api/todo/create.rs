@@ -2,8 +2,17 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::todo::create::CreateInput;
+use crate::adapters::todo::create::{CreateInput, ParseError};
 use crate::application::functions::todo;
+
+impl ParseError {
+    fn message(&self) -> String {
+        match self {
+            Self::Title => format!("title: {}", self.description()),
+            Self::TodoAt => format!("todoAt: {}", self.description()),
+        }
+    }
+}
 
 #[derive(Deserialize)]
 pub(super) struct CreateTodoBody {
@@ -27,7 +36,7 @@ pub(super) async fn create_todo(
 
     let payload = match input.parse() {
         Ok(payload) => payload,
-        Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.message()).into_response(),
     };
 
     let ctx = todo::CreateContext {
