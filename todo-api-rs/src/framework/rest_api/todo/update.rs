@@ -7,7 +7,20 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::{adapters::todo::update::UpdateInput, application::functions::todo};
+use crate::{
+    adapters::todo::update::{ParseError, UpdateInput},
+    application::functions::todo,
+};
+
+impl ParseError {
+    fn message(&self) -> String {
+        match self {
+            Self::Id => format!("id: {}", self.description()),
+            Self::Title => format!("title: {}", self.description()),
+            Self::TodoAt => format!("todoAt: {}", self.description()),
+        }
+    }
+}
 
 #[derive(Deserialize)]
 pub(super) struct UpdateTodoPath {
@@ -38,7 +51,7 @@ pub(super) async fn update_todo(
 
     let payload = match input.parse() {
         Ok(payload) => payload,
-        Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.message()).into_response(),
     };
 
     let ctx = todo::UpdateContext {
