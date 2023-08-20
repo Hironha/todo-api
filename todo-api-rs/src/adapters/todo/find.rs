@@ -1,15 +1,40 @@
 use crate::application::functions::todo::FindPayload;
 use crate::domain::types::Id;
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum ParseError {
+    Id,
+}
+
+impl ParseError {
+    pub fn description(&self) -> String {
+        match self {
+            Self::Id => "required and it should be a valid uuid".to_string(),
+        }
+    }
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Id => write!(f, "ParseError::Id {}", self.description()),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct FindInput {
     pub id: Option<String>,
 }
 
 impl FindInput {
-    pub fn parse(self) -> Result<FindPayload, String> {
-        let id_source = self.id.ok_or("id is required".to_string())?;
-        let id = Id::parse_str(&id_source).map_err(|_| "id should be a valid uuid".to_string())?;
+    pub fn parse(self) -> Result<FindPayload, ParseError> {
+        let id = self
+            .id
+            .map(|id| Id::parse_str(&id))
+            .transpose()
+            .map_err(|_| ParseError::Id)?
+            .ok_or(ParseError::Id)?;
 
         Ok(FindPayload { id })
     }
@@ -31,13 +56,13 @@ mod tests {
         let none_id = super::FindInput { id: None };
         let none_id_payload = none_id.parse();
 
-        assert!(none_id_payload.is_err_and(|e| e == "id is required"));
+        assert!(none_id_payload.is_err_and(|e| e == super::ParseError::Id));
 
         let invalid_id = super::FindInput {
             id: Some("invalid-id".to_string()),
         };
         let invalid_id_payload = invalid_id.parse();
 
-        assert!(invalid_id_payload.is_err_and(|e| e == "id should be a valid uuid"));
+        assert!(invalid_id_payload.is_err_and(|e| e == super::ParseError::Id));
     }
 }

@@ -7,7 +7,18 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::{adapters::todo::find::FindInput, application::functions::todo};
+use crate::{
+    adapters::todo::find::{FindInput, ParseError},
+    application::functions::todo,
+};
+
+impl ParseError {
+    fn message(&self) -> String {
+        match self {
+            Self::Id => format!("id: {}", self.description()),
+        }
+    }
+}
 
 #[derive(Deserialize)]
 pub(super) struct GetTodoPath {
@@ -24,7 +35,7 @@ pub(super) async fn find_todo(
 
     let payload = match input.parse() {
         Ok(payload) => payload,
-        Err(message) => return (StatusCode::UNPROCESSABLE_ENTITY, message).into_response(),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.message()).into_response(),
     };
 
     let ctx = todo::GetContext {
