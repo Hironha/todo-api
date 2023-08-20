@@ -17,7 +17,7 @@ impl ParseError {
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Id => write!(f, "ParseError::Id {}", self.description()),
+            Self::Id => write!(f, "Id"),
         }
     }
 }
@@ -32,9 +32,8 @@ impl DeleteInput {
         let id = self
             .id
             .map(|id| Id::parse_str(&id))
-            .transpose()
-            .map_err(|_| ParseError::Id)?
-            .ok_or(ParseError::Id)?;
+            .ok_or(ParseError::Id)?
+            .map_err(|_| ParseError::Id)?;
 
         Ok(DeletePayload { id })
     }

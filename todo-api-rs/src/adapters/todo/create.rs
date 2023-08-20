@@ -21,8 +21,8 @@ impl ParseError {
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Title => write!(f, "ParseError::Title {}", self.description()),
-            Self::TodoAt => write!(f, "ParseError::TodoAt {}", self.description()),
+            Self::Title => write!(f, "Title"),
+            Self::TodoAt => write!(f, "TodoAt"),
         }
     }
 }
