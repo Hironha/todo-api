@@ -16,6 +16,6 @@ pub struct GetContext<T: Find> {
     pub store: T,
 }
 
-pub async fn get_todo<T: Find>(ctx: GetContext<T>, payload: &FindPayload) -> Result<Todo, String> {
+pub async fn find_todo<T: Find>(ctx: GetContext<T>, payload: &FindPayload) -> Result<Todo, String> {
     ctx.store.find(&payload.id).await
 }

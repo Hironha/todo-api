@@ -2,20 +2,21 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
+    Json,
 };
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::{
-    adapters::todo::delete::{DeleteInput, ParseError},
-    application::functions::todo,
-};
+use crate::adapters::todo::delete::{DeleteInput, ParseError};
+use crate::application::functions::todo;
+use crate::framework::rest_api::{ApiError, ValidationError};
 
-impl ParseError {
-    fn message(&self) -> String {
-        match self {
-            Self::Id => format!("id: {}", self.description()),
-        }
+impl From<ParseError> for ApiError<ValidationError> {
+    fn from(error: ParseError) -> Self {
+        let field = match error {
+            ParseError::Id => "id",
+        };
+        Self::from(ValidationError::new(field.into(), error.description()))
     }
 }
 
@@ -34,7 +35,10 @@ pub(super) async fn delete_todo(
 
     let payload = match input.parse() {
         Ok(payload) => payload,
-        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.message()).into_response(),
+        Err(err) => {
+            let error = Json(ApiError::from(err));
+            return (StatusCode::UNPROCESSABLE_ENTITY, error).into_response();
+        }
     };
 
     let ctx = todo::DeleteContext {

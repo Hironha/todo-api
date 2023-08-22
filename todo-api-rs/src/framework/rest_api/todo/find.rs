@@ -7,16 +7,16 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::{
-    adapters::todo::find::{FindInput, ParseError},
-    application::functions::todo,
-};
+use crate::adapters::todo::find::{FindInput, ParseError};
+use crate::application::functions::todo;
+use crate::framework::rest_api::error::{ApiError, ValidationError};
 
-impl ParseError {
-    fn message(&self) -> String {
-        match self {
-            Self::Id => format!("id: {}", self.description()),
-        }
+impl From<ParseError> for ApiError<ValidationError> {
+    fn from(error: ParseError) -> Self {
+        let field = match error {
+            ParseError::Id => "id",
+        };
+        Self::from(ValidationError::new(field.into(), error.description()))
     }
 }
 
@@ -35,13 +35,16 @@ pub(super) async fn find_todo(
 
     let payload = match input.parse() {
         Ok(payload) => payload,
-        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.message()).into_response(),
+        Err(err) => {
+            let error = Json(ApiError::from(err));
+            return (StatusCode::UNPROCESSABLE_ENTITY, error).into_response();
+        }
     };
 
     let ctx = todo::GetContext {
         store: state.todo_store,
     };
-    let result = todo::get_todo(ctx, &payload).await;
+    let result = todo::find_todo(ctx, &payload).await;
 
     let todo = match result {
         Ok(todo) => todo,
