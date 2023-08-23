@@ -1,4 +1,4 @@
-import { type Todo } from '@models/todo'
+import { type Todo } from '@domain/entities/todo'
 
 export type CreateInput = Pick<Todo, 'title' | 'description' | 'todoAt'>
 

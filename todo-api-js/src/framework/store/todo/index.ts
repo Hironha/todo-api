@@ -1,5 +1,5 @@
-import { type Todo } from '@models/todo'
-import { type CreateInput, type TodoRepository } from '@repositories/todo'
+import { type Todo } from '@framework/models/todo'
+import { type CreateInput, type TodoRepository } from '@application/repositories/todo'
 
 export class TodoStore implements TodoRepository {
   private readonly store = new Map<string, Todo>()

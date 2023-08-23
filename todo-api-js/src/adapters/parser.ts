@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { type Parser, type ParseError, useParser } from '@helpers/parser'
-import * as E from '@helpers/either'
-import { InternalError } from '@helpers/error'
+import { type Parser, type ParseError, useParser } from '@core/helpers/parser'
+import * as E from '@core/helpers/either'
+import { InternalError } from '@core/helpers/error'
 
 type ErrorFrom<T extends {}> = {
   [K in keyof T]?: string[] | undefined

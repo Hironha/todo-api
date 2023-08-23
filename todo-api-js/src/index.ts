@@ -1,7 +1,7 @@
 import express from 'express'
 import dotenv from 'dotenv'
 
-import { router as todoRouter } from '@presentation/todo'
+import { router as todoRouter } from '@framework/presentation/todo'
 
 dotenv.config()
 const app = express()

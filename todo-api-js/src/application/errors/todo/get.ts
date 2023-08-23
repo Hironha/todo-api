@@ -1,4 +1,4 @@
-import { type InternalError } from '@helpers/error'
+import { type InternalError } from '@core/helpers/error'
 
 export const general: InternalError = {
   code: 'GTD-001',

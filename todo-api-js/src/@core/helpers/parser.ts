@@ -1,5 +1,5 @@
-import * as E from '@helpers/either'
-import { type InternalError } from '@helpers/error'
+import * as E from '@core/helpers/either'
+import { type InternalError } from '@core/helpers/error'
 
 export type ParseError<D> = { message: string; details: D }
 

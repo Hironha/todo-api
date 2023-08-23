@@ -1,13 +1,13 @@
 import { Router } from 'express'
-import * as E from '@helpers/either'
+import * as E from '@core/helpers/either'
 
-import { get } from '@functions/todo/get'
-import { create } from '@functions/todo/create'
-import { list } from '@functions/todo/list'
-import { remove } from '@functions/todo/remove'
-import { TodoStore } from '@store/todo'
-import * as GetErrors from '@errors/todo/get'
-import * as DeleteErrors from '@errors/todo/remove'
+import { get } from '@application/functions/todo/get'
+import { create } from '@application/functions/todo/create'
+import { list } from '@application/functions/todo/list'
+import { remove } from '@application/functions/todo/remove'
+import { TodoStore } from '@framework/store/todo'
+import * as GetErrors from '@application/errors/todo/get'
+import * as DeleteErrors from '@application/errors/todo/remove'
 import { parseCreateInput, parseGetInput, parseRemoveInput } from './parsers'
 
 const router = Router({ strict: true })
