@@ -4,7 +4,7 @@ use sqlx::{Pool, Postgres};
 use super::models::todo::TodoModel;
 use crate::{
     application::functions::todo::{
-        Create, CreatePayload, Delete, Find, List, Update, UpdatePayload,
+        Create, CreatePayload, Delete, DeleteError, Find, List, Update, UpdatePayload,
     },
     domain::{todo::Todo, types::Id},
 };
@@ -86,14 +86,22 @@ impl List for TodoStore {
 
 #[async_trait]
 impl Delete for TodoStore {
-    async fn delete(&self, id: &Id) -> Result<(), String> {
+    async fn delete(&self, id: &Id) -> Result<(), DeleteError> {
         let delete_q = r"DELETE FROM todos WHERE id = ($1)";
 
-        sqlx::query(delete_q)
+        let res = sqlx::query(delete_q)
             .bind(id.uuid())
             .execute(&self.pool)
-            .await
-            .map_err(|_| format!("failed to delete todo with id {id:?}"))?;
+            .await;
+
+        if let Err(err) = res {
+            println!("STORAGE -> DELETE TODO ERROR: {err:?}");
+            let error = match err {
+                sqlx::Error::ColumnNotFound(_) => DeleteError::NotFound,
+                _ => DeleteError::InternalError,
+            };
+            return Err(error);
+        }
 
         Ok(())
     }

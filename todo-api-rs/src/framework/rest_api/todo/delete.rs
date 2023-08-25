@@ -20,6 +20,30 @@ impl From<ParseError> for ApiError<ValidationError> {
     }
 }
 
+impl todo::DeleteError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::InternalError => StatusCode::NOT_FOUND,
+            Self::NotFound => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
+impl From<todo::DeleteError> for ApiError<String> {
+    fn from(error: todo::DeleteError) -> Self {
+        match error {
+            todo::DeleteError::NotFound => ApiError {
+                code: "DTD-001".to_string(),
+                message: "Todo not found".to_string(),
+            },
+            todo::DeleteError::InternalError => ApiError {
+                code: "DTD-002".to_string(),
+                message: "Internal server error".to_string(),
+            },
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub(super) struct DeleteTodoPath {
     id: Option<String>,
@@ -36,18 +60,16 @@ pub(super) async fn delete_todo(
     let payload = match input.parse() {
         Ok(payload) => payload,
         Err(err) => {
-            let error = Json(ApiError::from(err));
-            return (StatusCode::UNPROCESSABLE_ENTITY, error).into_response();
+            return (StatusCode::UNPROCESSABLE_ENTITY, Json(ApiError::from(err))).into_response();
         }
     };
 
     let ctx = todo::DeleteContext {
         store: state.todo_store,
     };
-    let result = todo::delete_todo(&ctx, &payload).await;
 
-    if let Err(message) = result {
-        (StatusCode::NOT_FOUND, message).into_response()
+    if let Err(error) = todo::delete_todo(&ctx, &payload).await {
+        (error.status_code(), Json(ApiError::from(error))).into_response()
     } else {
         (StatusCode::NO_CONTENT).into_response()
     }

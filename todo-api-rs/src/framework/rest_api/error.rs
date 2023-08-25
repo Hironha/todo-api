@@ -2,9 +2,8 @@ use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
 pub(super) struct ApiError<M: Serialize> {
-    code: String,
-    message: M,
-    short_message: String,
+    pub code: String,
+    pub message: M,
 }
 
 impl From<ValidationError> for ApiError<ValidationError> {
@@ -12,7 +11,6 @@ impl From<ValidationError> for ApiError<ValidationError> {
         Self {
             code: "VAL-001".to_string(),
             message: error,
-            short_message: "validationError".to_string(),
         }
     }
 }
