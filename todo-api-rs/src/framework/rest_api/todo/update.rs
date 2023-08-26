@@ -22,6 +22,30 @@ impl From<ParseError> for ApiError<ValidationError> {
     }
 }
 
+impl todo::UpdateError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::NotFound => StatusCode::NOT_FOUND,
+            Self::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
+impl From<todo::UpdateError> for ApiError<String> {
+    fn from(error: todo::UpdateError) -> Self {
+        match error {
+            todo::UpdateError::NotFound => Self {
+                code: "UTD-001".to_string(),
+                message: "Todo not found".to_string(),
+            },
+            todo::UpdateError::InternalError => Self {
+                code: "UTD-002".to_string(),
+                message: "Internal server error".to_string(),
+            },
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub(super) struct UpdateTodoPath {
     id: Option<String>,
@@ -64,7 +88,7 @@ pub(super) async fn update_todo(
 
     let todo = match result {
         Ok(todo) => todo,
-        Err(message) => return (StatusCode::NOT_FOUND, message).into_response(),
+        Err(err) => return (err.status_code(), Json(ApiError::from(err))).into_response(),
     };
 
     println!("UPDATE TODO -> updated: {todo:?}");

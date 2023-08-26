@@ -2,12 +2,11 @@ use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
 use super::models::todo::TodoModel;
-use crate::{
-    application::functions::todo::{
-        Create, CreateError, CreatePayload, Delete, DeleteError, Find, List, Update, UpdatePayload,
-    },
-    domain::{todo::Todo, types::Id},
+use crate::application::functions::todo::{
+    Create, CreateError, CreatePayload, Delete, DeleteError, Find, FindError, List, Update,
+    UpdateError, UpdatePayload,
 };
+use crate::domain::{todo::Todo, types::Id};
 
 #[derive(Clone)]
 pub struct TodoStore {
@@ -22,19 +21,21 @@ impl TodoStore {
 
 #[async_trait]
 impl Find for TodoStore {
-    async fn find(&self, id: &Id) -> Result<Todo, String> {
+    async fn find(&self, id: &Id) -> Result<Todo, FindError> {
         let q = r"SELECT * FROM todos WHERE id = ($1)";
 
-        let model = sqlx::query_as::<_, TodoModel>(q)
+        let res = sqlx::query_as::<_, TodoModel>(q)
             .bind(id.uuid())
             .fetch_one(&self.pool)
-            .await
-            .map_err(|err| {
-                println!("{err:?}");
-                format!("failed to find todo with id {id:?}")
-            })?;
+            .await;
 
-        Ok(model.into_entity())
+        res.map(|m| m.into_entity()).map_err(|err| {
+            println!("FIND ERROR -> {err:?}");
+            match err {
+                sqlx::Error::RowNotFound => FindError::NotFound,
+                _ => FindError::InternalError,
+            }
+        })
     }
 }
 
@@ -101,7 +102,7 @@ impl Delete for TodoStore {
         if let Err(err) = res {
             println!("STORAGE -> DELETE TODO ERROR: {err:?}");
             let error = match err {
-                sqlx::Error::ColumnNotFound(_) => DeleteError::NotFound,
+                sqlx::Error::RowNotFound => DeleteError::NotFound,
                 _ => DeleteError::InternalError,
             };
             return Err(error);
@@ -113,7 +114,7 @@ impl Delete for TodoStore {
 
 #[async_trait]
 impl Update for TodoStore {
-    async fn set(&self, payload: UpdatePayload) -> Result<Todo, String> {
+    async fn set(&self, payload: UpdatePayload) -> Result<Todo, UpdateError> {
         let q = r"
             UPDATE todos 
             SET title, description, todo_at
@@ -121,19 +122,27 @@ impl Update for TodoStore {
             WHERE id = ($4)
         ";
 
-        sqlx::query(q)
+        let res = sqlx::query(q)
             .bind(payload.title)
             .bind(payload.description)
             .bind(payload.todo_at.map(|at| at.date()))
             .bind(payload.id.uuid())
             .execute(&self.pool)
-            .await
-            .map_err(|err| {
-                println!("{err:?}");
-                "failed to update todo".to_string()
-            })?;
+            .await;
 
-        let todo = self.find(&payload.id).await?;
+        if let Err(err) = res {
+            println!("UPDATE ERROR => {err:?}");
+            let error = match err {
+                sqlx::Error::RowNotFound => UpdateError::NotFound,
+                _ => UpdateError::InternalError,
+            };
+            return Err(error);
+        }
+
+        let todo = self.find(&payload.id).await.map_err(|err| match err {
+            FindError::NotFound => UpdateError::NotFound,
+            FindError::InternalError => UpdateError::InternalError,
+        })?;
 
         Ok(todo)
     }

@@ -6,6 +6,21 @@ use crate::domain::{
 };
 
 #[derive(Clone, Debug)]
+pub enum UpdateError {
+    NotFound,
+    InternalError,
+}
+
+impl std::fmt::Display for UpdateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotFound => write!(f, "NotFound"),
+            Self::InternalError => write!(f, "InternalError"),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct UpdatePayload {
     pub id: Id,
     pub title: String,
@@ -15,7 +30,7 @@ pub struct UpdatePayload {
 
 #[async_trait]
 pub trait Update {
-    async fn set(&self, payload: UpdatePayload) -> Result<Todo, String>;
+    async fn set(&self, payload: UpdatePayload) -> Result<Todo, UpdateError>;
 }
 
 pub struct UpdateContext<T: Update> {
@@ -25,6 +40,6 @@ pub struct UpdateContext<T: Update> {
 pub async fn update_todo<T: Update>(
     ctx: &UpdateContext<T>,
     payload: UpdatePayload,
-) -> Result<Todo, String> {
+) -> Result<Todo, UpdateError> {
     ctx.store.set(payload).await
 }
