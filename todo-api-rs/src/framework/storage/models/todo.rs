@@ -1,10 +1,6 @@
-use sqlx::{
-    types::{
-        time::{Date, OffsetDateTime},
-        Uuid,
-    },
-    FromRow,
-};
+use sqlx::types::time::{Date, OffsetDateTime};
+use sqlx::types::Uuid;
+use sqlx::FromRow;
 
 use crate::{application::functions::todo::CreatePayload, domain::todo::Todo};
 
