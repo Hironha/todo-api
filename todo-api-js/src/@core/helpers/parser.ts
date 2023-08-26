@@ -16,14 +16,13 @@ export function useParser<L extends ParseError<any>, R>(
   parser: Parser<L, R>,
   input: unknown
 ): E.Either<InternalError<L['details']>, R> {
-  const result = parser.parse(input)
-  if (E.isLeft(result)) {
-    return E.left({
-      code: 'VAL-001',
-      message: result.value.message,
-      shortMessage: 'ValidationError',
-      details: result.value.details,
-    }) as E.Either<InternalError<L['details']>, R>
-  }
-  return E.right(result.value)
+  return E.mapping(parser.parse(input)).mapLeft(toInternalError).unwrap()
+}
+
+function toInternalError<E extends ParseError<any>>(err: E): InternalError<E['details']> {
+  return {
+    code: 'VAL-001',
+    message: err.message,
+    details: err.details,
+  } as InternalError<E['details']>
 }

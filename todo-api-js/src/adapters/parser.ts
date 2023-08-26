@@ -34,7 +34,5 @@ class ZodParser<S extends z.ZodSchema> implements Parser<ZodParserError<z.infer<
  */
 export function useZodParser<S extends z.ZodSchema>(schema: S): ParserFn<S> {
   const parser = new ZodParser(schema)
-  return (input: unknown) => {
-    return useParser(parser, input)
-  }
+  return (input: unknown) => useParser(parser, input)
 }
