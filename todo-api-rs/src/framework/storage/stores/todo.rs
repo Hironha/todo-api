@@ -4,7 +4,7 @@ use sqlx::{Pool, Postgres};
 use super::models::todo::TodoModel;
 use crate::{
     application::functions::todo::{
-        Create, CreatePayload, Delete, DeleteError, Find, List, Update, UpdatePayload,
+        Create, CreateError, CreatePayload, Delete, DeleteError, Find, List, Update, UpdatePayload,
     },
     domain::{todo::Todo, types::Id},
 };
@@ -40,14 +40,14 @@ impl Find for TodoStore {
 
 #[async_trait]
 impl Create for TodoStore {
-    async fn create(&self, payload: CreatePayload) -> Result<Todo, String> {
+    async fn create(&self, payload: CreatePayload) -> Result<Todo, CreateError> {
         let q = r"
             INSERT INTO todos (id, title, description, todo_at, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6)
         ";
 
         let model = TodoModel::from_payload(payload);
-        sqlx::query(q)
+        let res = sqlx::query(q)
             .bind(model.id)
             .bind(&model.title)
             .bind(&model.description)
@@ -55,8 +55,12 @@ impl Create for TodoStore {
             .bind(model.created_at)
             .bind(model.updated_at)
             .execute(&self.pool)
-            .await
-            .map_err(|_| "failed to create todo".to_string())?;
+            .await;
+
+        if let Err(err) = res {
+            println!("CREATE ERROR -> {err:?}");
+            return Err(CreateError::InternalError);
+        }
 
         Ok(model.into_entity())
     }

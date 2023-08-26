@@ -16,6 +16,25 @@ impl From<ParseError> for ApiError<ValidationError> {
     }
 }
 
+impl todo::CreateError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
+impl From<todo::CreateError> for ApiError<String> {
+    fn from(error: todo::CreateError) -> Self {
+        match error {
+            todo::CreateError::InternalError => ApiError {
+                code: "CTD-001".to_string(),
+                message: "Internal server error".to_string(),
+            },
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub(super) struct CreateTodoBody {
     title: Option<String>,
@@ -51,6 +70,6 @@ pub(super) async fn create_todo(
 
     match result {
         Ok(todo) => (StatusCode::CREATED, Json(todo)).into_response(),
-        Err(message) => (StatusCode::INTERNAL_SERVER_ERROR, message).into_response(),
+        Err(err) => (err.status_code(), Json(ApiError::from(err))).into_response(),
     }
 }
