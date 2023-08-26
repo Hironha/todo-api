@@ -18,11 +18,10 @@ pub struct TodoModel {
     pub updated_at: OffsetDateTime,
 }
 
-impl TodoModel {
-    pub fn from_payload(payload: CreatePayload) -> Self {
+impl From<CreatePayload> for TodoModel {
+    fn from(payload: CreatePayload) -> Self {
         let current_date_time = OffsetDateTime::now_utc();
-
-        TodoModel {
+        Self {
             id: Uuid::new_v4(),
             title: payload.title,
             description: payload.description,

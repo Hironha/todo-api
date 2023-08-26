@@ -47,7 +47,7 @@ impl Create for TodoStore {
             VALUES ($1, $2, $3, $4, $5, $6)
         ";
 
-        let model = TodoModel::from_payload(payload);
+        let model = TodoModel::from(payload);
         let res = sqlx::query(q)
             .bind(model.id)
             .bind(&model.title)
