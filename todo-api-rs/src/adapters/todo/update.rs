@@ -1,7 +1,7 @@
 use crate::application::functions::todo::UpdatePayload;
 use crate::domain::types::{Date, Id};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     Id,
     Title,
@@ -14,16 +14,6 @@ impl ParseError {
             Self::Id => "required and it should be a valid uuid".to_string(),
             Self::Title => "required".to_string(),
             Self::TodoAt => "optional, if defined, must be a date on format YYYY-MM-DD".to_string(),
-        }
-    }
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Id => write!(f, "Id"),
-            Self::Title => write!(f, "Title"),
-            Self::TodoAt => write!(f, "TodoAt"),
         }
     }
 }

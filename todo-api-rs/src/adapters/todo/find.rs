@@ -1,7 +1,7 @@
 use crate::application::functions::todo::FindPayload;
 use crate::domain::types::Id;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     Id,
 }
@@ -10,14 +10,6 @@ impl ParseError {
     pub fn description(&self) -> String {
         match self {
             Self::Id => "required and it should be a valid uuid".to_string(),
-        }
-    }
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Id => write!(f, "Id"),
         }
     }
 }

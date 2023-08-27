@@ -1,7 +1,7 @@
 use crate::application::functions::todo::CreatePayload;
 use crate::domain::types::Date;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     Title,
     TodoAt,
@@ -14,15 +14,6 @@ impl ParseError {
             Self::TodoAt => {
                 "optional, but if defined, must be a date on format YYYY-MM-DD".to_string()
             }
-        }
-    }
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Title => write!(f, "Title"),
-            Self::TodoAt => write!(f, "TodoAt"),
         }
     }
 }

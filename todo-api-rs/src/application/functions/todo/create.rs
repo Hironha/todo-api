@@ -2,17 +2,9 @@ use async_trait::async_trait;
 
 use crate::domain::{todo::Todo, types::Date};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum CreateError {
     InternalError,
-}
-
-impl std::fmt::Display for CreateError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InternalError => write!(f, "InternalError"),
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
