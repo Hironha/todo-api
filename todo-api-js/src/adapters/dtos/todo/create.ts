@@ -1,4 +1,7 @@
+import { z } from 'zod'
+
 import { type Todo } from '@domain/entities/todo'
+import { useZodParser } from '@adapters/parser'
 
 export type Input = Record<PropertyKey, unknown>
 
@@ -14,6 +17,19 @@ export type Output = {
   createdAt: string
 }
 
+const createInputSchema = z.object({
+  title: z.string({ required_error: 'title is required' }),
+  description: z.string({ required_error: 'description is required' }),
+  todoAt: z.coerce.date().optional(),
+})
+
+export const parser = useZodParser(createInputSchema)
+
+export class InputUtils {
+  static parse(input: Input) {
+    return parser(input)
+  }
+}
 export class OutputUtils {
   static fromTodo(todo: Todo): Output {
     return {
