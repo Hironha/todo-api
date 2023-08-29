@@ -11,41 +11,6 @@ use crate::adapters::todo::update::{ParseError, UpdateInput};
 use crate::application::functions::todo;
 use crate::framework::rest_api::{ApiError, ValidationError};
 
-impl From<ParseError> for ApiError<ValidationError> {
-    fn from(error: ParseError) -> Self {
-        let field = match error {
-            ParseError::Id => "id",
-            ParseError::Title => "title",
-            ParseError::TodoAt => "todoAt",
-        };
-        Self::from(ValidationError::new(field.into(), error.description()))
-    }
-}
-
-impl todo::UpdateError {
-    fn status_code(&self) -> StatusCode {
-        match self {
-            Self::NotFound => StatusCode::NOT_FOUND,
-            Self::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-}
-
-impl From<todo::UpdateError> for ApiError<String> {
-    fn from(error: todo::UpdateError) -> Self {
-        match error {
-            todo::UpdateError::NotFound => Self {
-                code: "UTD-001".to_string(),
-                message: "Todo not found".to_string(),
-            },
-            todo::UpdateError::InternalError => Self {
-                code: "UTD-002".to_string(),
-                message: "Internal server error".to_string(),
-            },
-        }
-    }
-}
-
 #[derive(Deserialize)]
 pub(super) struct UpdateTodoPath {
     id: Option<String>,
@@ -75,23 +40,57 @@ pub(super) async fn update_todo(
 
     let payload = match input.parse() {
         Ok(payload) => payload,
-        Err(err) => {
-            let error = Json(ApiError::from(err));
-            return (StatusCode::UNPROCESSABLE_ENTITY, error).into_response();
+        Err(error) => {
+            let message = error.validation_error();
+            return (StatusCode::UNPROCESSABLE_ENTITY, Json(message)).into_response();
         }
     };
 
     let ctx = todo::UpdateContext {
         store: state.todo_store,
     };
-    let result = todo::update_todo(&ctx, payload).await;
 
-    let todo = match result {
+    let todo = match todo::update_todo(&ctx, payload).await {
         Ok(todo) => todo,
-        Err(err) => return (err.status_code(), Json(ApiError::from(err))).into_response(),
+        Err(error) => {
+            let (status_code, message) = error.api_error();
+            return (status_code, Json(message)).into_response();
+        }
     };
 
     println!("UPDATE TODO -> updated: {todo:?}");
 
     (StatusCode::OK, Json(todo)).into_response()
+}
+
+impl ParseError {
+    fn validation_error(&self) -> ApiError<ValidationError> {
+        let field = match self {
+            Self::Id => "id",
+            Self::Title => "title",
+            Self::TodoAt => "todoAt",
+        };
+        ApiError::from(ValidationError::new(field.into(), self.description()))
+    }
+}
+
+impl todo::UpdateError {
+    fn api_error(&self) -> (StatusCode, ApiError<String>) {
+        match self {
+            Self::NotFound => (
+                StatusCode::NOT_FOUND,
+                ApiError {
+                    code: "UTD-001".to_string(),
+                    message: "Todo not found".to_string(),
+                },
+            ),
+            Self::InternalError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ApiError {
+                    code: "UTD-002".to_string(),
+                    message: "Internal server error".to_string(),
+                },
+            ),
+        }
+    }
 }
