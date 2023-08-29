@@ -1,6 +1,6 @@
-import { type InternalError } from '@core/helpers/error'
+import { type ApiError } from '@core/helpers/error'
 
-export const general: InternalError = {
+export const general: ApiError = {
   code: 'LTD-001',
   message: 'Internal server error',
 }

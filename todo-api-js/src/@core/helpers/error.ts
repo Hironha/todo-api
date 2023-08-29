@@ -1,16 +1,5 @@
-type UnsetDetails = undefined | null | void | never
-
-type BaseInternalError = {
+export type ApiError<D = never> = {
   code: string
   message: string
+  details?: D
 }
-
-type DetailedInternalError<D> = {
-  code: string
-  message: string
-  details: D
-}
-
-export type InternalError<D = null> = D extends UnsetDetails
-  ? BaseInternalError
-  : DetailedInternalError<D>

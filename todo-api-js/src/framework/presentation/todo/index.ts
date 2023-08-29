@@ -2,13 +2,13 @@ import { Router } from 'express'
 import * as E from '@core/helpers/either'
 
 import { get } from '@application/functions/todo/get'
-import { create } from '@application/functions/todo/create'
 import { list } from '@application/functions/todo/list'
 import { remove } from '@application/functions/todo/remove'
 import { TodoStore } from '@framework/store/todo'
 import * as GetErrors from '@application/errors/todo/get'
 import * as DeleteErrors from '@application/errors/todo/remove'
-import { parseCreateInput, parseGetInput, parseRemoveInput } from './parsers'
+import { CreateController } from '@adapters/controllers/todo/create'
+import { parseGetInput, parseRemoveInput } from './parsers'
 
 const router = Router({ strict: true })
 
@@ -23,14 +23,14 @@ router.get<'/', never>('/', async (req, res) => {
 })
 
 router.post<'/', never>('/', async (req, res) => {
-  const input = parseCreateInput(req.body)
-  if (E.isLeft(input)) {
-    return res.status(400).json(input.value).end()
-  }
+  const controller = new CreateController(store)
 
-  const output = await create({ repository: store, input: input.value })
+  const output = await controller.run(req.body)
   if (E.isLeft(output)) {
-    return res.status(500).json(output.value).end()
+    if (output.value.kind === 'validation') res.status(400)
+    else res.status(500)
+
+    return res.json(output.value.error).end()
   }
 
   res.status(201).json(output.value).end()

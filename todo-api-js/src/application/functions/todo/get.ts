@@ -1,5 +1,5 @@
 import * as E from '@core/helpers/either'
-import { type InternalError } from '@core/helpers/error'
+import { type ApiError } from '@core/helpers/error'
 import { type Todo } from '@domain/entities/todo'
 import { type TodoRepository } from '@application/repositories/todo'
 import * as Errors from '@application/errors/todo/get'
@@ -13,7 +13,7 @@ export type GetContext = {
   input: GetInput
 }
 
-export async function get(ctx: GetContext): Promise<E.Either<InternalError, Todo>> {
+export async function get(ctx: GetContext): Promise<E.Either<ApiError, Todo>> {
   try {
     const todo = await ctx.repository.get(ctx.input.id)
     if (!todo) {

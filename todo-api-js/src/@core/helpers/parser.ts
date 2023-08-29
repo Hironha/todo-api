@@ -1,5 +1,5 @@
 import * as E from '@core/helpers/either'
-import { type InternalError } from '@core/helpers/error'
+import { type ApiError } from '@core/helpers/error'
 
 export type ParseError<D> = { message: string; details: D }
 
@@ -15,14 +15,14 @@ export interface Parser<L extends ParseError<any>, R> {
 export function useParser<L extends ParseError<any>, R>(
   parser: Parser<L, R>,
   input: unknown
-): E.Either<InternalError<L['details']>, R> {
+): E.Either<ApiError<L['details']>, R> {
   return E.mapping(parser.parse(input)).mapLeft(toInternalError).unwrap()
 }
 
-function toInternalError<E extends ParseError<any>>(err: E): InternalError<E['details']> {
+function toInternalError<E extends ParseError<any>>(err: E): ApiError<E['details']> {
   return {
     code: 'VAL-001',
     message: err.message,
     details: err.details,
-  } as InternalError<E['details']>
+  } as ApiError<E['details']>
 }

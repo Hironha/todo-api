@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { type Parser, type ParseError, useParser } from '@core/helpers/parser'
 import * as E from '@core/helpers/either'
-import { InternalError } from '@core/helpers/error'
+import { ApiError } from '@core/helpers/error'
 
 type ErrorFrom<T extends {}> = {
   [K in keyof T]?: string[] | undefined
@@ -11,7 +11,7 @@ type ZodParserError<R extends {}> = ParseError<ErrorFrom<R>>
 
 type ParserFn<S extends z.ZodSchema> = (
   input: unknown
-) => E.Either<InternalError<ZodParserError<z.infer<S>>['details']>, z.infer<S>>
+) => E.Either<ApiError<ZodParserError<z.infer<S>>['details']>, z.infer<S>>
 
 class ZodParser<S extends z.ZodSchema> implements Parser<ZodParserError<z.infer<S>>, z.infer<S>> {
   constructor(private schema: S) {}
