@@ -7,11 +7,10 @@ pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoRespo
     let ctx = todo::ListContext {
         store: state.todo_store,
     };
-    let result = todo::list_todo(&ctx).await;
 
-    let todos = match result {
+    let todos = match todo::list_todo(&ctx).await {
         Ok(todos) => todos,
-        Err(message) => return (StatusCode::INTERNAL_SERVER_ERROR, message).into_response(),
+        Err(message) => return (StatusCode::BAD_REQUEST, message).into_response(),
     };
 
     if todos.is_empty() {

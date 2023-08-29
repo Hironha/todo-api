@@ -42,7 +42,7 @@ pub(super) async fn update_todo(
         Ok(payload) => payload,
         Err(error) => {
             let message = error.validation_error();
-            return (StatusCode::UNPROCESSABLE_ENTITY, Json(message)).into_response();
+            return (StatusCode::BAD_REQUEST, Json(message)).into_response();
         }
     };
 
