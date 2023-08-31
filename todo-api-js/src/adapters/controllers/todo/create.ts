@@ -7,11 +7,11 @@ import { create } from '@application/functions/todo/create'
 import { type Input, type Output, InputUtils, OutputUtils } from '@adapters/dtos/todo/create'
 
 export type RunError =
+  | { kind: 'internal'; error: ApiError }
   | {
       kind: 'validation'
-      error: ApiError<any>
+      error: ApiError<unknown>
     }
-  | { kind: 'internal'; error: ApiError }
 
 export class CreateController {
   constructor(private repository: TodoRepository) {}
@@ -22,10 +22,8 @@ export class CreateController {
       return E.left({ kind: 'validation', error: payload.value })
     }
 
-    return E.mapping(await create({ repository: this.repository, input: payload.value }))
-      .map(OutputUtils.fromTodo)
-      .mapLeft(this.createInternalError)
-      .unwrap()
+    const result = await create({ repository: this.repository, input: payload.value })
+    return E.mapping(result).map(OutputUtils.fromTodo).mapLeft(this.createInternalError).unwrap()
   }
 
   private createInternalError(error: CreateError): Extract<RunError, { kind: 'internal' }> {
