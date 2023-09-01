@@ -1,9 +1,7 @@
 import { Router } from 'express'
 import * as E from '@core/helpers/either'
 
-import { remove } from '@application/functions/todo/remove'
 import { TodoStore } from '@framework/store/todo'
-import * as DeleteErrors from '@application/errors/todo/remove'
 
 import { CreateController } from '@adapters/controllers/todo/create'
 import { InputView as CreateInputView } from '@adapters/dtos/todo/create'
@@ -11,9 +9,10 @@ import { InputView as CreateInputView } from '@adapters/dtos/todo/create'
 import { FindController } from '@adapters/controllers/todo/find'
 import { InputView as FindInputView } from '@adapters/dtos/todo/find'
 
-import { ListController } from '@adapters/controllers/todo/list'
+import { RemoveController } from '@adapters/controllers/todo/remove'
+import { InputView as RemoveInputView } from '@adapters/dtos/todo/remove'
 
-import { parseRemoveInput } from './parsers'
+import { ListController } from '@adapters/controllers/todo/list'
 
 const router = Router({ strict: true })
 
@@ -52,7 +51,7 @@ router.get<'/:todoId', { todoId: string }>('/:todoId', async (req, res) => {
   const controller = new FindController(store)
   const output = await controller.run(input.value)
   if (E.isLeft(output)) {
-    let status = output.value.kind === 'not-found' ? 404 : 500
+    const status = output.value.kind === 'not-found' ? 404 : 500
     return res.status(status).json(output.value).end()
   }
 
@@ -60,18 +59,19 @@ router.get<'/:todoId', { todoId: string }>('/:todoId', async (req, res) => {
 })
 
 router.delete<'/:todoId', { todoId: string }>('/:todoId', async (req, res) => {
-  const input = parseRemoveInput(req.params)
+  const input = RemoveInputView.parse(req.params)
   if (E.isLeft(input)) {
     return res.status(400).json(input.value).end()
   }
 
-  const output = await remove({ repository: store, input: { id: input.value.todoId } })
+  const controller = new RemoveController(store)
+  const output = await controller.run(input.value)
   if (E.isLeft(output)) {
-    const status = output.value.code === DeleteErrors.notFound.code ? 404 : 500
+    const status = output.value.kind === 'not-found' ? 404 : 500
     return res.status(status).json(output.value).end()
   }
 
-  return res.status(200).json(output.value).end()
+  return res.status(204).json(output.value).end()
 })
 
 export { router }

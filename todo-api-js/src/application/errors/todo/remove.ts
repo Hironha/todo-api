@@ -1,11 +1,20 @@
 import { type ApiError } from '@core/helpers/error'
 
-export const general: ApiError = {
-  code: 'DTD-001',
-  message: 'Internal server error',
+export enum RemoveError {
+  NotFound,
+  InternalError,
 }
 
-export const notFound: ApiError = {
-  code: 'DTD-002',
-  message: 'Todo not found',
+export class RemoveErrorUtils {
+  static toApi(error: RemoveError): ApiError {
+    switch (error) {
+      case RemoveError.NotFound:
+        return { code: 'DTD-002', message: 'Todo not found' }
+      case RemoveError.InternalError:
+        return { code: 'DTD-001', message: 'Internal server error' }
+      default:
+        const _: never = error
+        return _
+    }
+  }
 }
