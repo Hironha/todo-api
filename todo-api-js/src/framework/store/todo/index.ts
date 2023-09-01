@@ -19,7 +19,7 @@ export class TodoStore implements TodoRepository {
     return Promise.resolve(todo)
   }
 
-  get(id: string): Promise<Todo | undefined> {
+  find(id: string): Promise<Todo | undefined> {
     return Promise.resolve(this.store.get(id))
   }
 

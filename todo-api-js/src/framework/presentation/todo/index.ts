@@ -1,15 +1,18 @@
 import { Router } from 'express'
 import * as E from '@core/helpers/either'
 
-import { get } from '@application/functions/todo/get'
 import { list } from '@application/functions/todo/list'
 import { remove } from '@application/functions/todo/remove'
 import { TodoStore } from '@framework/store/todo'
-import * as GetErrors from '@application/errors/todo/get'
 import * as DeleteErrors from '@application/errors/todo/remove'
+
 import { CreateController } from '@adapters/controllers/todo/create'
 import { InputView as CreateInputView } from '@adapters/dtos/todo/create'
-import { parseGetInput, parseRemoveInput } from './parsers'
+
+import { FindController } from '@adapters/controllers/todo/find'
+import { InputView as FindInputView } from '@adapters/dtos/todo/find'
+
+import { parseRemoveInput } from './parsers'
 
 const router = Router({ strict: true })
 
@@ -30,7 +33,6 @@ router.post<'/', never>('/', async (req, res) => {
   }
 
   const controller = new CreateController(store)
-
   const output = await controller.run(input.value)
   if (E.isLeft(output)) {
     return res.status(500).json(output.value.error).end()
@@ -40,18 +42,19 @@ router.post<'/', never>('/', async (req, res) => {
 })
 
 router.get<'/:todoId', { todoId: string }>('/:todoId', async (req, res) => {
-  const input = parseGetInput(req.params)
+  const input = FindInputView.from(req.params)
   if (E.isLeft(input)) {
     return res.status(400).json(input.value).end()
   }
 
-  const output = await get({ repository: store, input: { id: input.value.todoId } })
+  const controller = new FindController(store)
+  const output = await controller.run(input.value)
   if (E.isLeft(output)) {
-    const status = output.value.code === GetErrors.notFound.code ? 404 : 500
+    let status = output.value.kind === 'not-found' ? 404 : 500
     return res.status(status).json(output.value).end()
   }
 
-  return res.status(200).json(output.value).end()
+  return res.status(200).json(output.value.view()).end()
 })
 
 router.delete<'/:todoId', { todoId: string }>('/:todoId', async (req, res) => {
