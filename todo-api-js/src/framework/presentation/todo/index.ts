@@ -27,7 +27,7 @@ router.get<'/', never>('/', async (req, res) => {
 })
 
 router.post<'/', never>('/', async (req, res) => {
-  const input = CreateInputView.from(req.body)
+  const input = CreateInputView.parse(req.body)
   if (E.isLeft(input)) {
     return res.status(400).json(input.value).end()
   }
@@ -42,7 +42,7 @@ router.post<'/', never>('/', async (req, res) => {
 })
 
 router.get<'/:todoId', { todoId: string }>('/:todoId', async (req, res) => {
-  const input = FindInputView.from(req.params)
+  const input = FindInputView.parse(req.params)
   if (E.isLeft(input)) {
     return res.status(400).json(input.value).end()
   }

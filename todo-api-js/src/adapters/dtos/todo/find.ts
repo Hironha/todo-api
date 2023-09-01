@@ -27,7 +27,7 @@ export type Output = {
 export class InputView implements View<Input> {
   protected constructor(private input: Input) {}
 
-  static from(input: unknown): E.Either<ApiError<DeserializationError<Input>>, InputView> {
+  static parse(input: unknown): E.Either<ApiError<DeserializationError<Input>>, InputView> {
     const result = inputSchema.safeParse(input)
     if (result.success) {
       return E.right(new InputView(result.data))
