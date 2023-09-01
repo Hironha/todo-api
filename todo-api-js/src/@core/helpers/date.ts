@@ -11,9 +11,4 @@ export class DateUtils {
   static utcRFC3339(date: Date): string {
     return date.toUTCString()
   }
-
-  static utcTimestamp(date: Date): number {
-    const msTimezoneDiff = date.getTimezoneOffset() * 60 * 1000
-    return date.getTime() + msTimezoneDiff
-  }
 }
