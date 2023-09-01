@@ -20,7 +20,7 @@ export class FindController {
   }
 
   private createError(error: FindError): RunError {
-    let kind: RunError['kind'] = error === FindError.InternalError ? 'internal' : 'not-found'
-    return { kind, error: FindErrorUtils.toInternalError(error) }
+    let kind: RunError['kind'] = error === FindError.Internal ? 'internal' : 'not-found'
+    return { kind, error: FindErrorUtils.toApi(error) }
   }
 }

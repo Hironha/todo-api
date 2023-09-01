@@ -22,6 +22,6 @@ export async function find(ctx: FindContext): Promise<E.Either<FindError, Todo>>
     return E.right(todo)
   } catch (e) {
     console.error(e)
-    return E.left(FindError.InternalError)
+    return E.left(FindError.Internal)
   }
 }

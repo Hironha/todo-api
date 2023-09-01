@@ -20,6 +20,6 @@ export async function create(ctx: CreateContext): Promise<E.Either<CreateError, 
     return E.right(createdTodo)
   } catch (e) {
     console.error(e)
-    return E.left(CreateError.InternalError)
+    return E.left(CreateError.Internal)
   }
 }

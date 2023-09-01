@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import * as E from '@core/helpers/either'
 
-import { list } from '@application/functions/todo/list'
 import { remove } from '@application/functions/todo/remove'
 import { TodoStore } from '@framework/store/todo'
 import * as DeleteErrors from '@application/errors/todo/remove'
@@ -12,6 +11,8 @@ import { InputView as CreateInputView } from '@adapters/dtos/todo/create'
 import { FindController } from '@adapters/controllers/todo/find'
 import { InputView as FindInputView } from '@adapters/dtos/todo/find'
 
+import { ListController } from '@adapters/controllers/todo/list'
+
 import { parseRemoveInput } from './parsers'
 
 const router = Router({ strict: true })
@@ -19,11 +20,12 @@ const router = Router({ strict: true })
 const store = new TodoStore()
 
 router.get<'/', never>('/', async (req, res) => {
-  const output = await list({ repository: store })
+  const output = await new ListController(store).run()
   if (E.isLeft(output)) {
     return res.status(500).json(output.value).end()
   }
-  return res.status(200).json(output.value).end()
+
+  return res.status(200).json(output.value.view()).end()
 })
 
 router.post<'/', never>('/', async (req, res) => {

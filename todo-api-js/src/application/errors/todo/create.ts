@@ -1,13 +1,13 @@
 import { type ApiError } from '@core/helpers/error'
 
 export enum CreateError {
-  InternalError,
+  Internal,
 }
 
 export class CreateErrorUtils {
-  static toInternalError(error: CreateError): ApiError {
+  static toApi(error: CreateError): ApiError {
     switch (error) {
-      case CreateError.InternalError:
+      case CreateError.Internal:
         return {
           code: 'CTD-001',
           message: 'Internal server error',

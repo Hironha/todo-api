@@ -21,7 +21,7 @@ export class CreateController {
   private createInternalError(error: CreateError): InternalError {
     return {
       kind: 'internal',
-      error: CreateErrorUtils.toInternalError(error),
+      error: CreateErrorUtils.toApi(error),
     }
   }
 }
