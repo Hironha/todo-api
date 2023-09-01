@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { DateUtils } from '@core/helpers/date'
 
 import * as E from '@core/helpers/either'
 import { type View } from '@core/helpers/view'
@@ -63,9 +64,9 @@ export class OutputView implements View<Output> {
       id: todo.id,
       title: todo.title,
       description: todo.description,
-      todoAt: todo.todoAt?.toUTCString(),
-      createdAt: todo.createdAt.toUTCString(),
-      updatedAt: todo.updatedAt.toUTCString(),
+      todoAt: todo.todoAt ? DateUtils.utcYMD(todo.todoAt) : undefined,
+      createdAt: DateUtils.utcRFC3339(todo.createdAt),
+      updatedAt: DateUtils.utcRFC3339(todo.updatedAt),
     })
   }
 
