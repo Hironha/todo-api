@@ -1,38 +1,28 @@
 import { z } from 'zod'
-import { type Parser, type ParseError, useParser } from '@core/helpers/parser'
 import * as E from '@core/helpers/either'
-import { ApiError } from '@core/helpers/error'
+import { type Parser, type ParseError } from '@core/helpers/parser'
+import { type ApiError } from '@core/helpers/error'
 
-type ErrorFrom<T extends {}> = {
-  [K in keyof T]?: string[] | undefined
-}
+type Entry<T extends {}> = [keyof T, T[keyof T]]
 
-type ZodParserError<R extends {}> = ParseError<ErrorFrom<R>>
-
-type ParserFn<S extends z.ZodSchema> = (
-  input: unknown
-) => E.Either<ApiError<ZodParserError<z.infer<S>>['details']>, z.infer<S>>
-
-class ZodParser<S extends z.ZodSchema> implements Parser<ZodParserError<z.infer<S>>, z.infer<S>> {
+export class ZodParser<S extends z.ZodSchema> implements Parser<z.infer<S>> {
   constructor(private schema: S) {}
 
-  parse(input: unknown): E.Either<ZodParserError<z.infer<S>>, z.infer<S>> {
+  parse(input: unknown): E.Either<ApiError<ParseError<z.TypeOf<S>>>, z.TypeOf<S>> {
     const result = this.schema.safeParse(input)
-    if (!result.success) {
-      const firstMessage = Object.values(result.error.flatten().fieldErrors).at(0)?.at(0)
-      return E.left({
-        message: firstMessage ?? 'Validation error',
-        details: result.error.formErrors.fieldErrors,
-      })
+    if (result.success) {
+      return E.right(result.data)
     }
-    return E.right(result.data)
-  }
-}
 
-/**
- * Adapter function to transform a zod schema into a `Parser<L, R>`.
- */
-export function useZodParser<S extends z.ZodSchema>(schema: S): ParserFn<S> {
-  const parser = new ZodParser(schema)
-  return (input: unknown) => useParser(parser, input)
+    const errors = result.error.flatten().fieldErrors
+    const details: ParseError<z.infer<S>> = {}
+    Object.entries(errors).forEach(([k, v]: Entry<z.infer<S>>) => {
+      const detail = v?.at(0)
+      if (detail) {
+        details[k] = detail
+      }
+    })
+
+    return E.left({ code: 'VAL-001', message: 'Validation error', details })
+  }
 }

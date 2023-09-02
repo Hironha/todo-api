@@ -6,7 +6,7 @@ import { type View } from '@core/helpers/view'
 import { type ApiError, type DeserializationError } from '@core/helpers/error'
 
 import { type Todo } from '@domain/entities/todo'
-import { type CreateInput } from '@application/functions/todo/create'
+import { ZodParser } from '@adapters/parser'
 
 const inputSchema = z.object({
   title: z.string({ required_error: 'title is required' }),
@@ -36,19 +36,9 @@ export class InputView implements View<Input> {
   protected constructor(private input: Input) {}
 
   static parse(input: unknown): E.Either<ApiError<DeserializationError<Input>>, InputView> {
-    const result = inputSchema.safeParse(input)
-    if (result.success) {
-      return E.right(new InputView(result.data))
-    }
-
-    const errors = result.error.flatten().fieldErrors
-    const details: DeserializationError<CreateInput> = {}
-
-    if (errors.title) details.title = errors.title[0]
-    if (errors.todoAt) details.todoAt = errors.todoAt[0]
-    if (errors.description) details.description = errors.description[0]
-
-    return E.left({ code: 'VAL-001', message: 'validation error', details })
+    return E.mapping(new ZodParser(inputSchema).parse(input))
+      .map(i => new InputView(i))
+      .unwrap()
   }
 
   view(): Input {
