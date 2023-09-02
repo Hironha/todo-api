@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import * as E from '@core/helpers/either'
-import { type DeserializationError, type ApiError } from '@core/helpers/error'
+import { type ParseError } from '@core/helpers/error'
 import { type View } from '@core/helpers/view'
 
 import { ZodParser } from '@adapters/parser'
@@ -15,9 +15,7 @@ const inputSchema = z.object({
 export class InputView implements View<Input> {
   constructor(private value: Input) {}
 
-  static parse(
-    input: Record<PropertyKey, any>
-  ): E.Either<ApiError<DeserializationError<Input>>, InputView> {
+  static parse(input: Record<PropertyKey, any>): E.Either<ParseError<Input>, InputView> {
     return E.mapping(new ZodParser(inputSchema).parse(input))
       .map(i => new InputView(i))
       .unwrap()

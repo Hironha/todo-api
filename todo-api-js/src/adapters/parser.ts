@@ -1,14 +1,13 @@
 import { z } from 'zod'
 import * as E from '@core/helpers/either'
 import { type Parser, type ParseError } from '@core/helpers/parser'
-import { type ApiError } from '@core/helpers/error'
 
 type Entry<T extends {}> = [keyof T, T[keyof T]]
 
 export class ZodParser<S extends z.ZodSchema> implements Parser<z.infer<S>> {
   constructor(private schema: S) {}
 
-  parse(input: unknown): E.Either<ApiError<ParseError<z.TypeOf<S>>>, z.TypeOf<S>> {
+  parse(input: unknown): E.Either<ParseError<z.TypeOf<S>>, z.TypeOf<S>> {
     const result = this.schema.safeParse(input)
     if (result.success) {
       return E.right(result.data)
@@ -23,6 +22,6 @@ export class ZodParser<S extends z.ZodSchema> implements Parser<z.infer<S>> {
       }
     })
 
-    return E.left({ code: 'VAL-001', message: 'Validation error', details })
+    return E.left({ details })
   }
 }

@@ -3,7 +3,7 @@ import { DateUtils } from '@core/helpers/date'
 
 import * as E from '@core/helpers/either'
 import { type View } from '@core/helpers/view'
-import { type ApiError, type DeserializationError } from '@core/helpers/error'
+import { type ParseError } from '@core/helpers/parser'
 
 import { type Todo } from '@domain/entities/todo'
 import { ZodParser } from '@adapters/parser'
@@ -35,7 +35,7 @@ export type Output = {
 export class InputView implements View<Input> {
   protected constructor(private input: Input) {}
 
-  static parse(input: unknown): E.Either<ApiError<DeserializationError<Input>>, InputView> {
+  static parse(input: unknown): E.Either<ParseError<Input>, InputView> {
     return E.mapping(new ZodParser(inputSchema).parse(input))
       .map(i => new InputView(i))
       .unwrap()

@@ -1,14 +1,16 @@
 import * as E from '@core/helpers/either'
-import { type ApiError } from '@core/helpers/error'
 import { type View } from '@core/helpers/view'
 
 import { type TodoRepository } from '@application/repositories/todo'
-import { FindError, FindErrorUtils } from '@application/errors/todo/find'
-import { find } from '@application/functions/todo/find'
+import { find, FindError } from '@application/functions/todo/find'
 import { type Input, type Output, OutputView } from '@adapters/dtos/todo/find'
 
-export type NotFound = { kind: 'not-found'; error: ApiError }
-export type InternalError = { kind: 'internal'; error: ApiError }
+export type InternalError = { kind: 'internal'; cause: string }
+export type NotFound = {
+  kind: 'not-found'
+  /** describes which property was not found */
+  which: string
+}
 export type RunError = NotFound | InternalError
 
 export class FindController {
@@ -20,7 +22,14 @@ export class FindController {
   }
 
   private createError(error: FindError): RunError {
-    let kind: RunError['kind'] = error === FindError.Internal ? 'internal' : 'not-found'
-    return { kind, error: FindErrorUtils.toApi(error) }
+    switch (error) {
+      case FindError.NotFound:
+        return { kind: 'not-found', which: 'id' }
+      case FindError.Unknown:
+        return { kind: 'internal', cause: 'internal error on find todo function' }
+      default:
+        // exhaustive check
+        return error
+    }
   }
 }

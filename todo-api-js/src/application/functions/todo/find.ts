@@ -1,6 +1,5 @@
 import * as E from '@core/helpers/either'
 import { type Todo } from '@domain/entities/todo'
-import { FindError } from '@application/errors/todo/find'
 import { type TodoRepository } from '@application/repositories/todo'
 
 export type FindInput = {
@@ -10,6 +9,11 @@ export type FindInput = {
 export type FindContext = {
   repository: TodoRepository
   input: FindInput
+}
+
+export enum FindError {
+  NotFound = 'NotFound',
+  Unknown = 'Unknown',
 }
 
 export async function find(ctx: FindContext): Promise<E.Either<FindError, Todo>> {
@@ -22,6 +26,6 @@ export async function find(ctx: FindContext): Promise<E.Either<FindError, Todo>>
     return E.right(todo)
   } catch (e) {
     console.error(e)
-    return E.left(FindError.Internal)
+    return E.left(FindError.Unknown)
   }
 }
