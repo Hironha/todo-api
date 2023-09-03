@@ -7,8 +7,8 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::todo::update::{ParseError, UpdateInput};
-use crate::application::functions::todo;
+use crate::adapters::controllers::todo::update::{UpdateController, RunError};
+use crate::adapters::dtos::todo::update::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -29,38 +29,35 @@ pub(super) async fn update_todo(
     Path(path): Path<UpdateTodoPath>,
     Json(body): Json<UpdateTodoBody>,
 ) -> impl IntoResponse {
-    let input = UpdateInput {
+    let input_schema = InputSchema {
         id: path.id,
         description: body.description,
         title: body.title,
         todo_at: body.todo_at,
     };
 
-    println!("UPDATE TODO -> input: {input:?}");
+    println!("UPDATE TODO -> input: {input_schema:?}");
 
-    let payload = match input.parse() {
-        Ok(payload) => payload,
+    let input = match Input::parse(input_schema) {
+        Ok(input) => input,
         Err(error) => {
             let message = error.validation_error();
             return (StatusCode::BAD_REQUEST, Json(message)).into_response();
         }
     };
 
-    let ctx = todo::UpdateContext {
-        store: state.todo_store,
-    };
-
-    let todo = match todo::update_todo(&ctx, payload).await {
-        Ok(todo) => todo,
+    let controller = UpdateController::new(state.todo_store);
+    let output = match controller.run(input).await {
+        Ok(output) => output,
         Err(error) => {
             let (status_code, message) = error.api_error();
             return (status_code, Json(message)).into_response();
         }
     };
 
-    println!("UPDATE TODO -> updated: {todo:?}");
+    println!("UPDATE TODO -> updated: {output:?}");
 
-    (StatusCode::OK, Json(todo)).into_response()
+    (StatusCode::OK, Json(output)).into_response()
 }
 
 impl ParseError {
@@ -74,7 +71,7 @@ impl ParseError {
     }
 }
 
-impl todo::UpdateError {
+impl RunError {
     fn api_error(&self) -> (StatusCode, ApiError<String>) {
         match self {
             Self::NotFound => (
@@ -84,7 +81,7 @@ impl todo::UpdateError {
                     message: "Todo not found".to_string(),
                 },
             ),
-            Self::InternalError => (
+            Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ApiError {
                     code: "UTD-002".to_string(),

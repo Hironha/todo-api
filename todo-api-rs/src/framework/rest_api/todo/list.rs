@@ -1,21 +1,33 @@
-use crate::application::functions::todo;
-
-use super::TodoState;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
+use super::TodoState;
+use crate::adapters::controllers::todo::list::{ListController, RunError};
+use crate::framework::rest_api::error::ApiError;
+
 pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoResponse {
-    let ctx = todo::ListContext {
-        store: state.todo_store,
-    };
+    let controller = ListController::new(state.todo_store);
 
-    let todos = match todo::list_todo(&ctx).await {
+    let output = match controller.run().await {
         Ok(todos) => todos,
-        Err(message) => return (StatusCode::BAD_REQUEST, message).into_response(),
+        Err(e) => {
+            let (status, error) = e.api_error();
+            return (status, Json(error)).into_response();
+        }
     };
 
-    if todos.is_empty() {
-        (StatusCode::NO_CONTENT).into_response()
-    } else {
-        (StatusCode::OK, Json(todos)).into_response()
+    (StatusCode::OK, Json(output)).into_response()
+}
+
+impl RunError {
+    fn api_error(&self) -> (StatusCode, ApiError<String>) {
+        match self {
+            Self::Internal => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ApiError {
+                    code: "LTD-001".into(),
+                    message: "Internal server error".into(),
+                },
+            ),
+        }
     }
 }

@@ -2,8 +2,8 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::todo::create::{CreateInput, ParseError};
-use crate::application::functions::todo;
+use crate::adapters::controllers::todo::create::{CreateController, RunError};
+use crate::adapters::dtos::todo::create::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -18,15 +18,15 @@ pub(super) async fn create_todo(
     State(state): State<TodoState>,
     Json(body): Json<CreateTodoBody>,
 ) -> impl IntoResponse {
-    let input = CreateInput {
+    let input_schema = InputSchema {
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
     };
 
-    println!("CREATE TODO -> input: {input:?}");
+    println!("CREATE TODO -> input: {input_schema:?}");
 
-    let payload = match input.parse() {
+    let input = match Input::parse(input_schema) {
         Ok(payload) => payload,
         Err(error) => {
             let message = error.validation_error();
@@ -34,12 +34,10 @@ pub(super) async fn create_todo(
         }
     };
 
-    let ctx = todo::CreateContext {
-        store: state.todo_store,
-    };
+    let controller = CreateController::new(state.todo_store);
 
-    match todo::create_todo(&ctx, payload).await {
-        Ok(todo) => (StatusCode::CREATED, Json(todo)).into_response(),
+    match controller.run(input).await {
+        Ok(output) => (StatusCode::CREATED, Json(output)).into_response(),
         Err(error) => {
             let (status_code, message) = error.api_error();
             (status_code, Json(message)).into_response()
@@ -57,10 +55,10 @@ impl ParseError {
     }
 }
 
-impl todo::CreateError {
+impl RunError {
     fn api_error(&self) -> (StatusCode, ApiError<String>) {
         match self {
-            Self::InternalError => (
+            Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ApiError {
                     code: "CTD-001".to_string(),

@@ -7,8 +7,8 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::todo::find::{FindInput, ParseError};
-use crate::application::functions::todo;
+use crate::adapters::controllers::todo::find::{FindController, RunError};
+use crate::adapters::dtos::todo::find::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -20,11 +20,11 @@ pub(super) async fn find_todo(
     State(state): State<TodoState>,
     Path(path): Path<GetTodoPath>,
 ) -> impl IntoResponse {
-    let input = FindInput { id: path.id };
+    let input_schema = InputSchema { id: path.id };
 
-    println!("GET TODO -> input: {input:?}");
+    println!("GET TODO -> input: {input_schema:?}");
 
-    let payload = match input.parse() {
+    let input = match Input::parse(input_schema) {
         Ok(payload) => payload,
         Err(error) => {
             let message = error.validation_error();
@@ -32,19 +32,16 @@ pub(super) async fn find_todo(
         }
     };
 
-    let ctx = todo::GetContext {
-        store: state.todo_store,
-    };
-
-    let todo = match todo::find_todo(ctx, &payload).await {
-        Ok(todo) => todo,
+    let controller = FindController::new(state.todo_store);
+    let output = match controller.run(input).await {
+        Ok(output) => output,
         Err(error) => {
             let (status_code, message) = error.api_error();
             return (status_code, Json(message)).into_response();
         }
     };
 
-    (StatusCode::OK, Json(todo)).into_response()
+    (StatusCode::OK, Json(output)).into_response()
 }
 
 impl ParseError {
@@ -56,7 +53,7 @@ impl ParseError {
     }
 }
 
-impl todo::FindError {
+impl RunError {
     fn api_error(&self) -> (StatusCode, ApiError<String>) {
         match self {
             Self::NotFound => (
@@ -66,7 +63,7 @@ impl todo::FindError {
                     message: "Todo not found".to_string(),
                 },
             ),
-            Self::InternalError => (
+            Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ApiError {
                     code: "FTD-002".to_string(),

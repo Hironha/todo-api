@@ -7,8 +7,8 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::todo::delete::{DeleteInput, ParseError};
-use crate::application::functions::todo;
+use crate::adapters::controllers::todo::delete::{DeleteController, RunError};
+use crate::adapters::dtos::todo::delete::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -20,23 +20,21 @@ pub(super) async fn delete_todo(
     State(state): State<TodoState>,
     Path(path): Path<DeleteTodoPath>,
 ) -> impl IntoResponse {
-    let input = DeleteInput { id: path.id };
+    let input_schema = InputSchema { id: path.id };
 
-    println!("DELETE TODO -> input {input:?}");
+    println!("DELETE TODO -> input {input_schema:?}");
 
-    let payload = match input.parse() {
+    let input = match Input::parse(input_schema) {
         Ok(payload) => payload,
         Err(error) => {
             let message = error.validation_error();
             return (StatusCode::BAD_REQUEST, Json(message)).into_response();
         }
     };
+    
+    let controller = DeleteController::new(state.todo_store);
 
-    let ctx = todo::DeleteContext {
-        store: state.todo_store,
-    };
-
-    if let Err(error) = todo::delete_todo(&ctx, &payload).await {
+    if let Err(error) = controller.run(input).await {
         let (status_code, message) = error.api_error();
         (status_code, Json(message)).into_response()
     } else {
@@ -53,7 +51,7 @@ impl ParseError {
     }
 }
 
-impl todo::DeleteError {
+impl RunError {
     fn api_error(&self) -> (StatusCode, ApiError<String>) {
         match self {
             Self::NotFound => (
@@ -63,7 +61,7 @@ impl todo::DeleteError {
                     message: "Todo not found".to_string(),
                 },
             ),
-            Self::InternalError => (
+            Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ApiError {
                     code: "DTD-002".to_string(),

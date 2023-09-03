@@ -24,7 +24,7 @@ pub struct DeleteContext<T: Delete> {
 
 pub async fn delete_todo<T: Delete>(
     ctx: &DeleteContext<T>,
-    payload: &DeletePayload,
+    payload: DeletePayload,
 ) -> Result<(), DeleteError> {
     ctx.store.delete(&payload.id).await
 }

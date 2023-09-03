@@ -3,8 +3,8 @@ use sqlx::{Pool, Postgres};
 
 use super::models::todo::TodoModel;
 use crate::application::functions::todo::{
-    Create, CreateError, CreatePayload, Delete, DeleteError, Find, FindError, List, Update,
-    UpdateError, UpdatePayload,
+    Create, CreateError, CreatePayload, Delete, DeleteError, Find, FindError, List, ListError,
+    Update, UpdateError, UpdatePayload,
 };
 use crate::domain::{todo::Todo, types::Id};
 
@@ -69,7 +69,7 @@ impl Create for TodoStore {
 
 #[async_trait]
 impl List for TodoStore {
-    async fn list(&self) -> Result<Vec<Todo>, String> {
+    async fn list(&self) -> Result<Vec<Todo>, ListError> {
         let q = r"SELECT * FROM todos";
 
         let res = sqlx::query_as::<_, TodoModel>(q)
@@ -77,7 +77,7 @@ impl List for TodoStore {
             .await
             .map_err(|err| {
                 println!("{err:?}");
-                "failed to list todos".to_string()
+                ListError::StorageAccess
             })?;
 
         let todos = res

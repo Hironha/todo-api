@@ -10,7 +10,8 @@ impl Date {
         self.date
     }
 
-    pub fn to_ymd(&self) -> String {
+    /// stringifies into Y-M-D
+    pub fn ymd(&self) -> String {
         let ydm_description = format_description!("[year]-[month]-[day]");
         self.date().format(ydm_description).unwrap()
     }
@@ -44,7 +45,7 @@ impl serde::Serialize for Date {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&self.to_ymd())
+        serializer.serialize_str(&self.ymd())
     }
 }
 

@@ -18,13 +18,13 @@ pub trait Find {
     async fn find(&self, id: &Id) -> Result<Todo, FindError>;
 }
 
-pub struct GetContext<T: Find> {
+pub struct FindContext<T: Find> {
     pub store: T,
 }
 
 pub async fn find_todo<T: Find>(
-    ctx: GetContext<T>,
-    payload: &FindPayload,
+    ctx: FindContext<T>,
+    payload: FindPayload,
 ) -> Result<Todo, FindError> {
     ctx.store.find(&payload.id).await
 }
