@@ -36,16 +36,7 @@ impl AsRef<time::Date> for Date {
 
 impl From<time::Date> for Date {
     fn from(date: time::Date) -> Self {
-        Self{ date }
-    }
-}
-
-impl serde::Serialize for Date {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&self.ymd())
+        Self { date }
     }
 }
 
@@ -70,14 +61,5 @@ impl PartialEq for DateTime {
 impl From<time::OffsetDateTime> for DateTime {
     fn from(date_time: time::OffsetDateTime) -> Self {
         Self { time: date_time }
-    }
-}
-
-impl serde::Serialize for DateTime {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&self.rfc3339())
     }
 }
