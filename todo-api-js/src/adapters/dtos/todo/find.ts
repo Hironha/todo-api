@@ -17,7 +17,7 @@ export type Input = { id: string }
 export type Output = {
   id: string
   title: string
-  description: string
+  description?: string
   /** UTC Date stringified on Y-M-D format */
   todoAt?: string
   /** UTC Date stringified on `RFC 3339` format  */

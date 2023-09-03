@@ -10,20 +10,20 @@ import { ZodParser } from '@adapters/parser'
 
 const inputSchema = z.object({
   title: z.string({ required_error: 'title is required' }),
-  description: z.string({ required_error: 'description is required' }),
+  description: z.string({ required_error: 'description is required' }).optional(),
   todoAt: z.coerce.date().optional(),
 })
 
 export type Input = {
   title: string
-  description: string
+  description?: string
   todoAt?: Date
 }
 
 export type Output = {
   id: string
   title: string
-  description: string
+  description?: string
   /** UTC Date stringified on Y-M-D format */
   todoAt?: string
   /** UTC Date stringified on `RFC 3339` format  */

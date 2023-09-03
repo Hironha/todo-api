@@ -4,7 +4,7 @@ import { type TodoRepository } from '@application/repositories/todo'
 
 export type CreateInput = {
   title: string
-  description: string
+  description?: string
   todoAt?: Date
 }
 
