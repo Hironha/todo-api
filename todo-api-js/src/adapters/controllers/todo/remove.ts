@@ -1,14 +1,16 @@
 import * as E from '@core/helpers/either'
 import { type View } from '@core/helpers/view'
-import { type ApiError } from '@core/helpers/error'
 
-import { remove } from '@application/functions/todo/remove'
+import { remove, RemoveError } from '@application/functions/todo/remove'
 import { type TodoRepository } from '@application/repositories/todo'
-import { RemoveError, RemoveErrorUtils } from '@application/errors/todo/remove'
 import { Input } from '@adapters/dtos/todo/remove'
 
-export type NotFound = { kind: 'not-found'; error: ApiError }
-export type InternalError = { kind: 'internal'; error: ApiError }
+export type NotFound = {
+  kind: 'not-found'
+  /** describes which property was not found */
+  which: string
+}
+export type InternalError = { kind: 'internal'; cause: string }
 export type RunError = NotFound | InternalError
 
 export class RemoveController {
@@ -20,7 +22,14 @@ export class RemoveController {
   }
 
   private createError(error: RemoveError): RunError {
-    const kind: RunError['kind'] = error === RemoveError.NotFound ? 'not-found' : 'internal'
-    return { kind, error: RemoveErrorUtils.toApi(error) }
+    switch (error) {
+      case RemoveError.NotFound:
+        return { kind: 'not-found', which: 'id' }
+      case RemoveError.InternalError:
+        return { kind: 'internal', cause: 'Internal error on remove function' }
+      default:
+        // exhaustive check
+        return error
+    }
   }
 }

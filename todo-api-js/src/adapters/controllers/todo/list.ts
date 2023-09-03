@@ -1,18 +1,17 @@
 import * as E from '@core/helpers/either'
-import { type ApiError } from '@core/helpers/error'
+import { type View } from '@core/helpers/view'
 
 import { type TodoRepository } from '@application/repositories/todo'
-import { type ListOutput, list } from '@application/functions/todo/list'
-import { ListError, ListErrorUtils } from '@application/errors/todo/list'
-import { OutputView } from '@adapters/dtos/todo/list'
+import { type ListOutput, list, ListError } from '@application/functions/todo/list'
+import { OutputView, type Output } from '@adapters/dtos/todo/list'
 
-export type InternalError = { kind: 'internal'; error: ApiError }
+export type InternalError = { kind: 'internal'; cause: string }
 export type RunError = InternalError
 
 export class ListController {
   constructor(private repository: TodoRepository) {}
 
-  async run(): Promise<E.Either<RunError, OutputView>> {
+  async run(): Promise<E.Either<RunError, View<Output>>> {
     const result = await list({ repository: this.repository })
     return E.mapping(result).map(this.createOutput).mapLeft(this.createError).unwrap()
   }
@@ -22,7 +21,12 @@ export class ListController {
   }
 
   private createError(error: ListError): RunError {
-    const kind: RunError['kind'] = 'internal'
-    return { kind, error: ListErrorUtils.toApi(error) }
+    switch (error) {
+      case ListError.Unknown:
+        return { kind: 'internal', cause: 'Internal error on list todos' }
+      default:
+        // exhaustive check
+        return error
+    }
   }
 }
