@@ -22,6 +22,6 @@ export class ZodParser<S extends z.ZodSchema> implements Parser<z.infer<S>> {
       }
     })
 
-    return E.left({ details })
+    return E.left(details)
   }
 }
