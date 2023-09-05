@@ -12,13 +12,13 @@ use crate::adapters::dtos::todo::find::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
-pub(super) struct GetTodoPath {
+pub(super) struct PathParams {
     id: Option<String>,
 }
 
 pub(super) async fn find_todo(
     State(state): State<TodoState>,
-    Path(path): Path<GetTodoPath>,
+    Path(path): Path<PathParams>,
 ) -> impl IntoResponse {
     let input_schema = InputSchema { id: path.id };
 

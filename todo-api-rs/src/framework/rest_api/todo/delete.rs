@@ -12,13 +12,13 @@ use crate::adapters::dtos::todo::delete::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
-pub(super) struct DeleteTodoPath {
+pub(super) struct PathParams {
     id: Option<String>,
 }
 
 pub(super) async fn delete_todo(
     State(state): State<TodoState>,
-    Path(path): Path<DeleteTodoPath>,
+    Path(path): Path<PathParams>,
 ) -> impl IntoResponse {
     let input_schema = InputSchema { id: path.id };
 

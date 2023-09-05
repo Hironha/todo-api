@@ -7,7 +7,7 @@ use crate::adapters::dtos::todo::create::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
-pub(super) struct CreateTodoBody {
+pub(super) struct RequestBody {
     title: Option<String>,
     description: Option<String>,
     #[serde(rename(deserialize = "todoAt"))]
@@ -16,7 +16,7 @@ pub(super) struct CreateTodoBody {
 
 pub(super) async fn create_todo(
     State(state): State<TodoState>,
-    Json(body): Json<CreateTodoBody>,
+    Json(body): Json<RequestBody>,
 ) -> impl IntoResponse {
     let input_schema = InputSchema {
         title: body.title,

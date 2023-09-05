@@ -12,12 +12,12 @@ use crate::adapters::dtos::todo::update::{Input, InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
-pub(super) struct UpdateTodoPath {
+pub(super) struct PathParams {
     id: Option<String>,
 }
 
 #[derive(Deserialize)]
-pub(super) struct UpdateTodoBody {
+pub(super) struct RequestBody {
     title: Option<String>,
     description: Option<String>,
     #[serde(rename(deserialize = "todoAt"))]
@@ -26,8 +26,8 @@ pub(super) struct UpdateTodoBody {
 
 pub(super) async fn update_todo(
     State(state): State<TodoState>,
-    Path(path): Path<UpdateTodoPath>,
-    Json(body): Json<UpdateTodoBody>,
+    Path(path): Path<PathParams>,
+    Json(body): Json<RequestBody>,
 ) -> impl IntoResponse {
     let input_schema = InputSchema {
         id: path.id,
