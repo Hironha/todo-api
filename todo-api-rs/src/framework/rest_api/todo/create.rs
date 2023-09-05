@@ -27,10 +27,14 @@ pub(super) async fn create_todo(
     println!("CREATE TODO -> input: {input_schema:?}");
 
     let input = match Input::parse(input_schema) {
-        Ok(payload) => payload,
-        Err(error) => {
-            let message = error.validation_error();
-            return (StatusCode::BAD_REQUEST, Json(message)).into_response();
+        Ok(input) => input,
+        Err(err) => {
+            let field = match err {
+                ParseError::Title => "title",
+                ParseError::TodoAt => "todoAt",
+            };
+            let error = ApiError::from(ValidationError::new(field.into(), err.description()));
+            return (StatusCode::BAD_REQUEST, Json(error)).into_response();
         }
     };
 
@@ -38,31 +42,21 @@ pub(super) async fn create_todo(
 
     match controller.run(input).await {
         Ok(output) => (StatusCode::CREATED, Json(output)).into_response(),
-        Err(error) => {
-            let (status_code, message) = error.api_error();
-            (status_code, Json(message)).into_response()
+        Err(err) => {
+            let (status, message) = err.response_parts();
+            (status, Json(message)).into_response()
         }
     }
 }
 
-impl ParseError {
-    fn validation_error(&self) -> ApiError<ValidationError> {
-        let field = match self {
-            Self::Title => "title",
-            Self::TodoAt => "todoAt",
-        };
-        ApiError::from(ValidationError::new(field.into(), self.description()))
-    }
-}
-
 impl RunError {
-    fn api_error(&self) -> (StatusCode, ApiError<String>) {
+    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
         match self {
             Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ApiError {
-                    code: "CTD-001".to_string(),
-                    message: "Internal server error".to_string(),
+                    code: "CTD-001".into(),
+                    message: "Internal server error".into(),
                 },
             ),
         }
