@@ -10,7 +10,7 @@ impl Date {
         self.date
     }
 
-    /// stringifies into Y-M-D
+    /// Stringifies into YYYY-MM-DD
     pub fn ymd(&self) -> String {
         let ydm_description = format_description!("[year]-[month]-[day]");
         self.date().format(ydm_description).unwrap()
