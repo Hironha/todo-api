@@ -29,7 +29,7 @@ pub struct UpdateContext<T: Update> {
 }
 
 pub async fn update_todo<T: Update>(
-    ctx: &UpdateContext<T>,
+    ctx: UpdateContext<T>,
     payload: UpdatePayload,
 ) -> Result<Todo, UpdateError> {
     ctx.store.set(payload).await

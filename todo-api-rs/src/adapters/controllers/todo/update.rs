@@ -29,7 +29,7 @@ impl<S: Update> UpdateController<S> {
             todo_at: input.todo_at,
         };
 
-        let todo = update_todo(&ctx, payload).await.map_err(|err| match err {
+        let todo = update_todo(ctx, payload).await.map_err(|err| match err {
             UpdateError::NotFound => RunError::NotFound,
             UpdateError::InternalError => RunError::Internal,
         })?;
