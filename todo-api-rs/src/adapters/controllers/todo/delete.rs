@@ -22,24 +22,15 @@ impl<S: Delete> DeleteController<S> {
 impl<S: Delete> DeleteController<S> {
     pub async fn run(self, input: Input) -> Result<Output, RunError> {
         let context = DeleteContext { store: self.store };
-        delete_todo(&context, input.into_payload())
+        let payload = DeletePayload { id: input.id };
+
+        delete_todo(&context, payload)
             .await
-            .map(|_| Output::new())
-            .map_err(|e| e.run_error())
-    }
-}
+            .map_err(|err| match err {
+                DeleteError::NotFound => RunError::NotFound,
+                DeleteError::InternalError => RunError::Internal,
+            })?;
 
-impl Input {
-    fn into_payload(self) -> DeletePayload {
-        DeletePayload { id: self.id }
-    }
-}
-
-impl DeleteError {
-    fn run_error(&self) -> RunError {
-        match self {
-            Self::InternalError => RunError::Internal,
-            Self::NotFound => RunError::NotFound,
-        }
+        Ok(Output::new())
     }
 }
