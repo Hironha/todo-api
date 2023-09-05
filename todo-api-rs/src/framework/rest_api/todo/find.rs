@@ -25,9 +25,9 @@ pub(super) async fn find_todo(
     println!("GET TODO -> input: {input_schema:?}");
 
     let input = match Input::parse(input_schema) {
-        Ok(payload) => payload,
-        Err(error) => {
-            let message = error.validation_error();
+        Ok(input) => input,
+        Err(err) => {
+            let message = err.api_error();
             return (StatusCode::BAD_REQUEST, Json(message)).into_response();
         }
     };
@@ -35,8 +35,8 @@ pub(super) async fn find_todo(
     let controller = FindController::new(state.todo_store);
     let output = match controller.run(input).await {
         Ok(output) => output,
-        Err(error) => {
-            let (status_code, message) = error.api_error();
+        Err(err) => {
+            let (status_code, message) = err.response_parts();
             return (status_code, Json(message)).into_response();
         }
     };
@@ -45,7 +45,7 @@ pub(super) async fn find_todo(
 }
 
 impl ParseError {
-    fn validation_error(&self) -> ApiError<ValidationError> {
+    fn api_error(&self) -> ApiError<ValidationError> {
         let field = match self {
             Self::Id => "id",
         };
@@ -54,7 +54,7 @@ impl ParseError {
 }
 
 impl RunError {
-    fn api_error(&self) -> (StatusCode, ApiError<String>) {
+    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
         match self {
             Self::NotFound => (
                 StatusCode::NOT_FOUND,

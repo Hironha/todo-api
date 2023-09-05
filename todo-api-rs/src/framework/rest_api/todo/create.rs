@@ -29,11 +29,7 @@ pub(super) async fn create_todo(
     let input = match Input::parse(input_schema) {
         Ok(input) => input,
         Err(err) => {
-            let field = match err {
-                ParseError::Title => "title",
-                ParseError::TodoAt => "todoAt",
-            };
-            let error = ApiError::from(ValidationError::new(field.into(), err.description()));
+            let error = err.api_error();
             return (StatusCode::BAD_REQUEST, Json(error)).into_response();
         }
     };
@@ -46,6 +42,16 @@ pub(super) async fn create_todo(
             let (status, message) = err.response_parts();
             (status, Json(message)).into_response()
         }
+    }
+}
+
+impl ParseError {
+    fn api_error(&self) -> ApiError<ValidationError> {
+        let field = match self {
+            Self::Title => "title",
+            Self::TodoAt => "todoAt",
+        };
+        ApiError::from(ValidationError::new(field.into(), self.description()))
     }
 }
 

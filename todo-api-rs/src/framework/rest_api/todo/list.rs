@@ -8,9 +8,9 @@ pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoRespo
     let controller = ListController::new(state.todo_store);
 
     let output = match controller.run().await {
-        Ok(todos) => todos,
-        Err(e) => {
-            let (status, error) = e.api_error();
+        Ok(output) => output,
+        Err(err) => {
+            let (status, error) = err.response_parts();
             return (status, Json(error)).into_response();
         }
     };
@@ -19,7 +19,7 @@ pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoRespo
 }
 
 impl RunError {
-    fn api_error(&self) -> (StatusCode, ApiError<String>) {
+    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
         match self {
             Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,

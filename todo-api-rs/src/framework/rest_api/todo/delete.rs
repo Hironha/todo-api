@@ -25,17 +25,17 @@ pub(super) async fn delete_todo(
     println!("DELETE TODO -> input {input_schema:?}");
 
     let input = match Input::parse(input_schema) {
-        Ok(payload) => payload,
-        Err(error) => {
-            let message = error.validation_error();
+        Ok(input) => input,
+        Err(err) => {
+            let message = err.api_error();
             return (StatusCode::BAD_REQUEST, Json(message)).into_response();
         }
     };
     
     let controller = DeleteController::new(state.todo_store);
 
-    if let Err(error) = controller.run(input).await {
-        let (status_code, message) = error.api_error();
+    if let Err(err) = controller.run(input).await {
+        let (status_code, message) = err.response_parts();
         (status_code, Json(message)).into_response()
     } else {
         (StatusCode::NO_CONTENT).into_response()
@@ -43,7 +43,7 @@ pub(super) async fn delete_todo(
 }
 
 impl ParseError {
-    fn validation_error(&self) -> ApiError<ValidationError> {
+    fn api_error(&self) -> ApiError<ValidationError> {
         let field = match self {
             Self::Id => "id",
         };
@@ -52,7 +52,7 @@ impl ParseError {
 }
 
 impl RunError {
-    fn api_error(&self) -> (StatusCode, ApiError<String>) {
+    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
         match self {
             Self::NotFound => (
                 StatusCode::NOT_FOUND,
