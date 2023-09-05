@@ -21,15 +21,13 @@ impl<S: Delete> DeleteController<S> {
 
 impl<S: Delete> DeleteController<S> {
     pub async fn run(self, input: Input) -> Result<Output, RunError> {
-        let context = DeleteContext { store: self.store };
+        let ctx = DeleteContext { store: self.store };
         let payload = DeletePayload { id: input.id };
 
-        delete_todo(context, payload)
-            .await
-            .map_err(|err| match err {
-                DeleteError::NotFound => RunError::NotFound,
-                DeleteError::InternalError => RunError::Internal,
-            })?;
+        delete_todo(ctx, payload).await.map_err(|err| match err {
+            DeleteError::NotFound => RunError::NotFound,
+            DeleteError::InternalError => RunError::Internal,
+        })?;
 
         Ok(Output::new())
     }

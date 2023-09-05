@@ -20,18 +20,16 @@ impl<S: Create> CreateController<S> {
 
 impl<S: Create> CreateController<S> {
     pub async fn run(self, input: Input) -> Result<Output, RunError> {
-        let context = CreateContext { store: self.store };
+        let ctx = CreateContext { store: self.store };
         let payload = CreatePayload {
             title: input.title,
             description: input.description,
             todo_at: input.todo_at,
         };
 
-        let todo = create_todo(context, payload)
-            .await
-            .map_err(|err| match err {
-                CreateError::InternalError => RunError::Internal,
-            })?;
+        let todo = create_todo(ctx, payload).await.map_err(|err| match err {
+            CreateError::InternalError => RunError::Internal,
+        })?;
 
         Ok(Output {
             id: todo.id.as_string(),
