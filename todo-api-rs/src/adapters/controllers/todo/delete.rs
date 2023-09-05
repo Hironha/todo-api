@@ -24,7 +24,7 @@ impl<S: Delete> DeleteController<S> {
         let context = DeleteContext { store: self.store };
         let payload = DeletePayload { id: input.id };
 
-        delete_todo(&context, payload)
+        delete_todo(context, payload)
             .await
             .map_err(|err| match err {
                 DeleteError::NotFound => RunError::NotFound,
