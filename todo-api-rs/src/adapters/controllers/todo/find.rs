@@ -1,6 +1,5 @@
 use crate::adapters::dtos::todo::find::{Input, Output};
 use crate::application::functions::todo::{find_todo, Find, FindContext, FindError, FindPayload};
-use crate::domain::todo::Todo;
 
 #[derive(Debug)]
 pub enum RunError {
@@ -20,38 +19,21 @@ impl<S: Find> FindController<S> {
 
 impl<S: Find> FindController<S> {
     pub async fn run(self, input: Input) -> Result<Output, RunError> {
-        let context = FindContext { store: self.store };
-        find_todo(context, input.into_payload())
-            .await
-            .map(Output::from_todo)
-            .map_err(|e| e.run_error())
-    }
-}
+        let ctx = FindContext { store: self.store };
+        let payload = FindPayload { id: input.id };
 
-impl Input {
-    fn into_payload(self) -> FindPayload {
-        FindPayload { id: self.id }
-    }
-}
+        let todo = find_todo(ctx, payload).await.map_err(|err| match err {
+            FindError::InternalError => RunError::Internal,
+            FindError::NotFound => RunError::NotFound,
+        })?;
 
-impl Output {
-    fn from_todo(todo: Todo) -> Self {
-        Self {
+        Ok(Output {
             id: todo.id.as_string(),
             title: todo.title,
             description: todo.description,
             todo_at: todo.todo_at.map(|at| at.ymd()),
             created_at: todo.created_at.rfc3339(),
             updated_at: todo.created_at.rfc3339(),
-        }
-    }
-}
-
-impl FindError {
-    fn run_error(&self) -> RunError {
-        match self {
-            Self::InternalError => RunError::Internal,
-            Self::NotFound => RunError::NotFound,
-        }
+        })
     }
 }
