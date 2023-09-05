@@ -27,7 +27,7 @@ impl<S: Create> CreateController<S> {
             todo_at: input.todo_at,
         };
 
-        let todo = create_todo(&context, payload)
+        let todo = create_todo(context, payload)
             .await
             .map_err(|err| match err {
                 CreateError::InternalError => RunError::Internal,

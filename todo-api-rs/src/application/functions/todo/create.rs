@@ -24,7 +24,7 @@ pub struct CreateContext<T: Create> {
 }
 
 pub async fn create_todo<T: Create>(
-    ctx: &CreateContext<T>,
+    ctx: CreateContext<T>,
     payload: CreatePayload,
 ) -> Result<Todo, CreateError> {
     ctx.store.create(payload).await
