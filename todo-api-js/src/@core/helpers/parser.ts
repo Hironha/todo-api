@@ -7,3 +7,7 @@ export type ParseError<From extends {}> = {
 export interface Parser<T extends {}> {
   parse(input: unknown): E.Either<ParseError<T>, T>
 }
+
+export interface ParsableInput<T extends {}> {
+  parse(): E.Either<ParseError<T>, T>
+}
