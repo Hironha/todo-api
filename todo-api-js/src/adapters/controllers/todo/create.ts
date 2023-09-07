@@ -1,22 +1,33 @@
 import * as E from '@core/helpers/either'
-import { type View } from '@core/helpers/view'
+import { type ParseError, type ParsableInput } from '@core/helpers/parser'
 
 import { type TodoRepository } from '@application/repositories/todo'
 import { create, CreateError } from '@application/functions/todo/create'
-import { type Input, type Output, OutputView } from '@adapters/dtos/todo/create'
+import { AbstractController } from '@adapters/controllers/controller'
+import { OutputUtils, type Input, type Output } from '@adapters/dtos/todo/create'
 
+export type ValidationError = { kind: 'validation'; details: ParseError<Input> }
 export type InternalError = { kind: 'internal'; cause: string }
-export type RunError = InternalError
+export type RunError = InternalError | ValidationError
 
-export class CreateController {
-  constructor(private repository: TodoRepository) {}
-
-  async run(input: View<Input>): Promise<E.Either<RunError, View<Output>>> {
-    const result = await create({ repository: this.repository, input: input.view() })
-    return E.mapping(result).map(OutputView.fromTodo).mapLeft(this.mapError).unwrap()
+export class CreateController extends AbstractController<Input, E.Either<RunError, Output>> {
+  private repository: TodoRepository
+  constructor(input: ParsableInput<Input>, repository: TodoRepository) {
+    super(input)
+    this.repository = repository
   }
 
-  private mapError(error: CreateError): RunError {
+  async run(): Promise<E.Either<RunError, Output>> {
+    const input = this.input.parse()
+    if (E.isLeft(input)) {
+      return E.left({ kind: 'validation', details: input.value })
+    }
+
+    const result = await create({ repository: this.repository, input: input.value })
+    return E.mapping(result).map(OutputUtils.fromTodo).mapLeft(this.mapCreateError).unwrap()
+  }
+
+  private mapCreateError(error: CreateError): RunError {
     switch (error) {
       case CreateError.Unknown:
         return { kind: 'internal', cause: 'Internal error on create todo function' }
