@@ -10,10 +10,7 @@ import { type ApiError } from '@framework/presentation/errors'
 type HandlerFn = RequestHandler<{}, Record<PropertyKey, any>, Record<string, string>>
 
 export class CreateHandler {
-  private repository: TodoRepository
-  constructor(repository: TodoRepository) {
-    this.repository = repository
-  }
+  constructor(private readonly repository: TodoRepository) {}
 
   handle: HandlerFn = async (req, res) => {
     const input = new InputParser(req.body)
@@ -28,7 +25,9 @@ export class CreateHandler {
     res.status(201).json(output.value).end()
   }
 
-  private getErrorResponseConfig(error: RunError): [number, ApiError<ParseError<Input>>] {
+  private getErrorResponseConfig(
+    error: RunError
+  ): [number, ApiError<ParseError<Input>['details']>] {
     switch (error.kind) {
       case 'validation':
         return [400, { code: 'CTD-001', message: 'Invalid input', details: error.details }]

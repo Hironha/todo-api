@@ -1,10 +1,8 @@
-type Left<L> = { value: L }
-
-type Right<R> = { value: R }
-
+export type Left<L> = { value: L }
+export type Right<R> = { value: R }
 export type Either<L, R> = Left<L> | Right<R>
 
-class Mapping<L, R> {
+export class Mapping<L, R> {
   constructor(private either: Either<L, R>) {}
 
   /** Transforms `R` into `T` using the callback `fn` */

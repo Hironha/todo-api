@@ -1,27 +1,17 @@
 import { z } from 'zod'
 
 import * as E from '@core/helpers/either'
-import { type View } from '@core/helpers/view'
-import { type ParseError } from '@core/helpers/parser'
+import { ParsableInput, type ParseError } from '@core/helpers/parser'
 
 import { ZodParser } from '@adapters/parser'
 
 export type Input = { id: string }
 
-const inputSchema = z.object({
-  id: z.string(),
-})
+const inputSchema = z.object({ id: z.string() })
+export class InputParser implements ParsableInput<Input> {
+  constructor(private input: unknown) {}
 
-export class InputView implements View<Input> {
-  constructor(private value: Input) {}
-
-  static parse(input: Record<PropertyKey, any>): E.Either<ParseError<Input>, InputView> {
-    return E.mapping(new ZodParser(inputSchema).parse(input))
-      .map(i => new InputView(i))
-      .unwrap()
-  }
-
-  view(): Input {
-    return this.value
+  parse(): E.Either<ParseError<Input>, Input> {
+    return new ZodParser(inputSchema).parse(this.input)
   }
 }

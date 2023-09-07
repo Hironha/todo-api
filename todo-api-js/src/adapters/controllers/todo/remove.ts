@@ -1,27 +1,34 @@
 import * as E from '@core/helpers/either'
-import { type View } from '@core/helpers/view'
+import { type ParsableInput, type ParseError } from '@core/helpers/parser'
 
 import { remove, RemoveError } from '@application/functions/todo/remove'
 import { type TodoRepository } from '@application/repositories/todo'
 import { Input } from '@adapters/dtos/todo/remove'
+import { AbstractController } from '@adapters/controllers/controller'
 
-export type NotFound = {
-  kind: 'not-found'
-  /** describes which property was not found */
-  which: string
-}
+export type ValidationError = { kind: 'validation' } & ParseError<Input>
+export type NotFound = { kind: 'not-found'; which: string }
 export type InternalError = { kind: 'internal'; cause: string }
-export type RunError = NotFound | InternalError
+export type RunError = ValidationError | NotFound | InternalError
 
-export class RemoveController {
-  constructor(private repository: TodoRepository) {}
-
-  async run(input: View<Input>): Promise<E.Either<RunError, void>> {
-    const result = await remove({ repository: this.repository, input: input.view() })
-    return E.mapping(result).mapLeft(this.createError).unwrap()
+export class RemoveController extends AbstractController<Input, E.Either<RunError, void>> {
+  private repository: TodoRepository
+  constructor(input: ParsableInput<Input>, repository: TodoRepository) {
+    super(input)
+    this.repository = repository
   }
 
-  private createError(error: RemoveError): RunError {
+  async run(): Promise<E.Either<RunError, void>> {
+    const input = this.input.parse()
+    if (E.isLeft(input)) {
+      return E.left({ kind: 'validation', details: input.value.details })
+    }
+
+    const result = await remove({ repository: this.repository, input: input.value })
+    return E.mapping(result).mapLeft(this.mapRemoveError).unwrap()
+  }
+
+  private mapRemoveError(error: RemoveError): RunError {
     switch (error) {
       case RemoveError.NotFound:
         return { kind: 'not-found', which: 'id' }

@@ -6,7 +6,7 @@ import { create, CreateError } from '@application/functions/todo/create'
 import { AbstractController } from '@adapters/controllers/controller'
 import { OutputUtils, type Input, type Output } from '@adapters/dtos/todo/create'
 
-export type ValidationError = { kind: 'validation'; details: ParseError<Input> }
+export type ValidationError = { kind: 'validation' } & ParseError<Input>
 export type InternalError = { kind: 'internal'; cause: string }
 export type RunError = InternalError | ValidationError
 
@@ -20,7 +20,7 @@ export class CreateController extends AbstractController<Input, E.Either<RunErro
   async run(): Promise<E.Either<RunError, Output>> {
     const input = this.input.parse()
     if (E.isLeft(input)) {
-      return E.left({ kind: 'validation', details: input.value })
+      return E.left({ kind: 'validation', details: input.value.details })
     }
 
     const result = await create({ repository: this.repository, input: input.value })

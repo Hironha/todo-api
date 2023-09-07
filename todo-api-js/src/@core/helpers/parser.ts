@@ -1,13 +1,15 @@
-import * as E from '@core/helpers/either'
+import { type Either } from '@core/helpers/either'
 
 export type ParseError<From extends {}> = {
-  [P in keyof From]?: string
+  details: {
+    [P in keyof From]?: string
+  }
 }
 
 export interface Parser<T extends {}> {
-  parse(input: unknown): E.Either<ParseError<T>, T>
+  parse(input: unknown): Either<ParseError<T>, T>
 }
 
 export interface ParsableInput<T extends {}> {
-  parse(): E.Either<ParseError<T>, T>
+  parse(): Either<ParseError<T>, T>
 }

@@ -1,7 +1,9 @@
+import { type Either, right, left } from '@core/helpers/either'
+import { type ParseError, type ParsableInput } from '@core/helpers/parser'
 import { DateUtils } from '@core/helpers/date'
-import { type View } from '@core/helpers/view'
 import { type Todo } from '@domain/entities/todo'
 
+export type Input = {}
 export type Item = {
   id: string
   title: string
@@ -13,35 +15,31 @@ export type Item = {
   /** UTC Date stringified on `RFC 3339` format  */
   createdAt: string
 }
-
 export type Output = {
   count: number
   items: Item[]
 }
 
-export class OutputView implements View<Output> {
-  private items: Item[] = []
-  private count: number = 0
+export class InputParser implements ParsableInput<Input> {
+  constructor(private readonly input: unknown) {}
 
-  setItemsFromTodos(todos: Todo[]): this {
-    this.items = todos.map(t => ({
-      id: t.id,
-      title: t.title,
-      description: t.description,
-      todoAt: t.todoAt ? DateUtils.utcYMD(t.todoAt) : undefined,
-      createdAt: DateUtils.utcRFC3339(t.createdAt),
-      updatedAt: DateUtils.utcRFC3339(t.updatedAt),
-    }))
-
-    return this
+  parse(): Either<ParseError<Input>, Input> {
+    if (typeof this.input === 'object' && !!this.input) {
+      return right(this.input)
+    }
+    return left({})
   }
+}
 
-  setCount(count: number): this {
-    this.count = count
-    return this
-  }
-
-  view(): Output {
-    return { count: this.count, items: this.items }
+export class OutputUtils {
+  static createItemFromTodo(todo: Todo): Item {
+    return {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description,
+      todoAt: todo.todoAt ? DateUtils.utcYMD(todo.todoAt) : undefined,
+      createdAt: DateUtils.utcRFC3339(todo.createdAt),
+      updatedAt: DateUtils.utcRFC3339(todo.updatedAt),
+    }
   }
 }

@@ -14,7 +14,7 @@ export class ZodParser<S extends z.ZodSchema> implements Parser<z.infer<S>> {
     }
 
     const errors = result.error.flatten().fieldErrors
-    const details: ParseError<z.infer<S>> = {}
+    const details: ParseError<z.infer<S>>['details'] = {}
     Object.entries(errors).forEach(([k, v]: Entry<z.infer<S>>) => {
       const detail = v?.at(0)
       if (detail) {
@@ -22,6 +22,6 @@ export class ZodParser<S extends z.ZodSchema> implements Parser<z.infer<S>> {
       }
     })
 
-    return E.left(details)
+    return E.left({ details })
   }
 }
