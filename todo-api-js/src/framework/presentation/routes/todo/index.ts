@@ -1,17 +1,18 @@
-import { Router } from 'express'
-import { type TodoRepository } from '@application/repositories/todo'
-import { CreateHandler } from '@framework/presentation/handlers/todo/create'
-import { FindHandler } from '@framework/presentation/handlers/todo/find'
-import { RemoveHandler } from '@framework/presentation/handlers/todo/remove'
-import { ListHandler } from '@framework/presentation/handlers/todo/list'
+import { Elysia } from 'elysia'
 
-export function createTodoRouter(repository: TodoRepository): Router {
-  const router = Router({ strict: true, caseSensitive: true })
+import { createHandler } from '@framework/presentation/handlers/todo/create'
+import { findHandler } from '@framework/presentation/handlers/todo/find'
+import { removeHandler } from '@framework/presentation/handlers/todo/remove'
+import { listHandler } from '@framework/presentation/handlers/todo/list'
+import { TodoStore } from '@framework/store/todo'
 
-  router.get('/', new ListHandler(repository).handle)
-  router.get('/:id', new FindHandler(repository).handle)
-  router.post('/', new CreateHandler(repository).handle)
-  router.delete('/:id', new RemoveHandler(repository).handle)
+export function createTodoRouter(path: string) {
+  const store = new TodoStore()
 
-  return router
+  return new Elysia({ prefix: path, strictPath: true })
+    .state('repository', store)
+    .get('/', listHandler)
+    .post('/', createHandler)
+    .get('/:id', findHandler)
+    .delete('/:id', removeHandler)
 }
