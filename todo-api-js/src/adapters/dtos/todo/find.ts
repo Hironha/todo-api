@@ -26,7 +26,7 @@ const inputSchema = z.object({
   id: z.string({ required_error: 'id is required' }),
 })
 
-export class InputParser implements ParsableInput<Input> {
+export class RawInput implements ParsableInput<Input> {
   constructor(private input: unknown) {}
 
   parse(): Either<ParseError<Input>, Input> {

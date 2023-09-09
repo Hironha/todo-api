@@ -20,7 +20,7 @@ export type Output = {
   items: Item[]
 }
 
-export class InputParser implements ParsableInput<Input> {
+export class RawInput implements ParsableInput<Input> {
   constructor(private readonly input: unknown) {}
 
   parse(): Either<ParseError<Input>, Input> {

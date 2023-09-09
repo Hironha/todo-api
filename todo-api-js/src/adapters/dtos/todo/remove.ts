@@ -8,7 +8,7 @@ import { ZodParser } from '@adapters/parser'
 export type Input = { id: string }
 
 const inputSchema = z.object({ id: z.string() })
-export class InputParser implements ParsableInput<Input> {
+export class RawInput implements ParsableInput<Input> {
   constructor(private input: unknown) {}
 
   parse(): E.Either<ParseError<Input>, Input> {

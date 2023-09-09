@@ -4,7 +4,7 @@ import * as E from '@core/helpers/either'
 import { type ParseError } from '@core/helpers/parser'
 import { type TodoRepository } from '@application/repositories/todo'
 import { ListController, type RunError } from '@adapters/controllers/todo/list'
-import { InputParser, type Input, type Output } from '@adapters/dtos/todo/list'
+import { RawInput, type Input, type Output } from '@adapters/dtos/todo/list'
 import { type ApiError } from '@framework/presentation/errors'
 
 export type ListHandlerState = { repository: TodoRepository }
@@ -17,7 +17,7 @@ export type ListHandlerContext = Context<
 >
 
 export async function listHandler(context: ListHandlerContext): Promise<ListHandlerOutput> {
-  const input = new InputParser({})
+  const input = new RawInput({})
   const controller = new ListController(input, context.store.repository)
   const output = await controller.run()
   if (E.isLeft(output)) {

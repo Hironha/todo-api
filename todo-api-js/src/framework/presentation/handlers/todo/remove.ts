@@ -4,7 +4,7 @@ import * as E from '@core/helpers/either'
 import { type ParseError } from '@core/helpers/parser'
 import { type TodoRepository } from '@application/repositories/todo'
 import { RemoveController, type RunError } from '@adapters/controllers/todo/remove'
-import { type Input, InputParser } from '@adapters/dtos/todo/remove'
+import { type Input, RawInput } from '@adapters/dtos/todo/remove'
 import { type ApiError } from '@framework/presentation/errors'
 
 export type RemoveHandlerState = { repository: TodoRepository }
@@ -18,7 +18,7 @@ export type RemoveHandlerContext = Context<
 >
 
 export async function removeHandler(context: RemoveHandlerContext): Promise<RemoveHandlerOutput> {
-  const input = new InputParser(context.params)
+  const input = new RawInput(context.params)
   const controller = new RemoveController(input, context.store.repository)
 
   const output = await controller.run()

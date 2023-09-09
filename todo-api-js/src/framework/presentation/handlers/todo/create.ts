@@ -3,7 +3,7 @@ import { type Context } from 'elysia'
 import * as E from '@core/helpers/either'
 import { type ParseError } from '@core/helpers/parser'
 import { type TodoRepository } from '@application/repositories/todo'
-import { InputParser, type Input, type Output } from '@adapters/dtos/todo/create'
+import { RawInput, type Input, type Output } from '@adapters/dtos/todo/create'
 import { CreateController, type RunError } from '@adapters/controllers/todo/create'
 import { type ApiError } from '@framework/presentation/errors'
 
@@ -17,7 +17,7 @@ export type CreateHandlerContext = Context<
 >
 
 export async function createHandler(context: CreateHandlerContext): Promise<CreateHandlerOutput> {
-  const input = new InputParser(context.body)
+  const input = new RawInput(context.body)
   const controller = new CreateController(input, context.store.repository)
   const output = await controller.run()
   if (E.isLeft(output)) {

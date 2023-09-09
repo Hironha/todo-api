@@ -4,7 +4,7 @@ import * as E from '@core/helpers/either'
 import { ParseError } from '@core/helpers/parser'
 import { type TodoRepository } from '@application/repositories/todo'
 import { FindController, type RunError } from '@adapters/controllers/todo/find'
-import { InputParser, type Input, type Output } from '@adapters/dtos/todo/find'
+import { RawInput, type Input, type Output } from '@adapters/dtos/todo/find'
 import { type ApiError } from '@framework/presentation/errors'
 
 export type FindHandlerState = { repository: TodoRepository }
@@ -18,7 +18,7 @@ export type FindHandlerContext = Context<
 >
 
 export async function findHandler(context: FindHandlerContext): Promise<FindHandlerOutput> {
-  const input = new InputParser(context.params)
+  const input = new RawInput(context.params)
   const controller = new FindController(input, context.store.repository)
 
   const output = await controller.run()
