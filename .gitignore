@@ -1,7 +1,7 @@
 # ignore env var
 .env
 
-# NODE
+# BUN
 # ignore dependencies of node implementation
 node_modules
 # ignore node implementation build 
