@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::delete::{DeleteController, RunError};
-use crate::adapters::dtos::todo::delete::{Input, InputSchema, ParseError};
+use crate::adapters::dtos::todo::delete::{InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -24,50 +24,37 @@ pub(super) async fn delete_todo(
 
     println!("DELETE TODO -> input {input_schema:?}");
 
-    let input = match Input::parse(input_schema) {
-        Ok(input) => input,
-        Err(err) => {
-            let message = err.api_error();
-            return (StatusCode::BAD_REQUEST, Json(message)).into_response();
-        }
-    };
-    
-    let controller = DeleteController::new(state.todo_store);
+    let controller = DeleteController::new(input_schema, state.todo_store);
 
-    if let Err(err) = controller.run(input).await {
-        let (status_code, message) = err.response_parts();
+    if let Err(err) = controller.run().await {
+        let (status_code, message) = get_error_response_config(err);
         (status_code, Json(message)).into_response()
     } else {
         (StatusCode::NO_CONTENT).into_response()
     }
 }
 
-impl ParseError {
-    fn api_error(&self) -> ApiError<ValidationError> {
-        let field = match self {
-            Self::Id => "id",
-        };
-        ApiError::from(ValidationError::new(field.into(), self.description()))
+fn get_error_response_config(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+    match error {
+        RunError::Validation(e) => {
+            let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());
+            let error = ApiError::new("DTD-001", "Invalid input").with_details(validation_error);
+            (StatusCode::BAD_REQUEST, error)
+        }
+        RunError::NotFound => {
+            let error: ApiError<_> = ApiError::new("DTD-002", "Todo not found");
+            (StatusCode::INTERNAL_SERVER_ERROR, error)
+        }
+        RunError::Internal => {
+            let error: ApiError<ValidationError> =
+                ApiError::new("DTD-003", "Internal server error");
+            (StatusCode::INTERNAL_SERVER_ERROR, error)
+        }
     }
 }
 
-impl RunError {
-    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
-        match self {
-            Self::NotFound => (
-                StatusCode::NOT_FOUND,
-                ApiError {
-                    code: "DTD-001".to_string(),
-                    message: "Todo not found".to_string(),
-                },
-            ),
-            Self::Internal => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ApiError {
-                    code: "DTD-002".to_string(),
-                    message: "Internal server error".to_string(),
-                },
-            ),
-        }
+fn get_parse_error_field(error: &ParseError) -> &'static str {
+    match error {
+        ParseError::Id => "id",
     }
 }

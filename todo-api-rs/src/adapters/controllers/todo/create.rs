@@ -1,32 +1,42 @@
-use crate::adapters::dtos::todo::create::{Input, Output};
+use crate::adapters::dtos::todo::create::{Input, Output, ParseError};
+use crate::adapters::dtos::ParsableInput;
 use crate::application::functions::todo::{
     create_todo, Create, CreateContext, CreateError, CreatePayload,
 };
 
 #[derive(Debug)]
 pub enum RunError {
+    Validation(ParseError),
     Internal,
 }
 
-pub struct CreateController<S: Create> {
+pub struct CreateController<I, S>
+where
+    I: ParsableInput<Input, ParseError>,
+    S: Create,
+{
     store: S,
+    input: I,
 }
 
-impl<S: Create> CreateController<S> {
-    pub const fn new(store: S) -> Self {
-        Self { store }
+impl<I, S> CreateController<I, S>
+where
+    I: ParsableInput<Input, ParseError>,
+    S: Create,
+{
+    pub const fn new(input: I, store: S) -> Self {
+        Self { input, store }
     }
-}
 
-impl<S: Create> CreateController<S> {
-    pub async fn run(self, input: Input) -> Result<Output, RunError> {
-        let ctx = CreateContext { store: self.store };
+    pub async fn run(self) -> Result<Output, RunError> {
+        let input = self.input.parse().map_err(RunError::Validation)?;
         let payload = CreatePayload {
             title: input.title,
             description: input.description,
             todo_at: input.todo_at,
         };
 
+        let ctx = CreateContext { store: self.store };
         let todo = create_todo(ctx, payload).await.map_err(|err| match err {
             CreateError::InternalError => RunError::Internal,
         })?;

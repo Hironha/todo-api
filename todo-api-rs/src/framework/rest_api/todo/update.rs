@@ -7,8 +7,8 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::update::{UpdateController, RunError};
-use crate::adapters::dtos::todo::update::{Input, InputSchema, ParseError};
+use crate::adapters::controllers::todo::update::{RunError, UpdateController};
+use crate::adapters::dtos::todo::update::{InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -38,19 +38,11 @@ pub(super) async fn update_todo(
 
     println!("UPDATE TODO -> input: {input_schema:?}");
 
-    let input = match Input::parse(input_schema) {
-        Ok(input) => input,
-        Err(err) => {
-            let message = err.api_error();
-            return (StatusCode::BAD_REQUEST, Json(message)).into_response();
-        }
-    };
-
-    let controller = UpdateController::new(state.todo_store);
-    let output = match controller.run(input).await {
+    let controller = UpdateController::new(input_schema, state.todo_store);
+    let output = match controller.run().await {
         Ok(output) => output,
         Err(err) => {
-            let (status_code, message) = err.response_parts();
+            let (status_code, message) = get_error_response_config(err);
             return (status_code, Json(message)).into_response();
         }
     };
@@ -60,34 +52,28 @@ pub(super) async fn update_todo(
     (StatusCode::OK, Json(output)).into_response()
 }
 
-impl ParseError {
-    fn api_error(&self) -> ApiError<ValidationError> {
-        let field = match self {
-            Self::Id => "id",
-            Self::Title => "title",
-            Self::TodoAt => "todoAt",
-        };
-        ApiError::from(ValidationError::new(field.into(), self.description()))
+fn get_error_response_config(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+    match error {
+        RunError::Validation(e) => {
+            let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());
+            let error = ApiError::new("UTD-001", "Invalid input").with_details(validation_error);
+            (StatusCode::BAD_REQUEST, error)
+        }
+        RunError::NotFound => {
+            let error = ApiError::new("UTD-002", "Todo not found");
+            (StatusCode::NOT_FOUND, error)
+        }
+        RunError::Internal => {
+            let error = ApiError::new("UTD-003", "Internal server error");
+            (StatusCode::INTERNAL_SERVER_ERROR, error)
+        }
     }
 }
 
-impl RunError {
-    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
-        match self {
-            Self::NotFound => (
-                StatusCode::NOT_FOUND,
-                ApiError {
-                    code: "UTD-001".to_string(),
-                    message: "Todo not found".to_string(),
-                },
-            ),
-            Self::Internal => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ApiError {
-                    code: "UTD-002".to_string(),
-                    message: "Internal server error".to_string(),
-                },
-            ),
-        }
+fn get_parse_error_field(error: &ParseError) -> &'static str {
+    match error {
+        ParseError::Id => "id",
+        ParseError::Title => "title",
+        ParseError::TodoAt => "todoAt",
     }
 }

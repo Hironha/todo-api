@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::create::{CreateController, RunError};
-use crate::adapters::dtos::todo::create::{Input, InputSchema, ParseError};
+use crate::adapters::dtos::todo::create::{InputSchema, ParseError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -26,45 +26,35 @@ pub(super) async fn create_todo(
 
     println!("CREATE TODO -> input: {input_schema:?}");
 
-    let input = match Input::parse(input_schema) {
-        Ok(input) => input,
+    let controller = CreateController::new(input_schema, state.todo_store);
+    let output = match controller.run().await {
+        Ok(output) => output,
         Err(err) => {
-            let error = err.api_error();
-            return (StatusCode::BAD_REQUEST, Json(error)).into_response();
+            let (status, error) = get_error_response_config(err);
+            return (status, Json(error)).into_response();
         }
     };
 
-    let controller = CreateController::new(state.todo_store);
+    (StatusCode::CREATED, Json(output)).into_response()
+}
 
-    match controller.run(input).await {
-        Ok(output) => (StatusCode::CREATED, Json(output)).into_response(),
-        Err(err) => {
-            let (status, message) = err.response_parts();
-            (status, Json(message)).into_response()
+fn get_error_response_config(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+    match error {
+        RunError::Validation(e) => {
+            let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());
+            let error = ApiError::new("CTD-001", "Invalid input").with_details(validation_error);
+            (StatusCode::BAD_REQUEST, error)
+        }
+        RunError::Internal => {
+            let error = ApiError::new("CTD-002", "Internal server error");
+            (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
     }
 }
 
-impl ParseError {
-    fn api_error(&self) -> ApiError<ValidationError> {
-        let field = match self {
-            Self::Title => "title",
-            Self::TodoAt => "todoAt",
-        };
-        ApiError::from(ValidationError::new(field.into(), self.description()))
-    }
-}
-
-impl RunError {
-    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
-        match self {
-            Self::Internal => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ApiError {
-                    code: "CTD-001".into(),
-                    message: "Internal server error".into(),
-                },
-            ),
-        }
+fn get_parse_error_field(error: &ParseError) -> &'static str {
+    match error {
+        ParseError::Title => "title",
+        ParseError::TodoAt => "todoAt",
     }
 }

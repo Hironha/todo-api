@@ -1,5 +1,6 @@
 use serde::Serialize;
 
+use crate::adapters::dtos::ParsableInput;
 use crate::domain::types::Date;
 
 #[derive(Debug, PartialEq)]
@@ -14,15 +15,8 @@ impl ParseError {
             Self::Title => "required",
             Self::TodoAt => "optional, but if defined, should be a date on Y-M-D format",
         };
-        description.to_string()
+        description.into()
     }
-}
-
-#[derive(Debug)]
-pub struct InputSchema {
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub todo_at: Option<String>,
 }
 
 #[derive(Debug)]
@@ -32,16 +26,23 @@ pub struct Input {
     pub todo_at: Option<Date>,
 }
 
-impl Input {
-    pub fn parse(schema: InputSchema) -> Result<Input, ParseError> {
-        let title = schema
+#[derive(Debug)]
+pub struct InputSchema {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub todo_at: Option<String>,
+}
+
+impl ParsableInput<Input, ParseError> for InputSchema {
+    fn parse(self) -> Result<Input, ParseError> {
+        let title = self
             .title
             .filter(|t| !t.is_empty())
             .ok_or(ParseError::Title)?;
 
-        let description = schema.description.filter(|d| !d.is_empty());
+        let description = self.description.filter(|d| !d.is_empty());
 
-        let todo_at = schema
+        let todo_at = self
             .todo_at
             .map(|at| Date::parse_str(&at))
             .transpose()
@@ -73,6 +74,8 @@ pub struct Output {
 
 #[cfg(test)]
 mod tests {
+    use crate::adapters::dtos::ParsableInput;
+
     #[test]
     fn parse_success() {
         let input_schema = super::InputSchema {
@@ -81,7 +84,7 @@ mod tests {
             todo_at: Some("2023-08-11".to_string()),
         };
 
-        assert!(super::Input::parse(input_schema).is_ok());
+        assert!(input_schema.parse().is_ok());
     }
 
     #[test]
@@ -91,9 +94,8 @@ mod tests {
             description: Some("".to_string()),
             todo_at: None,
         };
-        let payload = super::Input::parse(input_schema);
 
-        assert!(payload.is_ok_and(|p| p.description.is_none()));
+        assert!(input_schema.parse().is_ok_and(|p| p.description.is_none()));
     }
 
     #[test]
@@ -103,18 +105,18 @@ mod tests {
             description: Some("description".to_string()),
             todo_at: None,
         };
-        let none_title_payload = super::Input::parse(none_title_schema);
+        let none_tile_input = none_title_schema.parse();
 
-        assert!(none_title_payload.is_err_and(|e| e == super::ParseError::Title));
+        assert!(none_tile_input.is_err_and(|e| e == super::ParseError::Title));
 
         let empty_title_schema = super::InputSchema {
             title: Some("".to_string()),
             description: None,
             todo_at: None,
         };
-        let empty_title_payload = super::Input::parse(empty_title_schema);
+        let empty_title_input = empty_title_schema.parse();
 
-        assert!(empty_title_payload.is_err_and(|e| e == super::ParseError::Title));
+        assert!(empty_title_input.is_err_and(|e| e == super::ParseError::Title));
     }
 
     #[test]
@@ -125,8 +127,8 @@ mod tests {
             todo_at: Some("2023-2023-2023".to_string()),
         };
 
-        let invalid_todo_at_payload = super::Input::parse(invalid_todo_at_schema);
+        let invalid_todo_at_input = invalid_todo_at_schema.parse();
 
-        assert!(invalid_todo_at_payload.is_err_and(|e| e == super::ParseError::TodoAt));
+        assert!(invalid_todo_at_input.is_err_and(|e| e == super::ParseError::TodoAt));
     }
 }

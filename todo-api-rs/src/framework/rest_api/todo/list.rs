@@ -10,7 +10,7 @@ pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoRespo
     let output = match controller.run().await {
         Ok(output) => output,
         Err(err) => {
-            let (status, error) = err.response_parts();
+            let (status, error) = get_error_response_config(err);
             return (status, Json(error)).into_response();
         }
     };
@@ -18,16 +18,11 @@ pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoRespo
     (StatusCode::OK, Json(output)).into_response()
 }
 
-impl RunError {
-    fn response_parts(&self) -> (StatusCode, ApiError<String>) {
-        match self {
-            Self::Internal => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ApiError {
-                    code: "LTD-001".into(),
-                    message: "Internal server error".into(),
-                },
-            ),
+fn get_error_response_config(error: RunError) -> (StatusCode, ApiError<()>) {
+    match error {
+        RunError::Internal => {
+            let error = ApiError::new("LTD-001", "Internal server error");
+            (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
     }
 }

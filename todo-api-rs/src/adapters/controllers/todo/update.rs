@@ -1,27 +1,36 @@
-use crate::adapters::dtos::todo::update::{Input, Output};
+use crate::adapters::dtos::todo::update::{Input, Output, ParseError};
+use crate::adapters::dtos::ParsableInput;
 use crate::application::functions::todo::{
     update_todo, Update, UpdateContext, UpdateError, UpdatePayload,
 };
 
 #[derive(Debug)]
 pub enum RunError {
+    Validation(ParseError),
     NotFound,
     Internal,
 }
 
-pub struct UpdateController<S: Update> {
+pub struct UpdateController<I, S>
+where
+    I: ParsableInput<Input, ParseError>,
+    S: Update,
+{
+    input: I,
     store: S,
 }
 
-impl<S: Update> UpdateController<S> {
-    pub const fn new(store: S) -> Self {
-        Self { store }
+impl<I, S> UpdateController<I, S>
+where
+    I: ParsableInput<Input, ParseError>,
+    S: Update,
+{
+    pub const fn new(input: I, store: S) -> Self {
+        Self { input, store }
     }
-}
 
-impl<S: Update> UpdateController<S> {
-    pub async fn run(self, input: Input) -> Result<Output, RunError> {
-        let ctx = UpdateContext { store: self.store };
+    pub async fn run(self) -> Result<Output, RunError> {
+        let input = self.input.parse().map_err(RunError::Validation)?;
         let payload = UpdatePayload {
             id: input.id,
             title: input.title,
@@ -29,6 +38,7 @@ impl<S: Update> UpdateController<S> {
             todo_at: input.todo_at,
         };
 
+        let ctx = UpdateContext { store: self.store };
         let todo = update_todo(ctx, payload).await.map_err(|err| match err {
             UpdateError::NotFound => RunError::NotFound,
             UpdateError::InternalError => RunError::Internal,
