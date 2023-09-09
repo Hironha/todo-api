@@ -8,7 +8,7 @@
   "private": false,
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "bun build ./index.ts --outdir ../dist",
+    "prepare:build": "bun build --minify --target=bun --outdir=dist src/index.ts",
     "dev": "bun --hot run src/index.ts"
   },
   "dependencies": {
