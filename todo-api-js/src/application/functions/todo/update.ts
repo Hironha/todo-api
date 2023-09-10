@@ -1,6 +1,9 @@
 import * as E from '@core/helpers/either'
 import { type Todo } from '@domain/entities/todo'
-import { type TodoRepository, UpdateError as RepositoryError } from '@application/repositories/todo'
+import {
+  type TodoRepository,
+  type UpdateError as RepositoryUpdateError,
+} from '@application/repositories/todo'
 
 export type UpdateInput = {
   id: string
@@ -21,8 +24,8 @@ export enum UpdateError {
 
 export async function update(ctx: UpdateContext): Promise<E.Either<UpdateError, Todo>> {
   try {
-    return E.mapping(await ctx.repository.update(ctx.input))
-      .mapLeft(mapRepositoryError)
+    return E.map(await ctx.repository.update(ctx.input))
+      .mapLeft(mapUpdateError)
       .unwrap()
   } catch (e) {
     console.error(e)
@@ -30,7 +33,7 @@ export async function update(ctx: UpdateContext): Promise<E.Either<UpdateError, 
   }
 }
 
-function mapRepositoryError(error: RepositoryError): UpdateError {
+function mapUpdateError(error: RepositoryUpdateError): UpdateError {
   switch (error.kind) {
     case 'not-found':
       return UpdateError.NOT_FOUND

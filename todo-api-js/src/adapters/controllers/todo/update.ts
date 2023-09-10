@@ -21,7 +21,7 @@ export class UpdateController extends AbstractController<Input, Output> {
     }
 
     const result = await update({ repository: this.repository, input: input.value })
-    return E.mapping(result).map(TodoViewUtils.fromTodo).mapLeft(this.mapUpdateError).unwrap()
+    return E.map(result).mapRight(TodoViewUtils.fromTodo).mapLeft(this.mapUpdateError).unwrap()
   }
 
   private mapUpdateError(error: UpdateError): RunError {

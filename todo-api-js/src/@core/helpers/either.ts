@@ -6,7 +6,7 @@ export class Mapping<L, R> {
   constructor(private either: Either<L, R>) {}
 
   /** Transforms `R` into `T` using the callback `fn` */
-  map<T>(fn: (value: R) => T): Mapping<L, T> {
+  mapRight<T>(fn: (value: R) => T): Mapping<L, T> {
     if (isLeft(this.either)) {
       return this as unknown as Mapping<L, T>
     }
@@ -60,6 +60,6 @@ export function asLeft<L = unknown, R = unknown>(either: Either<L, R>): L | null
 }
 
 /** Creates a chainable mapper of `Either<L, R>`, allowing to transform `L` and `R` without removing the `Either` constraint */
-export function mapping<L = unknown, R = unknown>(either: Either<L, R>): Mapping<L, R> {
+export function map<L = unknown, R = unknown>(either: Either<L, R>): Mapping<L, R> {
   return new Mapping(either)
 }

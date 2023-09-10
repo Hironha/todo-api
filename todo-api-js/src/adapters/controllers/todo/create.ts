@@ -21,7 +21,7 @@ export class CreateController extends AbstractController<Input, Output> {
     }
 
     const result = await create({ repository: this.repository, input: input.value })
-    return E.mapping(result).map(TodoViewUtils.fromTodo).mapLeft(this.mapCreateError).unwrap()
+    return E.map(result).mapRight(TodoViewUtils.fromTodo).mapLeft(this.mapCreateError).unwrap()
   }
 
   private mapCreateError(error: CreateError): RunError {

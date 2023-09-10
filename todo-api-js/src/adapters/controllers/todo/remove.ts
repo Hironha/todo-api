@@ -20,14 +20,14 @@ export class RemoveController extends AbstractController<Input, Output> {
     }
 
     const result = await remove({ repository: this.repository, input: input.value })
-    return E.mapping(result).mapLeft(this.mapRemoveError).unwrap()
+    return E.map(result).mapLeft(this.mapRemoveError).unwrap()
   }
 
   private mapRemoveError(error: RemoveError): RunError {
     switch (error) {
       case RemoveError.NotFound:
         return { kind: 'not-found', which: 'id' }
-      case RemoveError.InternalError:
+      case RemoveError.Unknown:
         return { kind: 'internal', cause: 'Internal error on remove function' }
       default:
         // exhaustive check

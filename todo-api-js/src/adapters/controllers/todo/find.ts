@@ -21,7 +21,7 @@ export class FindController extends AbstractController<Input, Output> {
     }
 
     const result = await find({ repository: this.repository, input: input.value })
-    return E.mapping(result).map(TodoViewUtils.fromTodo).mapLeft(this.mapFindError).unwrap()
+    return E.map(result).mapRight(TodoViewUtils.fromTodo).mapLeft(this.mapFindError).unwrap()
   }
 
   private mapFindError(error: FindError): RunError {

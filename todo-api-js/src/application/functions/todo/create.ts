@@ -19,8 +19,12 @@ export enum CreateError {
 
 export async function create(ctx: CreateContext): Promise<E.Either<CreateError, Todo>> {
   try {
-    const createdTodo = await ctx.repository.create(ctx.input)
-    return E.right(createdTodo)
+    const todo = await ctx.repository.create(ctx.input)
+    if (E.isLeft(todo)) {
+      return E.left(CreateError.Unknown)
+    }
+
+    return E.right(todo.value)
   } catch (e) {
     console.error(e)
     return E.left(CreateError.Unknown)
