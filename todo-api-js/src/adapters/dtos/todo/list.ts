@@ -1,20 +1,10 @@
 import { type Either, right, left } from '@core/helpers/either'
 import { type ParseError, type ParsableInput } from '@core/helpers/parser'
-import { DateUtils } from '@core/helpers/date'
 import { type Todo } from '@domain/entities/todo'
+import { TodoViewUtils, type TodoView } from '@adapters/views/todo'
 
 export type Input = {}
-export type Item = {
-  id: string
-  title: string
-  description?: string
-  /** UTC Date stringified on Y-M-D format */
-  todoAt?: string
-  /** UTC Date stringified on `RFC 3339` format  */
-  updatedAt: string
-  /** UTC Date stringified on `RFC 3339` format  */
-  createdAt: string
-}
+export type Item = TodoView & {}
 export type Output = {
   count: number
   items: Item[]
@@ -33,13 +23,6 @@ export class RawInput implements ParsableInput<Input> {
 
 export class OutputUtils {
   static createItemFromTodo(todo: Todo): Item {
-    return {
-      id: todo.id,
-      title: todo.title,
-      description: todo.description,
-      todoAt: todo.todoAt ? DateUtils.utcYMD(todo.todoAt) : undefined,
-      createdAt: DateUtils.utcRFC3339(todo.createdAt),
-      updatedAt: DateUtils.utcRFC3339(todo.updatedAt),
-    }
+    return TodoViewUtils.fromTodo(todo)
   }
 }
