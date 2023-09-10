@@ -22,7 +22,7 @@ impl TodoStore {
 #[async_trait]
 impl Find for TodoStore {
     async fn find(&self, id: &Id) -> Result<Todo, FindError> {
-        let q = r"SELECT * FROM todos WHERE id = ($1)";
+        let q = r"SELECT * FROM Todo WHERE id = ($1)";
 
         let res = sqlx::query_as::<_, TodoModel>(q)
             .bind(id.uuid())
@@ -43,7 +43,7 @@ impl Find for TodoStore {
 impl Create for TodoStore {
     async fn create(&self, payload: CreatePayload) -> Result<Todo, CreateError> {
         let q = r"
-            INSERT INTO todos (id, title, description, todo_at, created_at, updated_at)
+            INSERT INTO Todo (id, title, description, todo_at, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6)
         ";
 
@@ -70,7 +70,7 @@ impl Create for TodoStore {
 #[async_trait]
 impl List for TodoStore {
     async fn list(&self) -> Result<Vec<Todo>, ListError> {
-        let q = r"SELECT * FROM todos";
+        let q = r"SELECT * FROM Todo";
 
         let res = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
@@ -92,7 +92,7 @@ impl List for TodoStore {
 #[async_trait]
 impl Delete for TodoStore {
     async fn delete(&self, id: &Id) -> Result<(), DeleteError> {
-        let delete_q = r"DELETE FROM todos WHERE id = ($1)";
+        let delete_q = r"DELETE FROM Todo WHERE id = ($1)";
 
         let res = sqlx::query(delete_q)
             .bind(id.uuid())
@@ -116,7 +116,7 @@ impl Delete for TodoStore {
 impl Update for TodoStore {
     async fn set(&self, payload: UpdatePayload) -> Result<Todo, UpdateError> {
         let q = r"
-            UPDATE todos 
+            UPDATE Todo 
             SET title, description, todo_at
             VALUES ($1), ($2), ($3)
             WHERE id = ($4)
