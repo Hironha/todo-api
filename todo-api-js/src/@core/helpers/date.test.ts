@@ -17,3 +17,11 @@ test('should create ISO-8601 on YYYY-MM-DD format', () => {
   expect(parts.at(1)).toBe('08')
   expect(parts.at(2)).toBe('22')
 })
+
+test('should create RFC-3339', () => {
+  const date = new Date()
+  const iso = date.toISOString()
+
+  expect(iso).toEqual(DateUtils.utcRFC3339(date))
+  expect(new Date(iso)).toEqual(date)
+})
