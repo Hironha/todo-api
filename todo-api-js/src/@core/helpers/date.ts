@@ -9,6 +9,6 @@ export class DateUtils {
   }
 
   static utcRFC3339(date: Date): string {
-    return date.toUTCString()
+    return date.toISOString()
   }
 }
