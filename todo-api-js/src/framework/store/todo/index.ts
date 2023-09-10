@@ -1,13 +1,19 @@
-import { type Todo } from '@framework/models/todo'
-import { type CreateInput, type TodoRepository } from '@application/repositories/todo'
+import * as E from '@core/helpers/either'
+import {
+  UpdateError,
+  UpdateInput,
+  type CreateInput,
+  type TodoRepository,
+} from '@application/repositories/todo'
+import { type TodoModel } from '@framework/models/todo'
 
 export class TodoStore implements TodoRepository {
-  private readonly store = new Map<string, Todo>()
+  private readonly store = new Map<string, TodoModel>()
 
-  create(input: CreateInput): Promise<Todo> {
+  async create(input: CreateInput): Promise<TodoModel> {
     const currentDate = new Date()
     const id = currentDate.getTime().toString()
-    const todo: Todo = {
+    const todo: TodoModel = {
       id,
       title: input.title,
       description: input.description,
@@ -16,28 +22,36 @@ export class TodoStore implements TodoRepository {
       updatedAt: currentDate,
     }
     this.store.set(id, todo)
-    return Promise.resolve(todo)
+    return todo
   }
 
-  find(id: string): Promise<Todo | undefined> {
-    return Promise.resolve(this.store.get(id))
+  async find(id: string): Promise<TodoModel | undefined> {
+    return this.store.get(id)
   }
 
-  list(): Promise<Todo[]> {
-    return Promise.resolve(Array.from(this.store.values()))
+  async list(): Promise<TodoModel[]> {
+    return Array.from(this.store.values())
   }
 
-  remove(id: string): Promise<void> {
-    const todo = this.store.get(id)
+  async remove(id: string): Promise<void> {
+    this.store.delete(id)
+  }
+
+  async update(input: UpdateInput): Promise<E.Either<UpdateError, TodoModel>> {
+    const todo = this.store.get(input.id)
     if (!todo) {
-      return Promise.resolve(undefined)
+      return E.left({ kind: 'not-found' })
     }
 
-    const deleted = this.store.delete(todo.id)
-    if (!deleted) {
-      return Promise.resolve(undefined)
+    const updated: TodoModel = {
+      id: todo.id,
+      title: input.title,
+      description: input.description,
+      todoAt: input.todoAt,
+      createdAt: todo.createdAt,
+      updatedAt: new Date(),
     }
-
-    return Promise.resolve()
+    this.store.set(input.id, todo)
+    return E.right(updated)
   }
 }
