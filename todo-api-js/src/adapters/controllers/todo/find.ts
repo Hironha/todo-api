@@ -12,7 +12,7 @@ export type NotFoundError = { kind: 'not-found'; which: string }
 export type RunError = InternalError | ValidationError | NotFoundError
 
 export class FindController extends AbstractController<Input, E.Either<RunError, Output>> {
-  private repository: TodoRepository
+  private readonly repository: TodoRepository
   constructor(input: ParsableInput<Input>, repository: TodoRepository) {
     super(input)
     this.repository = repository

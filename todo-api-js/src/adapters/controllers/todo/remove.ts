@@ -12,7 +12,7 @@ export type InternalError = { kind: 'internal'; cause: string }
 export type RunError = ValidationError | NotFound | InternalError
 
 export class RemoveController extends AbstractController<Input, E.Either<RunError, void>> {
-  private repository: TodoRepository
+  private readonly repository: TodoRepository
   constructor(input: ParsableInput<Input>, repository: TodoRepository) {
     super(input)
     this.repository = repository

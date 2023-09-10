@@ -11,7 +11,7 @@ export type InternalError = { kind: 'internal'; cause: string }
 export type RunError = InternalError | ValidationError
 
 export class CreateController extends AbstractController<Input, E.Either<RunError, Output>> {
-  private repository: TodoRepository
+  private readonly repository: TodoRepository
   constructor(input: ParsableInput<Input>, repository: TodoRepository) {
     super(input)
     this.repository = repository
