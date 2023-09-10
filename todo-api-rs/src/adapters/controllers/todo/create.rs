@@ -1,14 +1,9 @@
-use crate::adapters::dtos::todo::create::{Input, Output, ParseError};
+use crate::adapters::dtos::todo::create::{Input, Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
+use crate::adapters::views::todo::TodoView;
 use crate::application::functions::todo::{
     create_todo, Create, CreateContext, CreateError, CreatePayload,
 };
-
-#[derive(Debug)]
-pub enum RunError {
-    Validation(ParseError),
-    Internal,
-}
 
 pub struct CreateController<I, S>
 where
@@ -28,26 +23,24 @@ where
         Self { input, store }
     }
 
-    pub async fn run(self) -> Result<Output, RunError> {
-        let input = self.input.parse().map_err(RunError::Validation)?;
-        let payload = CreatePayload {
-            title: input.title,
-            description: input.description,
-            todo_at: input.todo_at,
+    pub async fn run(self) -> Output {
+        let payload = match self.input.parse() {
+            Ok(input) => CreatePayload {
+                title: input.title,
+                description: input.description,
+                todo_at: input.todo_at,
+            },
+            Err(err) => return Output::err(RunError::Validation(err)),
         };
 
         let ctx = CreateContext { store: self.store };
-        let todo = create_todo(ctx, payload).await.map_err(|err| match err {
-            CreateError::InternalError => RunError::Internal,
-        })?;
+        let result = create_todo(ctx, payload).await.map_err(|err| match err {
+            CreateError::Internal => RunError::Internal,
+        });
 
-        Ok(Output {
-            id: todo.id.as_string(),
-            title: todo.title,
-            description: todo.description,
-            todo_at: todo.todo_at.map(|at| at.ymd()),
-            created_at: todo.created_at.rfc3339(),
-            updated_at: todo.updated_at.rfc3339(),
-        })
+        match result {
+            Ok(todo) => Output::ok(TodoView::from(todo)),
+            Err(err) => Output::err(err),
+        }
     }
 }

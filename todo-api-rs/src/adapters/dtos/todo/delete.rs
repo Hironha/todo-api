@@ -37,11 +37,26 @@ impl ParsableInput<Input, ParseError> for InputSchema {
     }
 }
 
-pub struct Output;
+#[derive(Debug, PartialEq)]
+pub enum RunError {
+    Validation(ParseError),
+    NotFound,
+    Internal,
+}
 
+#[derive(Debug)]
+pub struct Output(Result<(), RunError>);
 impl Output {
-    pub const fn new() -> Self {
-        Output {}
+    pub const fn ok() -> Self {
+        Self(Ok(()))
+    }
+
+    pub const fn err(error: RunError) -> Self {
+        Self(Err(error))
+    }
+
+    pub fn value(self) -> Result<(), RunError> {
+        self.0
     }
 }
 

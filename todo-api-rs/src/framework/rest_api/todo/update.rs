@@ -7,8 +7,8 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::update::{RunError, UpdateController};
-use crate::adapters::dtos::todo::update::{InputSchema, ParseError};
+use crate::adapters::controllers::todo::update::UpdateController;
+use crate::adapters::dtos::todo::update::{InputSchema, ParseError, RunError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -39,7 +39,7 @@ pub(super) async fn update_todo(
     println!("UPDATE TODO -> input: {input_schema:?}");
 
     let controller = UpdateController::new(input_schema, state.todo_store);
-    let output = match controller.run().await {
+    let output = match controller.run().await.value() {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = get_error_response_config(err);

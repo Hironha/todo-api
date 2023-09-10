@@ -60,7 +60,7 @@ impl Create for TodoStore {
 
         if let Err(err) = res {
             println!("CREATE ERROR -> {err:?}");
-            return Err(CreateError::InternalError);
+            return Err(CreateError::Internal);
         }
 
         Ok(model.into_entity())

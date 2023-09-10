@@ -1,15 +1,8 @@
-use crate::adapters::dtos::todo::delete::{Input, Output, ParseError};
+use crate::adapters::dtos::todo::delete::{Input, Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
 use crate::application::functions::todo::{
     delete_todo, Delete, DeleteContext, DeleteError, DeletePayload,
 };
-
-#[derive(Debug)]
-pub enum RunError {
-    Validation(ParseError),
-    NotFound,
-    Internal,
-}
 
 pub struct DeleteController<I, S>
 where
@@ -29,16 +22,21 @@ where
         Self { input, store }
     }
 
-    pub async fn run(self) -> Result<Output, RunError> {
-        let input = self.input.parse().map_err(RunError::Validation)?;
-        let payload = DeletePayload { id: input.id };
+    pub async fn run(self) -> Output {
+        let payload = match self.input.parse() {
+            Ok(input) => DeletePayload { id: input.id },
+            Err(err) => return Output::err(RunError::Validation(err)),
+        };
 
         let ctx = DeleteContext { store: self.store };
-        delete_todo(ctx, payload).await.map_err(|err| match err {
+        let result = delete_todo(ctx, payload).await.map_err(|err| match err {
             DeleteError::NotFound => RunError::NotFound,
             DeleteError::InternalError => RunError::Internal,
-        })?;
+        });
 
-        Ok(Output::new())
+        match result {
+            Ok(_) => Output::ok(),
+            Err(err) => Output::err(err),
+        }
     }
 }

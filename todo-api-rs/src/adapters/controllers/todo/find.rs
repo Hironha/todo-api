@@ -1,13 +1,7 @@
-use crate::adapters::dtos::todo::find::{Input, Output, ParseError};
+use crate::adapters::dtos::todo::find::{Input, Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
+use crate::adapters::views::todo::TodoView;
 use crate::application::functions::todo::{find_todo, Find, FindContext, FindError, FindPayload};
-
-#[derive(Debug)]
-pub enum RunError {
-    Validation(ParseError),
-    NotFound,
-    Internal,
-}
 
 pub struct FindController<I, S>
 where
@@ -27,23 +21,21 @@ where
         Self { input, store }
     }
 
-    pub async fn run(self) -> Result<Output, RunError> {
-        let input = self.input.parse().map_err(RunError::Validation)?;
-        let payload = FindPayload { id: input.id };
+    pub async fn run(self) -> Output {
+        let payload = match self.input.parse() {
+            Ok(input) => FindPayload { id: input.id },
+            Err(err) => return Output::err(RunError::Validation(err)),
+        };
 
         let ctx = FindContext { store: self.store };
-        let todo = find_todo(ctx, payload).await.map_err(|err| match err {
+        let result = find_todo(ctx, payload).await.map_err(|err| match err {
             FindError::InternalError => RunError::Internal,
             FindError::NotFound => RunError::NotFound,
-        })?;
+        });
 
-        Ok(Output {
-            id: todo.id.as_string(),
-            title: todo.title,
-            description: todo.description,
-            todo_at: todo.todo_at.map(|at| at.ymd()),
-            created_at: todo.created_at.rfc3339(),
-            updated_at: todo.created_at.rfc3339(),
-        })
+        match result {
+            Ok(todo) => Output::ok(TodoView::from(todo)),
+            Err(err) => Output::err(err),
+        }
     }
 }

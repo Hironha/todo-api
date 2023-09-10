@@ -7,8 +7,8 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::find::{FindController, RunError};
-use crate::adapters::dtos::todo::find::{InputSchema, ParseError};
+use crate::adapters::controllers::todo::find::FindController;
+use crate::adapters::dtos::todo::find::{InputSchema, ParseError, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -25,7 +25,7 @@ pub(super) async fn find_todo(
     println!("GET TODO -> input: {input_schema:?}");
 
     let controller = FindController::new(input_schema, state.todo_store);
-    let output = match controller.run().await {
+    let output = match controller.run().await.value() {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = get_error_response_config(err);

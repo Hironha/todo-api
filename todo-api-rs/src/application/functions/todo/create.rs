@@ -4,7 +4,7 @@ use crate::domain::{todo::Todo, types::Date};
 
 #[derive(Debug)]
 pub enum CreateError {
-    InternalError,
+    Internal,
 }
 
 #[derive(Clone, Debug)]

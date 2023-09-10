@@ -7,8 +7,8 @@ use axum::{
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::delete::{DeleteController, RunError};
-use crate::adapters::dtos::todo::delete::{InputSchema, ParseError};
+use crate::adapters::controllers::todo::delete::DeleteController;
+use crate::adapters::dtos::todo::delete::{InputSchema, ParseError, RunError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -26,7 +26,7 @@ pub(super) async fn delete_todo(
 
     let controller = DeleteController::new(input_schema, state.todo_store);
 
-    if let Err(err) = controller.run().await {
+    if let Err(err) = controller.run().await.value() {
         let (status_code, message) = get_error_response_config(err);
         (status_code, Json(message)).into_response()
     } else {

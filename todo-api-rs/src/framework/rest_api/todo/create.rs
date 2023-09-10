@@ -2,8 +2,8 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::create::{CreateController, RunError};
-use crate::adapters::dtos::todo::create::{InputSchema, ParseError};
+use crate::adapters::controllers::todo::create::CreateController;
+use crate::adapters::dtos::todo::create::{InputSchema, ParseError, RunError};
 use crate::framework::rest_api::{ApiError, ValidationError};
 
 #[derive(Deserialize)]
@@ -27,7 +27,7 @@ pub(super) async fn create_todo(
     println!("CREATE TODO -> input: {input_schema:?}");
 
     let controller = CreateController::new(input_schema, state.todo_store);
-    let output = match controller.run().await {
+    let output = match controller.run().await.value() {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = get_error_response_config(err);
