@@ -1,40 +1,42 @@
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
-use serde::Deserialize;
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Json;
+use serde_json::Value;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::delete::DeleteController;
 use crate::adapters::dtos::todo::delete::{InputSchema, ParseError, RunError};
-use crate::framework::rest_api::{ApiError, ValidationError};
-
-#[derive(Deserialize)]
-pub(super) struct PathParams {
-    id: Option<String>,
-}
+use crate::framework::rest_api::errors::{ApiError, ValidationError};
+use crate::framework::rest_api::extractors::StringExtractor;
 
 pub(super) async fn delete_todo(
     State(state): State<TodoState>,
-    Path(path): Path<PathParams>,
+    Path(path): Path<Value>,
 ) -> impl IntoResponse {
-    let input_schema = InputSchema { id: path.id };
+    println!("DELETE TODO -> path {path:#?}");
 
-    println!("DELETE TODO -> input {input_schema:?}");
-
+    let input_schema = match extract_input_schema(path) {
+        Ok(input) => input,
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, Json(err)).into_response(),
+    };
     let controller = DeleteController::new(input_schema, state.todo_store);
 
     if let Err(err) = controller.run().await.value() {
-        let (status_code, message) = get_error_response_config(err);
+        let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {
         (StatusCode::NO_CONTENT).into_response()
     }
 }
 
-fn get_error_response_config(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn extract_input_schema(mut path: Value) -> Result<InputSchema, ApiError<ValidationError>> {
+    let id = StringExtractor::optional("id").extract(&mut path)?;
+
+    Ok(InputSchema { id })
+}
+
+fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
         RunError::Validation(e) => {
             let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());

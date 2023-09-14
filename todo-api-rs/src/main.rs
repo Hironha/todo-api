@@ -4,7 +4,7 @@ mod domain;
 mod framework;
 
 use axum::Router;
-use framework::rest_api::todo;
+use framework::rest_api::routes::todo;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 

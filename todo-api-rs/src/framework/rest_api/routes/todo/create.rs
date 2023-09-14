@@ -1,36 +1,31 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use serde::Deserialize;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Json;
+use serde_json::Value;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateController;
 use crate::adapters::dtos::todo::create::{InputSchema, ParseError, RunError};
-use crate::framework::rest_api::{ApiError, ValidationError};
-
-#[derive(Deserialize)]
-pub(super) struct RequestBody {
-    title: Option<String>,
-    description: Option<String>,
-    #[serde(rename(deserialize = "todoAt"))]
-    todo_at: Option<String>,
-}
+use crate::framework::rest_api::errors::{ApiError, ValidationError};
+use crate::framework::rest_api::extractors::StringExtractor;
 
 pub(super) async fn create_todo(
     State(state): State<TodoState>,
-    Json(body): Json<RequestBody>,
+    Json(body): Json<Value>,
 ) -> impl IntoResponse {
-    let input_schema = InputSchema {
-        title: body.title,
-        description: body.description,
-        todo_at: body.todo_at,
+    println!("CREATE TODO -> body: {body:#?}");
+
+    let input_schema = match extract_input_schema(body) {
+        Ok(input) => input,
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, Json(err)).into_response(),
     };
-
-    println!("CREATE TODO -> input: {input_schema:?}");
-
     let controller = CreateController::new(input_schema, state.todo_store);
+
     let output = match controller.run().await.value() {
         Ok(output) => output,
         Err(err) => {
-            let (status, error) = get_error_response_config(err);
+            let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
     };
@@ -38,7 +33,19 @@ pub(super) async fn create_todo(
     (StatusCode::CREATED, Json(output)).into_response()
 }
 
-fn get_error_response_config(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn extract_input_schema(mut body: Value) -> Result<InputSchema, ApiError<ValidationError>> {
+    let title = StringExtractor::optional("title").extract(&mut body)?;
+    let description = StringExtractor::optional("description").extract(&mut body)?;
+    let todo_at = StringExtractor::optional("todoAt").extract(&mut body)?;
+
+    Ok(InputSchema {
+        title,
+        description,
+        todo_at,
+    })
+}
+
+fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
         RunError::Validation(e) => {
             let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());

@@ -1,4 +1,3 @@
-mod error;
-pub mod todo;
-
-use error::*;
+mod errors;
+mod extractors;
+pub mod routes;
