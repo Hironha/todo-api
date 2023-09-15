@@ -3,12 +3,12 @@ import { type Context } from 'elysia'
 import * as E from '@core/helpers/either'
 import { ParseError } from '@core/helpers/parser'
 import { type TodoRepository } from '@application/repositories/todo'
-import { FindController, type RunError } from '@adapters/controllers/todo/find'
-import { RawInput, type Input, type Output } from '@adapters/dtos/todo/find'
+import { FindController } from '@adapters/controllers/todo/find'
+import { RawInput, type Input, type Output, type RunError } from '@adapters/dtos/todo/find'
 import { type ApiError } from '@framework/presentation/errors'
 
 export type FindHandlerState = { repository: TodoRepository }
-export type FindHandlerOutput = Output | ApiError<ParseError<Input>['details']>
+export type FindHandlerOutput = Output['value'] | ApiError<ParseError<Input>['details']>
 export type FindHandlerContext = Context<
   {
     params: { id: string }

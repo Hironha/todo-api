@@ -3,8 +3,8 @@ import { type Context } from 'elysia'
 import * as E from '@core/helpers/either'
 import { type ParseError } from '@core/helpers/parser'
 import { type TodoRepository } from '@application/repositories/todo'
-import { RemoveController, type RunError } from '@adapters/controllers/todo/remove'
-import { type Input, RawInput } from '@adapters/dtos/todo/remove'
+import { RawInput, type Input, type RunError } from '@adapters/dtos/todo/remove'
+import { RemoveController } from '@adapters/controllers/todo/remove'
 import { type ApiError } from '@framework/presentation/errors'
 
 export type RemoveHandlerState = { repository: TodoRepository }

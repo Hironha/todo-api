@@ -3,12 +3,12 @@ import { type Context } from 'elysia'
 import * as E from '@core/helpers/either'
 import { type ParseError } from '@core/helpers/parser'
 import { type TodoRepository } from '@application/repositories/todo'
-import { RawInput, type Input, type Output } from '@adapters/dtos/todo/create'
-import { CreateController, type RunError } from '@adapters/controllers/todo/create'
+import { RawInput, type Input, type Output, type RunError } from '@adapters/dtos/todo/create'
+import { CreateController } from '@adapters/controllers/todo/create'
 import { type ApiError } from '@framework/presentation/errors'
 
 export type CreateHandlerState = { repository: TodoRepository }
-export type CreateHandlerOutput = Output | ApiError<ParseError<Input>['details']>
+export type CreateHandlerOutput = Output['value'] | ApiError<ParseError<Input>['details']>
 export type CreateHandlerContext = Context<
   {
     response: Promise<CreateHandlerOutput>
