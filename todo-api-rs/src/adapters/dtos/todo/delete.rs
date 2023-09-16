@@ -9,7 +9,7 @@ pub enum ParseError {
 impl ParseError {
     pub fn description(&self) -> String {
         let description = match self {
-            Self::Id => "required",
+            Self::Id => "required string",
         };
         description.into()
     }

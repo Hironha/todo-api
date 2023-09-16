@@ -8,20 +8,16 @@ use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
 use crate::adapters::dtos::todo::update::{InputSchema, ParseError, RunError};
 use crate::framework::rest_api::errors::{ApiError, ValidationError};
-use crate::framework::rest_api::extractors::StringExtractor;
 
 pub(super) async fn update_todo(
     State(state): State<TodoState>,
     Path(path): Path<Value>,
     Json(body): Json<Value>,
 ) -> impl IntoResponse {
-    println!("UPDATE TODO -> path: {path:#?}");
-    println!("UPDATE TODO -> body: {body:#?}");
+    tracing::info!("UPDATE TODO -> path: {path:?}");
+    tracing::info!("UPDATE TODO -> body: {body:?}");
 
-    let input_schema = match extract_input_schema(path, body) {
-        Ok(input) => input,
-        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, Json(err)).into_response(),
-    };
+    let input_schema = extract_input_schema(path, body);
     let controller = UpdateController::new(input_schema, state.todo_store);
 
     let output = match controller.run().await.value() {
@@ -32,26 +28,21 @@ pub(super) async fn update_todo(
         }
     };
 
-    println!("UPDATE TODO -> updated: {output:?}");
-
     (StatusCode::OK, Json(output)).into_response()
 }
 
-fn extract_input_schema(
-    mut path: Value,
-    mut body: Value,
-) -> Result<InputSchema, ApiError<ValidationError>> {
-    let id = StringExtractor::optional("id").extract(&mut path)?;
-    let title = StringExtractor::optional("title").extract(&mut body)?;
-    let description = StringExtractor::optional("description").extract(&mut body)?;
-    let todo_at = StringExtractor::optional("todoAt").extract(&mut body)?;
+fn extract_input_schema(path: Value, body: Value) -> InputSchema {
+    let id = path.as_str().map(|id| id.to_string());
+    let title = body["title"].as_str().map(|t| t.to_string());
+    let description = body["description"].as_str().map(|d| d.to_string());
+    let todo_at = body["todoAt"].as_str().map(|at| at.to_string());
 
-    Ok(InputSchema {
+    InputSchema {
         id,
         title,
         description,
         todo_at,
-    })
+    }
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {

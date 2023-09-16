@@ -11,8 +11,8 @@ pub enum ParseError {
 impl ParseError {
     pub fn description(&self) -> String {
         let description = match self {
-            Self::Title => "required",
-            Self::TodoAt => "optional, but if defined, should be an UTC date on YYYY-MM-DD format",
+            Self::Title => "required string",
+            Self::TodoAt => "optional string, but if defined, should be an UTC date on YYYY-MM-DD format",
         };
         description.into()
     }

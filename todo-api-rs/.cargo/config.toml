@@ -1,0 +1,3 @@
+# Enviroments variables set for all `cargo ...` commands
+[env]
+RUST_LOG = "todo_api_rs=debug"

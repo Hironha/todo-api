@@ -4,31 +4,73 @@ mod domain;
 mod framework;
 
 use axum::Router;
-use framework::rest_api::routes::todo;
+use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
+use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
+use tower_http::trace::{DefaultOnRequest, DefaultOnResponse, TraceLayer};
+use tracing::Level;
+use tracing_subscriber::EnvFilter;
+
+use framework::rest_api::routes::todo;
+use std::collections::HashMap;
 use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // initialize db connection
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect("postgres://hironha:rafaelhiro123@0.0.0.0:5432/todo_api")
-        .await
-        .expect("failed to connect into postgres db");
+    dotenv().expect("Failed to load .env file");
 
+    tracing_subscriber::fmt()
+        .without_time()
+        .with_target(false)
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
+    let pool = create_db_pool(5).await;
     sqlx::migrate!("./migrations").run(&pool).await?;
 
-    // initialize all app routes
-    let routes = Router::new().merge(todo::create_router(pool.clone()));
+    let app = Router::new()
+        .merge(todo::create_router(pool.clone()))
+        .layer(create_tracer());
 
-    // Creates an IPv4 socket address for the server
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-    println!("Server listening on {addr}");
+    tracing::info!("Server listening on {addr:?}");
 
     axum::Server::bind(&addr)
-        .serve(routes.into_make_service())
+        .serve(app.into_make_service())
         .await?;
 
     Ok(())
+}
+
+async fn create_db_pool(connections: u32) -> Pool<Postgres> {
+    let env = std::env::vars().collect::<HashMap<String, String>>();
+    let user = env
+        .get("DB_USER")
+        .expect("Failed to load DB_USER from .env");
+    let password = env
+        .get("DB_PASSWORD")
+        .expect("Failed to load DB_PASSWORD from .env");
+    let host = env
+        .get("DB_HOST")
+        .expect("Failed to load DB_HOST from .env");
+    let db_name = env
+        .get("DB_NAME")
+        .expect("Failed to load DB_NAME from .env");
+
+    PgPoolOptions::new()
+        .max_connections(connections)
+        .connect(&format!("postgres://{user}:{password}@{host}/{db_name}"))
+        .await
+        .expect("Failed to connect to Postgres database")
+}
+
+fn create_tracer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
+    TraceLayer::new_for_http()
+        .on_request(DefaultOnRequest::new().level(Level::INFO))
+        .on_response(
+            DefaultOnResponse::new()
+                .level(Level::INFO)
+                .latency_unit(tower_http::LatencyUnit::Micros),
+        )
 }

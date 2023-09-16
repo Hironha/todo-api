@@ -8,18 +8,14 @@ use super::TodoState;
 use crate::adapters::controllers::todo::delete::DeleteController;
 use crate::adapters::dtos::todo::delete::{InputSchema, ParseError, RunError};
 use crate::framework::rest_api::errors::{ApiError, ValidationError};
-use crate::framework::rest_api::extractors::StringExtractor;
 
 pub(super) async fn delete_todo(
     State(state): State<TodoState>,
     Path(path): Path<Value>,
 ) -> impl IntoResponse {
-    println!("DELETE TODO -> path {path:#?}");
+    tracing::info!("DELETE TODO ->> path {path:?}");
 
-    let input_schema = match extract_input_schema(path) {
-        Ok(input) => input,
-        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, Json(err)).into_response(),
-    };
+    let input_schema = InputSchema { id: path.as_str().map(|id| id.to_string()) };
     let controller = DeleteController::new(input_schema, state.todo_store);
 
     if let Err(err) = controller.run().await.value() {
@@ -28,12 +24,6 @@ pub(super) async fn delete_todo(
     } else {
         (StatusCode::NO_CONTENT).into_response()
     }
-}
-
-fn extract_input_schema(mut path: Value) -> Result<InputSchema, ApiError<ValidationError>> {
-    let id = StringExtractor::optional("id").extract(&mut path)?;
-
-    Ok(InputSchema { id })
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {

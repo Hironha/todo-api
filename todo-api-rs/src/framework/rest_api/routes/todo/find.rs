@@ -8,18 +8,14 @@ use super::TodoState;
 use crate::adapters::controllers::todo::find::FindController;
 use crate::adapters::dtos::todo::find::{InputSchema, ParseError, RunError};
 use crate::framework::rest_api::errors::{ApiError, ValidationError};
-use crate::framework::rest_api::extractors::StringExtractor;
 
 pub(super) async fn find_todo(
     State(state): State<TodoState>,
     Path(path): Path<Value>,
 ) -> impl IntoResponse {
-    println!("GET TODO -> path: {path:#?}");
+    tracing::info!("GET TODO -> path: {path:#?}");
 
-    let input_schema = match extract_input_schema(path) {
-        Ok(input) => input,
-        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, Json(err)).into_response(),
-    };
+    let input_schema = InputSchema { id: path.as_str().map(|id| id.to_string()) };
     let controller = FindController::new(input_schema, state.todo_store);
 
     let output = match controller.run().await.value() {
@@ -31,12 +27,6 @@ pub(super) async fn find_todo(
     };
 
     (StatusCode::OK, Json(output)).into_response()
-}
-
-fn extract_input_schema(mut path: Value) -> Result<InputSchema, ApiError<ValidationError>> {
-    let id = StringExtractor::optional("id").extract(&mut path)?;
-
-    Ok(InputSchema { id })
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
