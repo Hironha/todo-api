@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .merge(todo::create_router(pool.clone()))
-        .layer(create_tracer());
+        .layer(create_tracing_layer());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
     tracing::info!("Server listening on {addr:?}");
@@ -65,7 +65,7 @@ async fn create_db_pool(connections: u32) -> Pool<Postgres> {
         .expect("Failed to connect to Postgres database")
 }
 
-fn create_tracer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
+fn create_tracing_layer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
     TraceLayer::new_for_http()
         .on_request(DefaultOnRequest::new().level(Level::INFO))
         .on_response(
