@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateController;
-use crate::adapters::dtos::todo::create::{InputSchema, ParseError, RunError};
+use crate::adapters::dtos::todo::create::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::errors::{ApiError, ValidationError};
 
 pub(super) async fn create_todo(
@@ -16,9 +16,9 @@ pub(super) async fn create_todo(
     tracing::info!("CREATE TODO ->> body {body:#?}");
 
     let input_schema = extract_input_schema(body);
-    let controller = CreateController::new(input_schema, state.todo_store);
+    let controller = CreateController::new(state.todo_store);
 
-    let output = match controller.run().await.value() {
+    let output = match controller.run(input_schema).await.value() {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);
@@ -29,12 +29,12 @@ pub(super) async fn create_todo(
     (StatusCode::CREATED, Json(output)).into_response()
 }
 
-fn extract_input_schema(body: Value) -> InputSchema {
+fn extract_input_schema(body: Value) -> RawInput {
     let title = body["title"].as_str().map(|t| t.to_string());
     let description = body["description"].as_str().map(|d| d.to_string());
     let todo_at = body["todoAt"].as_str().map(|at| at.to_string());
 
-    InputSchema {
+    RawInput {
         title,
         description,
         todo_at,
@@ -57,7 +57,8 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
 
 fn get_parse_error_field(error: &ParseError) -> &'static str {
     match error {
-        ParseError::Title => "title",
+        ParseError::Title | ParseError::TitleLength => "title",
+        ParseError::DescriptionLength => "description",
         ParseError::TodoAt => "todoAt",
     }
 }

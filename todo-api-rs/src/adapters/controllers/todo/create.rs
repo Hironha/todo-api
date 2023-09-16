@@ -5,26 +5,17 @@ use crate::application::functions::todo::{
     create_todo, Create, CreateContext, CreateError, CreatePayload,
 };
 
-pub struct CreateController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Create,
-{
+pub struct CreateController<S: Create> {
     store: S,
-    input: I,
 }
 
-impl<I, S> CreateController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Create,
-{
-    pub const fn new(input: I, store: S) -> Self {
-        Self { input, store }
+impl<S: Create> CreateController<S> {
+    pub const fn new(store: S) -> Self {
+        Self { store }
     }
 
-    pub async fn run(self) -> Output {
-        let payload = match self.input.parse() {
+    pub async fn run(self, input: impl ParsableInput<Input, ParseError>) -> Output {
+        let payload = match input.parse() {
             Ok(input) => CreatePayload {
                 title: input.title,
                 description: input.description,
