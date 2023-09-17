@@ -1,30 +1,31 @@
-use async_trait::async_trait;
+use crate::application::repositories::todo::find::{Find, FindError};
+use crate::domain::todo::Todo;
+use crate::domain::types::Id;
 
-use crate::domain::{todo::Todo, types::Id};
-
-#[derive(Debug)]
-pub enum FindError {
-    NotFound,
-    InternalError,
+pub async fn find_todo<T: Find>(
+    ctx: FindTodoContext<T>,
+    FindTodoInput(id): FindTodoInput,
+) -> Result<Todo, FindTodoError> {
+    ctx.store.find(id).await.map_err(|e| match e {
+        FindError::NotFound => FindTodoError::NotFound,
+        FindError::Internal => FindTodoError::Internal,
+    })
 }
 
 #[derive(Clone, Debug)]
-pub struct FindPayload {
-    pub id: Id,
+pub struct FindTodoInput(Id);
+impl FindTodoInput {
+    pub const fn new(id: Id) -> Self {
+        Self(id)
+    }
 }
 
-#[async_trait]
-pub trait Find {
-    async fn find(&self, id: &Id) -> Result<Todo, FindError>;
-}
-
-pub struct FindContext<T: Find> {
+pub struct FindTodoContext<T: Find> {
     pub store: T,
 }
 
-pub async fn find_todo<T: Find>(
-    ctx: FindContext<T>,
-    payload: FindPayload,
-) -> Result<Todo, FindError> {
-    ctx.store.find(&payload.id).await
+#[derive(Clone, Debug)]
+pub enum FindTodoError {
+    NotFound,
+    Internal,
 }

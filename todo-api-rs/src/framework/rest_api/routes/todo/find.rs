@@ -34,8 +34,11 @@ pub(super) async fn find_todo(
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
         RunError::Validation(e) => {
-            let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());
-            let error = ApiError::new("FTD-001", "Invalid input").with_details(validation_error);
+            let field = match e {
+                ParseError::EmptyId | ParseError::InvalidId => "id",
+            };
+            let details = ValidationError::new(field, e.description());
+            let error = ApiError::new("FTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
         RunError::NotFound => {
@@ -46,11 +49,5 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             let error = ApiError::new("FTD-003", "Internal server error");
             (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
-    }
-}
-
-fn get_parse_error_field(error: &ParseError) -> &'static str {
-    match error {
-        ParseError::Id => "id",
     }
 }

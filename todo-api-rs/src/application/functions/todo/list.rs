@@ -1,20 +1,16 @@
-use async_trait::async_trait;
-
+use crate::application::repositories::todo::list::{List, ListError};
 use crate::domain::todo::Todo;
 
-pub enum ListError {
-    StorageAccess,
+pub async fn list_todo<T: List>(ctx: ListContext<T>) -> Result<Vec<Todo>, ListTodoError> {
+    ctx.store.list().await.map_err(|e| match e {
+        ListError::Internal => ListTodoError::Internal,
+    })
 }
 
-#[async_trait]
-pub trait List {
-    async fn list(&self) -> Result<Vec<Todo>, ListError>;
+pub enum ListTodoError {
+    Internal,
 }
 
 pub struct ListContext<T: List> {
     pub store: T,
-}
-
-pub async fn list_todo<T: List>(ctx: ListContext<T>) -> Result<Vec<Todo>, ListError> {
-    ctx.store.list().await
 }

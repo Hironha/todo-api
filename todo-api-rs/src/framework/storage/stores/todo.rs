@@ -2,11 +2,11 @@ use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
 use super::models::todo::TodoModel;
-use crate::application::functions::todo::{
-    Find, FindError, List, ListError, Update, UpdateError, UpdatePayload,
-};
+use crate::application::functions::todo::{Update, UpdateError, UpdatePayload};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
+use crate::application::repositories::todo::find::{Find, FindError};
+use crate::application::repositories::todo::list::{List, ListError};
 use crate::domain::todo::Todo;
 use crate::domain::types::Id;
 
@@ -23,7 +23,7 @@ impl TodoStore {
 
 #[async_trait]
 impl Find for TodoStore {
-    async fn find(&self, id: &Id) -> Result<Todo, FindError> {
+    async fn find(&self, id: Id) -> Result<Todo, FindError> {
         let q = r"SELECT * FROM Todo WHERE id = ($1)";
 
         let res = sqlx::query_as::<_, TodoModel>(q)
@@ -33,7 +33,7 @@ impl Find for TodoStore {
 
         res.map(|m| m.into_entity()).map_err(|err| match err {
             sqlx::Error::RowNotFound => FindError::NotFound,
-            _ => FindError::InternalError,
+            _ => FindError::Internal,
         })
     }
 }
@@ -73,7 +73,7 @@ impl List for TodoStore {
         let res = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
             .await
-            .map_err(|_| ListError::StorageAccess)?;
+            .map_err(|_| ListError::Internal)?;
 
         let todos = res
             .into_iter()
@@ -132,9 +132,9 @@ impl Update for TodoStore {
             return Err(error);
         }
 
-        let todo = self.find(&payload.id).await.map_err(|err| match err {
+        let todo = self.find(payload.id).await.map_err(|err| match err {
             FindError::NotFound => UpdateError::NotFound,
-            FindError::InternalError => UpdateError::InternalError,
+            FindError::Internal => UpdateError::InternalError,
         })?;
 
         Ok(todo)

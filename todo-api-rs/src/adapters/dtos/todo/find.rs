@@ -1,5 +1,6 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
+use crate::application::functions::todo::FindTodoInput;
 use crate::domain::types::Id;
 
 #[derive(Debug)]
@@ -19,24 +20,20 @@ impl Output {
 }
 
 #[derive(Debug)]
-pub struct Input {
-    pub id: Id,
-}
-
-#[derive(Debug)]
 pub struct InputSchema {
     pub id: Option<String>,
 }
 
-impl ParsableInput<Input, ParseError> for InputSchema {
-    fn parse(self) -> Result<Input, ParseError> {
+impl ParsableInput<FindTodoInput, ParseError> for InputSchema {
+    fn parse(self) -> Result<FindTodoInput, ParseError> {
         let id = self
             .id
-            .map(|id| Id::parse_str(&id))
-            .ok_or(ParseError::Id)?
-            .map_err(|_| ParseError::Id)?;
+            .filter(|id| !id.is_empty())
+            .ok_or(ParseError::EmptyId)?;
 
-        Ok(Input { id })
+        Id::parse_str(&id)
+            .map_err(|_| ParseError::InvalidId)
+            .map(FindTodoInput::new)
     }
 }
 
@@ -49,15 +46,16 @@ pub enum RunError {
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
-    Id,
+    EmptyId,
+    InvalidId,
 }
 
 impl ParseError {
     pub fn description(&self) -> String {
-        let description = match self {
-            Self::Id => "required string",
-        };
-        description.to_string()
+        match self {
+            Self::EmptyId => "required string".into(),
+            Self::InvalidId => "invalid id format".into(),
+        }
     }
 }
 
@@ -80,7 +78,7 @@ mod test {
         let none_id_input = none_id_schema.parse();
 
         assert!(none_id_input.is_err());
-        assert_eq!(none_id_input.unwrap_err(), super::ParseError::Id);
+        assert_eq!(none_id_input.unwrap_err(), super::ParseError::EmptyId);
 
         let invalid_id_schema = super::InputSchema {
             id: Some("invalid-id".to_string()),
@@ -88,6 +86,6 @@ mod test {
         let invalid_id_input = invalid_id_schema.parse();
 
         assert!(invalid_id_input.is_err());
-        assert_eq!(invalid_id_input.unwrap_err(), super::ParseError::Id);
+        assert_eq!(invalid_id_input.unwrap_err(), super::ParseError::InvalidId);
     }
 }
