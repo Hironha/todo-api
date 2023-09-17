@@ -46,25 +46,16 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
     match error {
         RunError::Parsing(e) => {
             let field = match e {
-                ParseError::Title => "title",
+                ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
+                ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
             };
             let details = ValidationError::new(field, e.description());
             let error = ApiError::new("CTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::InvalidTitle(cause) => {
-            let details = ValidationError::new("title", cause);
-            let error = ApiError::new("CTD-002", "Invalid title").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
-        }
-        RunError::InvalidDescription(cause) => {
-            let details = ValidationError::new("description", cause);
-            let error = ApiError::new("CTD-003", "Invalid description").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
-        }
         RunError::Internal => {
-            let error = ApiError::new("CTD-004", "Internal server error");
+            let error = ApiError::new("CTD-002", "Internal server error");
             (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
     }

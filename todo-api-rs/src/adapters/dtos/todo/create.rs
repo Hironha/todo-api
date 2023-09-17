@@ -1,6 +1,7 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::application::functions::todo::CreateTodoInput;
+use crate::domain::todo::{Description, DescriptionError, Title, TitleError};
 use crate::domain::types::Date;
 
 #[derive(Debug)]
@@ -31,7 +32,7 @@ impl ParsableInput<CreateTodoInput, ParseError> for RawInput {
         let title = self
             .title
             .filter(|t| !t.is_empty())
-            .ok_or(ParseError::Title)?;
+            .ok_or(ParseError::EmptyTitle)?;
 
         let description = self.description.filter(|d| !d.is_empty());
 
@@ -42,8 +43,8 @@ impl ParsableInput<CreateTodoInput, ParseError> for RawInput {
             .map_err(|_| ParseError::TodoAt)?;
 
         Ok(CreateTodoInput {
-            title,
-            description,
+            title: Title::new(title).map_err(ParseError::InvalidTitle)?,
+            description: Description::new(description).map_err(ParseError::InvalidDescription)?,
             todo_at,
         })
     }
@@ -52,25 +53,27 @@ impl ParsableInput<CreateTodoInput, ParseError> for RawInput {
 #[derive(Clone, Debug, PartialEq)]
 pub enum RunError {
     Parsing(ParseError),
-    InvalidTitle(String),
-    InvalidDescription(String),
     Internal,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ParseError {
-    Title,
+    EmptyTitle,
+    InvalidTitle(TitleError),
+    InvalidDescription(DescriptionError),
     TodoAt,
 }
 
 impl ParseError {
     pub fn description(&self) -> String {
-        let description = match self {
-            Self::Title => "required string",
+        match self {
+            Self::EmptyTitle => "required string".into(),
+            Self::InvalidTitle(e) => e.description(),
+            Self::InvalidDescription(e) => e.description(),
             Self::TodoAt => {
                 "optional string, but, if defined, should be an UTC date on YYYY-MM-DD format"
+                    .into()
             }
-        };
-        description.into()
+        }
     }
 }

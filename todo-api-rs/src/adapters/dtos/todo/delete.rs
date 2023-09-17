@@ -1,4 +1,5 @@
 use crate::adapters::dtos::ParsableInput;
+use crate::domain::types::Id;
 
 #[derive(Debug)]
 pub struct Output(Result<(), RunError>);
@@ -21,30 +22,35 @@ pub struct RawInput {
     pub id: Option<String>,
 }
 
-impl ParsableInput<String, ParseError> for RawInput {
-    fn parse(self) -> Result<String, ParseError> {
-        let id = self.id.filter(|id| !id.is_empty()).ok_or(ParseError::Id)?;
-        Ok(id)
+impl ParsableInput<Id, ParseError> for RawInput {
+    fn parse(self) -> Result<Id, ParseError> {
+        let id = self
+            .id
+            .filter(|id| !id.is_empty())
+            .ok_or(ParseError::EmptyId)?;
+
+        Id::parse_str(&id).map_err(|_| ParseError::InvalidId)
     }
 }
 
 #[derive(Debug, PartialEq)]
 pub enum RunError {
     Parsing(ParseError),
-    InvalidId,
     TodoNotFound,
     Internal,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
-    Id,
+    EmptyId,
+    InvalidId,
 }
 
 impl ParseError {
     pub fn description(&self) -> String {
         match self {
-            Self::Id => "required string".into(),
+            Self::InvalidId => "invalid id format".into(),
+            Self::EmptyId => "required string".into(),
         }
     }
 }

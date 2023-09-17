@@ -23,8 +23,6 @@ impl<S: Create> CreateController<S> {
 
         let ctx = CreateContext { store: self.store };
         let result = create_todo(ctx, create_input).await.map_err(|e| match e {
-            CreateTodoError::Title(e) => RunError::InvalidTitle(e.description()),
-            CreateTodoError::Description(e) => RunError::InvalidDescription(e.description()),
             CreateTodoError::Internal => RunError::Internal,
         });
 
