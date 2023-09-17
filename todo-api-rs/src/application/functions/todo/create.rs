@@ -14,10 +14,9 @@ pub async fn create_todo<T: Create>(
         todo_at: input.todo_at,
     };
 
-    ctx.store
-        .create(payload)
-        .await
-        .map_err(CreateTodoError::Repository)
+    ctx.store.create(payload).await.map_err(|e| match e {
+        CreateError::Internal => CreateTodoError::Internal,
+    })
 }
 
 #[derive(Clone, Debug)]
@@ -35,5 +34,5 @@ pub struct CreateContext<T: Create> {
 pub enum CreateTodoError {
     Title(TitleError),
     Description(DescriptionError),
-    Repository(CreateError),
+    Internal,
 }

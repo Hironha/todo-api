@@ -25,7 +25,7 @@ impl<S: Create> CreateController<S> {
         let result = create_todo(ctx, create_input).await.map_err(|e| match e {
             CreateTodoError::Title(e) => RunError::InvalidTitle(e.description()),
             CreateTodoError::Description(e) => RunError::InvalidDescription(e.description()),
-            CreateTodoError::Repository(e) => RunError::CreateTodo(e),
+            CreateTodoError::Internal => RunError::Internal,
         });
 
         match result {

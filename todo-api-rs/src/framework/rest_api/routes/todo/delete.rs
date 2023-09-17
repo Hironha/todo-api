@@ -30,25 +30,26 @@ pub(super) async fn delete_todo(
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Validation(e) => {
-            let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());
-            let error = ApiError::new("DTD-001", "Invalid input").with_details(validation_error);
+        RunError::Parsing(e) => {
+            let field = match e {
+                ParseError::Id => "id",
+            };
+            let details = ValidationError::new(field, e.description());
+            let error = ApiError::new("DTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::NotFound => {
-            let error: ApiError<_> = ApiError::new("DTD-002", "Todo not found");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
+        RunError::InvalidId => {
+            let details = ValidationError::new("id", "Invalid id format");
+            let error = ApiError::new("DTD-002", "Invalid id").with_details(details);
+            (StatusCode::BAD_REQUEST, error)
+        }
+        RunError::TodoNotFound => {
+            let error = ApiError::new("DTD-003", "Todo not found");
+            (StatusCode::NOT_FOUND, error)
         }
         RunError::Internal => {
-            let error: ApiError<ValidationError> =
-                ApiError::new("DTD-003", "Internal server error");
+            let error = ApiError::new("DTD-004", "Internal server error");
             (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
-    }
-}
-
-fn get_parse_error_field(error: &ParseError) -> &'static str {
-    match error {
-        ParseError::Id => "id",
     }
 }

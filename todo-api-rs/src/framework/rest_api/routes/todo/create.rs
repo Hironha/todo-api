@@ -63,7 +63,7 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             let error = ApiError::new("CTD-003", "Invalid description").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::CreateTodo(_) => {
+        RunError::Internal => {
             let error = ApiError::new("CTD-004", "Internal server error");
             (StatusCode::INTERNAL_SERVER_ERROR, error)
         }

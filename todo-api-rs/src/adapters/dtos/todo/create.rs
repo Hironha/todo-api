@@ -1,7 +1,6 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::application::functions::todo::CreateTodoInput;
-use crate::application::repositories::todo::create::CreateError;
 use crate::domain::types::Date;
 
 #[derive(Debug)]
@@ -55,7 +54,7 @@ pub enum RunError {
     Parsing(ParseError),
     InvalidTitle(String),
     InvalidDescription(String),
-    CreateTodo(CreateError),
+    Internal,
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -1,30 +1,24 @@
-use async_trait::async_trait;
-
+use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::domain::types::Id;
 
-#[derive(Debug)]
-pub enum DeleteError {
-    NotFound,
-    InternalError,
-}
+pub async fn delete_todo<S: Delete>(
+    ctx: DeleteContext<S>,
+    id: String,
+) -> Result<(), DeleteTodoError> {
+    let id = Id::parse_str(&id).map_err(|_| DeleteTodoError::InvalidId)?;
 
-#[derive(Clone, Debug)]
-pub struct DeletePayload {
-    pub id: Id,
-}
-
-#[async_trait]
-pub trait Delete {
-    async fn delete(&self, id: &Id) -> Result<(), DeleteError>;
+    ctx.store.delete(id).await.map_err(|e| match e {
+        DeleteError::NotFound => DeleteTodoError::NotFound,
+        DeleteError::Internal => DeleteTodoError::Internal,
+    })
 }
 
 pub struct DeleteContext<T: Delete> {
     pub store: T,
 }
 
-pub async fn delete_todo<T: Delete>(
-    ctx: DeleteContext<T>,
-    payload: DeletePayload,
-) -> Result<(), DeleteError> {
-    ctx.store.delete(&payload.id).await
+pub enum DeleteTodoError {
+    InvalidId,
+    NotFound,
+    Internal,
 }

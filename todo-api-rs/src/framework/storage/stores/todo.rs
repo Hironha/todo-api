@@ -3,10 +3,12 @@ use sqlx::{Pool, Postgres};
 
 use super::models::todo::TodoModel;
 use crate::application::functions::todo::{
-    Delete, DeleteError, Find, FindError, List, ListError, Update, UpdateError, UpdatePayload,
+    Find, FindError, List, ListError, Update, UpdateError, UpdatePayload,
 };
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
-use crate::domain::{todo::Todo, types::Id};
+use crate::application::repositories::todo::delete::{Delete, DeleteError};
+use crate::domain::todo::Todo;
+use crate::domain::types::Id;
 
 #[derive(Clone)]
 pub struct TodoStore {
@@ -29,12 +31,9 @@ impl Find for TodoStore {
             .fetch_one(&self.pool)
             .await;
 
-        res.map(|m| m.into_entity()).map_err(|err| {
-            println!("FIND ERROR -> {err:?}");
-            match err {
-                sqlx::Error::RowNotFound => FindError::NotFound,
-                _ => FindError::InternalError,
-            }
+        res.map(|m| m.into_entity()).map_err(|err| match err {
+            sqlx::Error::RowNotFound => FindError::NotFound,
+            _ => FindError::InternalError,
         })
     }
 }
@@ -58,8 +57,7 @@ impl Create for TodoStore {
             .execute(&self.pool)
             .await;
 
-        if let Err(err) = res {
-            println!("CREATE ERROR -> {err:?}");
+        if res.is_err() {
             return Err(CreateError::Internal);
         }
 
@@ -75,10 +73,7 @@ impl List for TodoStore {
         let res = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
             .await
-            .map_err(|err| {
-                println!("{err:?}");
-                ListError::StorageAccess
-            })?;
+            .map_err(|_| ListError::StorageAccess)?;
 
         let todos = res
             .into_iter()
@@ -91,7 +86,7 @@ impl List for TodoStore {
 
 #[async_trait]
 impl Delete for TodoStore {
-    async fn delete(&self, id: &Id) -> Result<(), DeleteError> {
+    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
         let delete_q = r"DELETE FROM Todo WHERE id = ($1)";
 
         let res = sqlx::query(delete_q)
@@ -100,10 +95,9 @@ impl Delete for TodoStore {
             .await;
 
         if let Err(err) = res {
-            println!("STORAGE -> DELETE TODO ERROR: {err:?}");
             let error = match err {
                 sqlx::Error::RowNotFound => DeleteError::NotFound,
-                _ => DeleteError::InternalError,
+                _ => DeleteError::Internal,
             };
             return Err(error);
         }
@@ -131,7 +125,6 @@ impl Update for TodoStore {
             .await;
 
         if let Err(err) = res {
-            println!("UPDATE ERROR => {err:?}");
             let error = match err {
                 sqlx::Error::RowNotFound => UpdateError::NotFound,
                 _ => UpdateError::InternalError,
