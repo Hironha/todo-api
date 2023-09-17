@@ -1,9 +1,10 @@
-use crate::adapters::dtos::todo::create::{Input, Output, ParseError, RunError};
+use crate::adapters::dtos::todo::create::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::application::functions::todo::{
-    create_todo, Create, CreateContext, CreateError, CreatePayload,
+    create_todo, CreateContext, CreateTodoError, CreateTodoInput,
 };
+use crate::application::repositories::todo::create::Create;
 
 pub struct CreateController<S: Create> {
     store: S,
@@ -14,19 +15,17 @@ impl<S: Create> CreateController<S> {
         Self { store }
     }
 
-    pub async fn run(self, input: impl ParsableInput<Input, ParseError>) -> Output {
-        let payload = match input.parse() {
-            Ok(input) => CreatePayload {
-                title: input.title,
-                description: input.description,
-                todo_at: input.todo_at,
-            },
-            Err(err) => return Output::err(RunError::Validation(err)),
+    pub async fn run(self, input: impl ParsableInput<CreateTodoInput, ParseError>) -> Output {
+        let create_input = match input.parse() {
+            Ok(i) => i,
+            Err(err) => return Output::err(RunError::Parsing(err)),
         };
 
         let ctx = CreateContext { store: self.store };
-        let result = create_todo(ctx, payload).await.map_err(|err| match err {
-            CreateError::Internal => RunError::Internal,
+        let result = create_todo(ctx, create_input).await.map_err(|e| match e {
+            CreateTodoError::Title(e) => RunError::InvalidTitle(e.description()),
+            CreateTodoError::Description(e) => RunError::InvalidDescription(e.description()),
+            CreateTodoError::Repository(e) => RunError::CreateTodo(e),
         });
 
         match result {

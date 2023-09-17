@@ -1,5 +1,7 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
+use crate::application::functions::todo::CreateTodoInput;
+use crate::application::repositories::todo::create::CreateError;
 use crate::domain::types::Date;
 
 #[derive(Debug)]
@@ -19,26 +21,28 @@ impl Output {
 }
 
 #[derive(Debug)]
-pub struct Input {
-    pub title: String,
-    pub description: Option<String>,
-    pub todo_at: Option<Date>,
-}
-
-#[derive(Debug)]
 pub struct RawInput {
     pub title: Option<String>,
     pub description: Option<String>,
     pub todo_at: Option<String>,
 }
 
-impl ParsableInput<Input, ParseError> for RawInput {
-    fn parse(self) -> Result<Input, ParseError> {
-        let title = parse_title(self.title)?;
-        let description = parse_description(self.description)?;
-        let todo_at = parse_todo_at(self.todo_at)?;
+impl ParsableInput<CreateTodoInput, ParseError> for RawInput {
+    fn parse(self) -> Result<CreateTodoInput, ParseError> {
+        let title = self
+            .title
+            .filter(|t| !t.is_empty())
+            .ok_or(ParseError::Title)?;
 
-        Ok(Input {
+        let description = self.description.filter(|d| !d.is_empty());
+
+        let todo_at = self
+            .todo_at
+            .map(|at| Date::parse_str(&at))
+            .transpose()
+            .map_err(|_| ParseError::TodoAt)?;
+
+        Ok(CreateTodoInput {
             title,
             description,
             todo_at,
@@ -46,17 +50,17 @@ impl ParsableInput<Input, ParseError> for RawInput {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum RunError {
-    Validation(ParseError),
-    Internal,
+    Parsing(ParseError),
+    InvalidTitle(String),
+    InvalidDescription(String),
+    CreateTodo(CreateError),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ParseError {
     Title,
-    TitleLength,
-    DescriptionLength,
     TodoAt,
 }
 
@@ -64,36 +68,10 @@ impl ParseError {
     pub fn description(&self) -> String {
         let description = match self {
             Self::Title => "required string",
-            Self::TitleLength => "maximum of 64 characters",
-            Self::DescriptionLength => "maximum of 256 characters",
             Self::TodoAt => {
                 "optional string, but, if defined, should be an UTC date on YYYY-MM-DD format"
             }
         };
         description.into()
     }
-}
-
-fn parse_title(title: Option<String>) -> Result<String, ParseError> {
-    let title = title.filter(|t| !t.is_empty()).ok_or(ParseError::Title)?;
-    if title.len() > 64 {
-        return Err(ParseError::TitleLength);
-    }
-
-    Ok(title)
-}
-
-fn parse_description(description: Option<String>) -> Result<Option<String>, ParseError> {
-    match description.filter(|d| !d.is_empty()) {
-        Some(d) if d.len() <= 256 => Ok(Some(d)),
-        Some(_) => Err(ParseError::DescriptionLength),
-        None => Ok(None),
-    }
-}
-
-fn parse_todo_at(todo_at: Option<String>) -> Result<Option<Date>, ParseError> {
-    todo_at
-        .map(|at| Date::parse_str(&at))
-        .transpose()
-        .map_err(|_| ParseError::TodoAt)
 }

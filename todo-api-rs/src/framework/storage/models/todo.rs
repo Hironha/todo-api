@@ -2,7 +2,8 @@ use sqlx::types::time::{Date, OffsetDateTime};
 use sqlx::types::Uuid;
 use sqlx::FromRow;
 
-use crate::{application::functions::todo::CreatePayload, domain::todo::Todo};
+use crate::application::repositories::todo::create::CreatePayload;
+use crate::domain::todo::{Title, Todo, Description};
 
 #[derive(Clone, Debug, FromRow)]
 pub struct TodoModel {
@@ -19,8 +20,8 @@ impl From<CreatePayload> for TodoModel {
         let current_date_time = OffsetDateTime::now_utc();
         Self {
             id: Uuid::new_v4(),
-            title: payload.title,
-            description: payload.description,
+            title: payload.title.value(),
+            description: payload.description.value(),
             todo_at: payload.todo_at.map(|at| at.date()),
             created_at: current_date_time,
             updated_at: current_date_time,
@@ -32,8 +33,8 @@ impl TodoModel {
     pub fn into_entity(self) -> Todo {
         Todo {
             id: self.id.into(),
-            title: self.title,
-            description: self.description,
+            title: Title::new(self.title).unwrap(),
+            description: Description::new(self.description).unwrap(),
             todo_at: self.todo_at.map(|at| at.into()),
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),

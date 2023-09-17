@@ -21,6 +21,7 @@ pub(super) async fn create_todo(
     let output = match controller.run(input_schema).await.value() {
         Ok(output) => output,
         Err(err) => {
+            tracing::info!("CREATE TODO ERROR ->> {err:#?}");
             let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
@@ -43,22 +44,28 @@ fn extract_input_schema(body: Value) -> RawInput {
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Validation(e) => {
-            let validation_error = ValidationError::new(get_parse_error_field(&e), e.description());
-            let error = ApiError::new("CTD-001", "Invalid input").with_details(validation_error);
+        RunError::Parsing(e) => {
+            let field = match e {
+                ParseError::Title => "title",
+                ParseError::TodoAt => "todoAt",
+            };
+            let details = ValidationError::new(field, e.description());
+            let error = ApiError::new("CTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::Internal => {
-            let error = ApiError::new("CTD-002", "Internal server error");
+        RunError::InvalidTitle(cause) => {
+            let details = ValidationError::new("title", cause);
+            let error = ApiError::new("CTD-002", "Invalid title").with_details(details);
+            (StatusCode::BAD_REQUEST, error)
+        }
+        RunError::InvalidDescription(cause) => {
+            let details = ValidationError::new("description", cause);
+            let error = ApiError::new("CTD-003", "Invalid description").with_details(details);
+            (StatusCode::BAD_REQUEST, error)
+        }
+        RunError::CreateTodo(_) => {
+            let error = ApiError::new("CTD-004", "Internal server error");
             (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
-    }
-}
-
-fn get_parse_error_field(error: &ParseError) -> &'static str {
-    match error {
-        ParseError::Title | ParseError::TitleLength => "title",
-        ParseError::DescriptionLength => "description",
-        ParseError::TodoAt => "todoAt",
     }
 }

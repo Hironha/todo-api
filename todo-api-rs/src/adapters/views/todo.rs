@@ -24,8 +24,8 @@ impl From<Todo> for TodoView {
     fn from(todo: Todo) -> Self {
         TodoView {
             id: todo.id.as_string(),
-            title: todo.title,
-            description: todo.description,
+            title: todo.title.value(),
+            description: todo.description.value(),
             todo_at: todo.todo_at.map(|at| at.ymd()),
             created_at: todo.created_at.rfc3339(),
             updated_at: todo.updated_at.rfc3339(),
