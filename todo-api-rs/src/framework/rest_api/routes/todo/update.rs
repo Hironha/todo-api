@@ -18,9 +18,9 @@ pub(super) async fn update_todo(
     tracing::info!("UPDATE TODO -> body: {body:?}");
 
     let input_schema = extract_input_schema(path, body);
-    let controller = UpdateController::new(input_schema, state.todo_store);
+    let controller = UpdateController::new(state.todo_store);
 
-    let output = match controller.run().await.value() {
+    let output = match controller.run(input_schema,).await.value() {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = config_error_response(err);
@@ -66,7 +66,8 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
 fn get_parse_error_field(error: &ParseError) -> &'static str {
     match error {
         ParseError::Id => "id",
-        ParseError::Title => "title",
+        ParseError::Title | ParseError::TitleLength => "title",
+        ParseError::DescriptionLength => "description",
         ParseError::TodoAt => "todoAt",
     }
 }

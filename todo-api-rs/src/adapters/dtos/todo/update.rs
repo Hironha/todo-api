@@ -2,21 +2,19 @@ use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::domain::types::{Date, Id};
 
-#[derive(Debug, PartialEq)]
-pub enum ParseError {
-    Id,
-    Title,
-    TodoAt,
-}
+#[derive(Debug)]
+pub struct Output(Result<TodoView, RunError>);
+impl Output {
+    pub const fn ok(view: TodoView) -> Self {
+        Self(Ok(view))
+    }
 
-impl ParseError {
-    pub fn description(&self) -> String {
-        let description = match self {
-            Self::Id => "required string",
-            Self::Title => "required string",
-            Self::TodoAt => "optional string, but if defined, should be a date on Y-M-D format",
-        };
-        description.to_string()
+    pub const fn err(error: RunError) -> Self {
+        Self(Err(error))
+    }
+
+    pub fn value(self) -> Result<TodoView, RunError> {
+        self.0
     }
 }
 
@@ -38,24 +36,10 @@ pub struct InputSchema {
 
 impl ParsableInput<Input, ParseError> for InputSchema {
     fn parse(self) -> Result<Input, ParseError> {
-        let id = self
-            .id
-            .map(|id| Id::parse_str(&id))
-            .ok_or(ParseError::Id)?
-            .map_err(|_| ParseError::Id)?;
-
-        let title = self
-            .title
-            .filter(|t| !t.is_empty())
-            .ok_or(ParseError::Title)?;
-
-        let description = self.description.filter(|d| !d.is_empty());
-
-        let todo_at = self
-            .todo_at
-            .map(|at| Date::parse_str(&at))
-            .transpose()
-            .map_err(|_| ParseError::TodoAt)?;
+        let id = parse_id(self.id)?;
+        let title = parse_title(self.title)?;
+        let description = parse_description(self.description)?;
+        let todo_at = parse_todo_at(self.todo_at)?;
 
         Ok(Input {
             id,
@@ -73,20 +57,60 @@ pub enum RunError {
     Internal,
 }
 
-#[derive(Debug)]
-pub struct Output(Result<TodoView, RunError>);
-impl Output {
-    pub const fn ok(view: TodoView) -> Self {
-        Self(Ok(view))
+#[derive(Debug, PartialEq)]
+pub enum ParseError {
+    Id,
+    Title,
+    TitleLength,
+    DescriptionLength,
+    TodoAt,
+}
+
+impl ParseError {
+    pub fn description(&self) -> String {
+        let description = match self {
+            Self::Id => "required string",
+            Self::Title => "required string",
+            Self::TitleLength => "maximum of 64 characters",
+            Self::DescriptionLength => "maximum of 256 characters",
+            Self::TodoAt => "optional string, but if defined, should be a date on Y-M-D format",
+        };
+        description.to_string()
+    }
+}
+
+fn parse_id(id: Option<String>) -> Result<Id, ParseError> {
+    let Some(id) = id else {
+        return Err(ParseError::Id);
+    };
+    Id::parse_str(&id).map_err(|_| ParseError::Id)
+}
+
+fn parse_title(title: Option<String>) -> Result<String, ParseError> {
+    let title = title.filter(|t| !t.is_empty()).ok_or(ParseError::Title)?;
+    if title.len() > 64 {
+        return Err(ParseError::TitleLength);
     }
 
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
+    Ok(title)
+}
 
-    pub fn value(self) -> Result<TodoView, RunError> {
-        self.0
+fn parse_description(description: Option<String>) -> Result<Option<String>, ParseError> {
+    match description.filter(|d| !d.is_empty()) {
+        Some(d) if d.len() <= 256 => Ok(Some(d)),
+        Some(_) => Err(ParseError::DescriptionLength),
+        None => Ok(None),
     }
+}
+
+fn parse_todo_at(todo_at: Option<String>) -> Result<Option<Date>, ParseError> {
+    let Some(todo_at) = todo_at else {
+        return Ok(None);
+    };
+
+    Date::parse_str(&todo_at)
+        .map(Some)
+        .map_err(|_| ParseError::TodoAt)
 }
 
 #[cfg(test)]

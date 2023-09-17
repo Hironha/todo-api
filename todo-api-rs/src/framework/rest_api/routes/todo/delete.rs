@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::delete::DeleteController;
-use crate::adapters::dtos::todo::delete::{InputSchema, ParseError, RunError};
+use crate::adapters::dtos::todo::delete::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::errors::{ApiError, ValidationError};
 
 pub(super) async fn delete_todo(
@@ -15,10 +15,12 @@ pub(super) async fn delete_todo(
 ) -> impl IntoResponse {
     tracing::info!("DELETE TODO ->> path {path:?}");
 
-    let input_schema = InputSchema { id: path.as_str().map(|id| id.to_string()) };
-    let controller = DeleteController::new(input_schema, state.todo_store);
+    let input_schema = RawInput {
+        id: path.as_str().map(|id| id.to_string()),
+    };
+    let controller = DeleteController::new(state.todo_store);
 
-    if let Err(err) = controller.run().await.value() {
+    if let Err(err) = controller.run(input_schema).await.value() {
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {

@@ -1,17 +1,19 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::domain::types::Id;
 
-#[derive(Debug, PartialEq)]
-pub enum ParseError {
-    Id,
-}
+#[derive(Debug)]
+pub struct Output(Result<(), RunError>);
+impl Output {
+    pub const fn ok() -> Self {
+        Self(Ok(()))
+    }
 
-impl ParseError {
-    pub fn description(&self) -> String {
-        let description = match self {
-            Self::Id => "required string",
-        };
-        description.into()
+    pub const fn err(error: RunError) -> Self {
+        Self(Err(error))
+    }
+
+    pub fn value(self) -> Result<(), RunError> {
+        self.0
     }
 }
 
@@ -21,11 +23,11 @@ pub struct Input {
 }
 
 #[derive(Debug)]
-pub struct InputSchema {
+pub struct RawInput {
     pub id: Option<String>,
 }
 
-impl ParsableInput<Input, ParseError> for InputSchema {
+impl ParsableInput<Input, ParseError> for RawInput {
     fn parse(self) -> Result<Input, ParseError> {
         let id = self
             .id
@@ -44,19 +46,17 @@ pub enum RunError {
     Internal,
 }
 
-#[derive(Debug)]
-pub struct Output(Result<(), RunError>);
-impl Output {
-    pub const fn ok() -> Self {
-        Self(Ok(()))
-    }
+#[derive(Debug, PartialEq)]
+pub enum ParseError {
+    Id,
+}
 
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
-
-    pub fn value(self) -> Result<(), RunError> {
-        self.0
+impl ParseError {
+    pub fn description(&self) -> String {
+        let description = match self {
+            Self::Id => "required string",
+        };
+        description.into()
     }
 }
 
@@ -66,7 +66,7 @@ mod test {
 
     #[test]
     fn parse_success() {
-        let input_schema = super::InputSchema {
+        let input_schema = super::RawInput {
             id: Some(super::Id::new().as_string()),
         };
 
@@ -75,13 +75,13 @@ mod test {
 
     #[test]
     fn parse_fail() {
-        let none_id_schema = super::InputSchema { id: None };
+        let none_id_schema = super::RawInput { id: None };
         let none_id_input = none_id_schema.parse();
 
         assert!(none_id_input.is_err());
         assert_eq!(none_id_input.unwrap_err(), super::ParseError::Id);
 
-        let invalid_id_schema = super::InputSchema {
+        let invalid_id_schema = super::RawInput {
             id: Some("invalid-id".to_string()),
         };
         let invalid_id_input = invalid_id_schema.parse();

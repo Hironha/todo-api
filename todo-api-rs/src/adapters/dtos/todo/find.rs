@@ -2,17 +2,19 @@ use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::domain::types::Id;
 
-#[derive(Debug, PartialEq)]
-pub enum ParseError {
-    Id,
-}
+#[derive(Debug)]
+pub struct Output(Result<TodoView, RunError>);
+impl Output {
+    pub const fn ok(view: TodoView) -> Self {
+        Self(Ok(view))
+    }
 
-impl ParseError {
-    pub fn description(&self) -> String {
-        let description = match self {
-            Self::Id => "required string",
-        };
-        description.to_string()
+    pub const fn err(error: RunError) -> Self {
+        Self(Err(error))
+    }
+
+    pub fn value(self) -> Result<TodoView, RunError> {
+        self.0
     }
 }
 
@@ -45,19 +47,17 @@ pub enum RunError {
     Internal,
 }
 
-#[derive(Debug)]
-pub struct Output(Result<TodoView, RunError>);
-impl Output {
-    pub const fn ok(view: TodoView) -> Self {
-        Self(Ok(view))
-    }
+#[derive(Debug, PartialEq)]
+pub enum ParseError {
+    Id,
+}
 
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
-
-    pub fn value(self) -> Result<TodoView, RunError> {
-        self.0
+impl ParseError {
+    pub fn description(&self) -> String {
+        let description = match self {
+            Self::Id => "required string",
+        };
+        description.to_string()
     }
 }
 

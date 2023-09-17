@@ -76,11 +76,11 @@ impl ParseError {
 
 fn parse_title(title: Option<String>) -> Result<String, ParseError> {
     let title = title.filter(|t| !t.is_empty()).ok_or(ParseError::Title)?;
-    if title.len() <= 64 {
-        Ok(title)
-    } else {
-        Err(ParseError::TitleLength)
+    if title.len() > 64 {
+        return Err(ParseError::TitleLength);
     }
+
+    Ok(title)
 }
 
 fn parse_description(description: Option<String>) -> Result<Option<String>, ParseError> {

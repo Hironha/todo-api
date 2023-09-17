@@ -5,26 +5,17 @@ use crate::application::functions::todo::{
     update_todo, Update, UpdateContext, UpdateError, UpdatePayload,
 };
 
-pub struct UpdateController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Update,
-{
-    input: I,
+pub struct UpdateController<S: Update> {
     store: S,
 }
 
-impl<I, S> UpdateController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Update,
-{
-    pub const fn new(input: I, store: S) -> Self {
-        Self { input, store }
+impl<S: Update> UpdateController<S> {
+    pub const fn new(store: S) -> Self {
+        Self { store }
     }
 
-    pub async fn run(self) -> Output {
-        let payload = match self.input.parse() {
+    pub async fn run(self, input: impl ParsableInput<Input, ParseError>) -> Output {
+        let payload = match input.parse() {
             Ok(input) => UpdatePayload {
                 id: input.id,
                 title: input.title,

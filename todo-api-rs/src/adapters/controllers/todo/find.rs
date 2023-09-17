@@ -3,26 +3,17 @@ use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::application::functions::todo::{find_todo, Find, FindContext, FindError, FindPayload};
 
-pub struct FindController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Find,
-{
-    input: I,
+pub struct FindController<S: Find> {
     store: S,
 }
 
-impl<I, S> FindController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Find,
-{
-    pub const fn new(input: I, store: S) -> Self {
-        Self { input, store }
+impl<S: Find> FindController<S> {
+    pub const fn new(store: S) -> Self {
+        Self { store }
     }
 
-    pub async fn run(self) -> Output {
-        let payload = match self.input.parse() {
+    pub async fn run(self, input: impl ParsableInput<Input, ParseError>) -> Output {
+        let payload = match input.parse() {
             Ok(input) => FindPayload { id: input.id },
             Err(err) => return Output::err(RunError::Validation(err)),
         };

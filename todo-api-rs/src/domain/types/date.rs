@@ -1,6 +1,6 @@
 use time::{error, format_description::well_known::Rfc3339, macros::format_description};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Date {
     date: time::Date,
 }
@@ -19,12 +19,6 @@ impl Date {
     pub fn parse_str(input: &str) -> Result<Self, error::Parse> {
         let ymd_description = format_description!("[year]-[month]-[day]");
         time::Date::parse(input, ymd_description).map(Self::from)
-    }
-}
-
-impl PartialEq for Date {
-    fn eq(&self, other: &Self) -> bool {
-        self.date == other.date
     }
 }
 

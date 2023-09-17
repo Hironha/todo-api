@@ -1,6 +1,6 @@
 use uuid::{Error, Uuid};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Id {
     uuid: Uuid,
 }
@@ -23,12 +23,6 @@ impl Id {
     pub fn uuid(&self) -> Uuid {
         // only works because Uuid struct derives Copy
         self.uuid
-    }
-}
-
-impl PartialEq for Id {
-    fn eq(&self, other: &Self) -> bool {
-        self.uuid() == other.uuid()
     }
 }
 

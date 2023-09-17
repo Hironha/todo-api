@@ -4,26 +4,17 @@ use crate::application::functions::todo::{
     delete_todo, Delete, DeleteContext, DeleteError, DeletePayload,
 };
 
-pub struct DeleteController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Delete,
-{
-    input: I,
+pub struct DeleteController<S: Delete> {
     store: S,
 }
 
-impl<I, S> DeleteController<I, S>
-where
-    I: ParsableInput<Input, ParseError>,
-    S: Delete,
-{
-    pub const fn new(input: I, store: S) -> Self {
-        Self { input, store }
+impl<S: Delete> DeleteController<S> {
+    pub const fn new(store: S) -> Self {
+        Self { store }
     }
 
-    pub async fn run(self) -> Output {
-        let payload = match self.input.parse() {
+    pub async fn run(self, input: impl ParsableInput<Input, ParseError>) -> Output {
+        let payload = match input.parse() {
             Ok(input) => DeletePayload { id: input.id },
             Err(err) => return Output::err(RunError::Validation(err)),
         };

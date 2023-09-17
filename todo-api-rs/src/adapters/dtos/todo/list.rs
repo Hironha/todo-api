@@ -2,17 +2,6 @@ use serde::Serialize;
 
 use crate::adapters::views::todo::TodoView;
 
-#[derive(Debug, PartialEq)]
-pub enum RunError {
-    Internal,
-}
-
-#[derive(Debug, Serialize)]
-pub struct OutputData {
-    pub count: usize,
-    pub items: Vec<TodoView>,
-}
-
 #[derive(Debug)]
 pub struct Output(Result<OutputData, RunError>);
 impl Output {
@@ -27,4 +16,15 @@ impl Output {
     pub fn value(self) -> Result<OutputData, RunError> {
         self.0
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct OutputData {
+    pub count: usize,
+    pub items: Vec<TodoView>,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum RunError {
+    Internal,
 }

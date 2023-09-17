@@ -15,10 +15,12 @@ pub(super) async fn find_todo(
 ) -> impl IntoResponse {
     tracing::info!("GET TODO -> path: {path:#?}");
 
-    let input_schema = InputSchema { id: path.as_str().map(|id| id.to_string()) };
-    let controller = FindController::new(input_schema, state.todo_store);
+    let input_schema = InputSchema {
+        id: path.as_str().map(|id| id.to_string()),
+    };
+    let controller = FindController::new(state.todo_store);
 
-    let output = match controller.run().await.value() {
+    let output = match controller.run(input_schema).await.value() {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = config_error_response(err);
