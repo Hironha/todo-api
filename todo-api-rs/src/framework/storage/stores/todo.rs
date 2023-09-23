@@ -1,12 +1,12 @@
 use async_trait::async_trait;
-use sqlx::{Pool, Postgres};
+use sqlx::{Error as SqlxError, Pool, Postgres};
 
 use super::models::todo::TodoModel;
-use crate::application::functions::todo::{Update, UpdateError, UpdatePayload};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListError};
+use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
 use crate::domain::todo::Todo;
 use crate::domain::types::Id;
 
@@ -32,7 +32,7 @@ impl Find for TodoStore {
             .await;
 
         res.map(|m| m.into_entity()).map_err(|err| match err {
-            sqlx::Error::RowNotFound => FindError::NotFound,
+            SqlxError::RowNotFound => FindError::NotFound,
             _ => FindError::Internal,
         })
     }
@@ -89,18 +89,14 @@ impl Delete for TodoStore {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
         let delete_q = r"DELETE FROM Todo WHERE id = ($1)";
 
-        let res = sqlx::query(delete_q)
+        sqlx::query(delete_q)
             .bind(id.uuid())
             .execute(&self.pool)
-            .await;
-
-        if let Err(err) = res {
-            let error = match err {
-                sqlx::Error::RowNotFound => DeleteError::NotFound,
+            .await
+            .map_err(|e| match e {
+                SqlxError::RowNotFound => DeleteError::NotFound,
                 _ => DeleteError::Internal,
-            };
-            return Err(error);
-        }
+            })?;
 
         Ok(())
     }
@@ -116,25 +112,21 @@ impl Update for TodoStore {
             WHERE id = ($4)
         ";
 
-        let res = sqlx::query(q)
-            .bind(payload.title)
-            .bind(payload.description)
+        sqlx::query(q)
+            .bind(payload.title.value())
+            .bind(payload.description.value())
             .bind(payload.todo_at.map(|at| at.date()))
             .bind(payload.id.uuid())
             .execute(&self.pool)
-            .await;
-
-        if let Err(err) = res {
-            let error = match err {
-                sqlx::Error::RowNotFound => UpdateError::NotFound,
-                _ => UpdateError::InternalError,
-            };
-            return Err(error);
-        }
+            .await
+            .map_err(|e| match e {
+                SqlxError::RowNotFound => UpdateError::NotFound,
+                _ => UpdateError::Internal,
+            })?;
 
         let todo = self.find(payload.id).await.map_err(|err| match err {
             FindError::NotFound => UpdateError::NotFound,
-            FindError::Internal => UpdateError::InternalError,
+            FindError::Internal => UpdateError::Internal,
         })?;
 
         Ok(todo)
