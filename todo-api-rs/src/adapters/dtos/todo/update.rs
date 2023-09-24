@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn parse_success() {
         let input_schema = super::RawInput {
-            id: Some(super::Id::new().as_string()),
+            id: Some(super::Id::new().to_string()),
             title: Some("title".to_string()),
             description: Some("description".to_string()),
             todo_at: Some("2023-08-12".to_string()),
@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn parse_title_fail() {
         let none_title_schema = super::RawInput {
-            id: Some(super::Id::new().as_string()),
+            id: Some(super::Id::new().to_string()),
             title: None,
             description: None,
             todo_at: None,
@@ -141,7 +141,7 @@ mod tests {
         assert!(none_title_input.is_err_and(|e| e == super::ParseError::EmptyTitle));
 
         let empty_title_schema = super::RawInput {
-            id: Some(super::Id::new().as_string()),
+            id: Some(super::Id::new().to_string()),
             title: Some("".to_string()),
             description: None,
             todo_at: None,
@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn parse_todo_at_fail() {
         let invalid_todo_at_schema = super::RawInput {
-            id: Some(super::Id::new().as_string()),
+            id: Some(super::Id::new().to_string()),
             title: Some("title".to_string()),
             description: None,
             todo_at: Some("todo_at".to_string()),

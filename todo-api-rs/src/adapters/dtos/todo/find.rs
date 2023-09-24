@@ -66,7 +66,7 @@ mod test {
     #[test]
     fn parse_success() {
         let input_schema = super::InputSchema {
-            id: Some(super::Id::new().as_string()),
+            id: Some(super::Id::new().to_string()),
         };
 
         assert!(input_schema.parse().is_ok())

@@ -23,7 +23,7 @@ pub struct TodoView {
 impl From<Todo> for TodoView {
     fn from(todo: Todo) -> Self {
         TodoView {
-            id: todo.id.as_string(),
+            id: todo.id.to_string(),
             title: todo.title.value(),
             description: todo.description.value(),
             todo_at: todo.todo_at.map(|at| at.ymd()),

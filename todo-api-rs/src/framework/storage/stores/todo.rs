@@ -27,7 +27,7 @@ impl Find for TodoStore {
         let q = r"SELECT * FROM Todo WHERE id = ($1)";
 
         let res = sqlx::query_as::<_, TodoModel>(q)
-            .bind(id.uuid())
+            .bind(id.value())
             .fetch_one(&self.pool)
             .await;
 
@@ -90,7 +90,7 @@ impl Delete for TodoStore {
         let delete_q = r"DELETE FROM Todo WHERE id = ($1)";
 
         sqlx::query(delete_q)
-            .bind(id.uuid())
+            .bind(id.value())
             .execute(&self.pool)
             .await
             .map_err(|e| match e {
@@ -115,8 +115,8 @@ impl Update for TodoStore {
         sqlx::query(q)
             .bind(payload.title.value())
             .bind(payload.description.value())
-            .bind(payload.todo_at.map(|at| at.date()))
-            .bind(payload.id.uuid())
+            .bind(payload.todo_at.map(|at| at.value()))
+            .bind(payload.id.value())
             .execute(&self.pool)
             .await
             .map_err(|e| match e {

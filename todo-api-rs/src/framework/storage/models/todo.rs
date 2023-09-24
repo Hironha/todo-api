@@ -22,7 +22,7 @@ impl From<CreatePayload> for TodoModel {
             id: Uuid::new_v4(),
             title: payload.title.value(),
             description: payload.description.value(),
-            todo_at: payload.todo_at.map(|at| at.date()),
+            todo_at: payload.todo_at.map(|at| at.value()),
             created_at: current_date_time,
             updated_at: current_date_time,
         }
