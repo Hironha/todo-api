@@ -24,7 +24,7 @@ impl TodoStore {
 #[async_trait]
 impl Find for TodoStore {
     async fn find(&self, id: Id) -> Result<Todo, FindError> {
-        let q = r"SELECT * FROM Todo WHERE id = ($1)";
+        let q = r#"SELECT * FROM "Todo" WHERE id = ($1)"#;
 
         let res = sqlx::query_as::<_, TodoModel>(q)
             .bind(id.value())
@@ -41,10 +41,10 @@ impl Find for TodoStore {
 #[async_trait]
 impl Create for TodoStore {
     async fn create(&self, payload: CreatePayload) -> Result<Todo, CreateError> {
-        let q = r"
-            INSERT INTO Todo (id, title, description, todo_at, created_at, updated_at)
+        let q = r#"
+            INSERT INTO "Todo" (id, title, description, todo_at, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6)
-        ";
+        "#;
 
         let model = TodoModel::from(payload);
         let res = sqlx::query(q)
@@ -68,7 +68,7 @@ impl Create for TodoStore {
 #[async_trait]
 impl List for TodoStore {
     async fn list(&self) -> Result<Vec<Todo>, ListError> {
-        let q = r"SELECT * FROM Todo";
+        let q = r#"SELECT * FROM "Todo""#;
 
         let res = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
@@ -87,7 +87,7 @@ impl List for TodoStore {
 #[async_trait]
 impl Delete for TodoStore {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        let delete_q = r"DELETE FROM Todo WHERE id = ($1)";
+        let delete_q = r#"DELETE FROM "Todo" WHERE id = ($1)"#;
 
         sqlx::query(delete_q)
             .bind(id.value())
@@ -105,12 +105,12 @@ impl Delete for TodoStore {
 #[async_trait]
 impl Update for TodoStore {
     async fn set(&self, payload: UpdatePayload) -> Result<Todo, UpdateError> {
-        let q = r"
-            UPDATE Todo 
+        let q = r#"
+            UPDATE "Todo" 
             SET title, description, todo_at
             VALUES ($1), ($2), ($3)
             WHERE id = ($4)
-        ";
+        "#;
 
         sqlx::query(q)
             .bind(payload.title.value())
