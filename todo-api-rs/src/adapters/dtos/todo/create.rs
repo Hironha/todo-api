@@ -1,7 +1,7 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::application::functions::todo::CreateTodoInput;
-use crate::domain::todo::{Description, DescriptionError, Title, TitleError};
+use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
 use crate::domain::types::Date;
 
 #[derive(Debug)]

@@ -1,5 +1,5 @@
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::todo::{Description, Title, Todo};
+use crate::domain::entities::todo::{Description, Title, Todo};
 use crate::domain::types::{Date, Id};
 
 pub async fn update_todo<T: Update>(

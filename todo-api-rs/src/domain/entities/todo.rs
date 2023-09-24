@@ -1,4 +1,4 @@
-use super::types::{Date, DateTime, Id};
+use crate::domain::types::{Date, DateTime, Id};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Todo {

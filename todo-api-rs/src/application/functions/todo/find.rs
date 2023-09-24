@@ -1,5 +1,5 @@
 use crate::application::repositories::todo::find::{Find, FindError};
-use crate::domain::todo::Todo;
+use crate::domain::entities::todo::Todo;
 use crate::domain::types::Id;
 
 pub async fn find_todo<T: Find>(

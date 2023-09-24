@@ -7,7 +7,7 @@ use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListError};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::todo::Todo;
+use crate::domain::entities::todo::Todo;
 use crate::domain::types::Id;
 
 #[derive(Clone)]

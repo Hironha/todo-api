@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::domain::todo::{Description, Title, Todo};
+use crate::domain::entities::todo::{Description, Title, Todo};
 use crate::domain::types::Date;
 
 #[async_trait]

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::domain::todo::Todo;
+use crate::domain::entities::todo::Todo;
 
 #[async_trait]
 pub trait List {

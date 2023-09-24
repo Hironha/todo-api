@@ -1,5 +1,5 @@
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
-use crate::domain::todo::{Description, Title, Todo};
+use crate::domain::entities::todo::{Description, Title, Todo};
 use crate::domain::types::Date;
 
 pub async fn create_todo<T: Create>(

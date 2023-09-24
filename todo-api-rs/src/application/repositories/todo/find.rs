@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::domain::todo::Todo;
+use crate::domain::entities::todo::Todo;
 use crate::domain::types::Id;
 
 #[async_trait]

@@ -3,7 +3,7 @@ use sqlx::types::Uuid;
 use sqlx::FromRow;
 
 use crate::application::repositories::todo::create::CreatePayload;
-use crate::domain::todo::{Title, Todo, Description};
+use crate::domain::entities::todo::{Title, Todo, Description};
 
 #[derive(Clone, Debug, FromRow)]
 pub struct TodoModel {

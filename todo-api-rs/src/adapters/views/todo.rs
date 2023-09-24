@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::domain::todo::Todo;
+use crate::domain::entities::todo::Todo;
 
 /// Presentable format of `Todo` entity, *i.e.* the most appropriate format
 /// to be used by framework layer
