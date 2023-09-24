@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     sqlx::migrate!("./migrations").run(&pool).await?;
 
     let app = Router::new()
-        .merge(todo::create_router(pool.clone()))
+        .merge(todo::create_router(pool))
         .layer(create_tracing_layer());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
