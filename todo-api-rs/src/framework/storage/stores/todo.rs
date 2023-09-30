@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use sqlx::{Error as SqlxError, Pool, Postgres};
+use time::OffsetDateTime;
 
 use super::models::todo::TodoModel;
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
@@ -7,8 +8,8 @@ use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListError};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::todo::TodoEntity;
-use crate::domain::types::Id;
+use crate::domain::entities::todo::{Description, Title, TodoEntity};
+use crate::domain::types::{Date, DateTime, Id};
 
 #[derive(Clone)]
 pub struct TodoStore {
@@ -24,17 +25,24 @@ impl TodoStore {
 #[async_trait]
 impl Find for TodoStore {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
-        let q = r#"SELECT * FROM "Todo" WHERE id = ($1)"#;
+        let q = r#"
+            SELECT * FROM "Todo" 
+            WHERE id = ($1)
+        "#;
 
-        let res = sqlx::query_as::<_, TodoModel>(q)
+        let todo_model = sqlx::query_as::<_, TodoModel>(q)
             .bind(id.into_uuid())
             .fetch_one(&self.pool)
-            .await;
+            .await
+            .map_err(|err| match err {
+                SqlxError::RowNotFound => FindError::NotFound,
+                _ => {
+                    tracing::error!("find todo repository error {err:?}");
+                    FindError::Internal
+                }
+            })?;
 
-        res.map(|m| m.into_entity()).map_err(|err| match err {
-            SqlxError::RowNotFound => FindError::NotFound,
-            _ => FindError::Internal,
-        })
+        todo_model_to_entity(todo_model).map_err(|_| FindError::Internal)
     }
 }
 
@@ -42,26 +50,37 @@ impl Find for TodoStore {
 impl Create for TodoStore {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
         let q = r#"
-            INSERT INTO "Todo" (id, title, description, todo_at, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO "Todo"
+                (id, title, description, todo_at, created_at, updated_at)
+            VALUES 
+                ($1, $2, $3, $4, $5, $6)
         "#;
 
-        let model = TodoModel::from(payload);
-        let res = sqlx::query(q)
-            .bind(model.id)
-            .bind(&model.title)
-            .bind(&model.description)
-            .bind(model.todo_at)
-            .bind(model.created_at)
-            .bind(model.updated_at)
+        let current_date_time = OffsetDateTime::now_utc();
+        let todo_model = TodoModel {
+            id: Id::new().into_uuid(),
+            title: payload.title.into_string(),
+            description: payload.description.into_opt_string(),
+            todo_at: payload.todo_at.map(|at| at.into_date()),
+            created_at: current_date_time,
+            updated_at: current_date_time,
+        };
+
+        sqlx::query(q)
+            .bind(&todo_model.id)
+            .bind(&todo_model.title)
+            .bind(&todo_model.description)
+            .bind(&todo_model.todo_at)
+            .bind(&todo_model.created_at)
+            .bind(&todo_model.updated_at)
             .execute(&self.pool)
-            .await;
+            .await
+            .map_err(|err| {
+                tracing::error!("create todo repository error {err:?}");
+                CreateError::Internal
+            })?;
 
-        if res.is_err() {
-            return Err(CreateError::Internal);
-        }
-
-        Ok(model.into_entity())
+        todo_model_to_entity(todo_model).map_err(|_| CreateError::Internal)
     }
 }
 
@@ -70,17 +89,16 @@ impl List for TodoStore {
     async fn list(&self) -> Result<Vec<TodoEntity>, ListError> {
         let q = r#"SELECT * FROM "Todo""#;
 
-        let res = sqlx::query_as::<_, TodoModel>(q)
+        let todo_models = sqlx::query_as::<_, TodoModel>(q)
             .fetch_all(&self.pool)
             .await
             .map_err(|_| ListError::Internal)?;
 
-        let todos = res
+        todo_models
             .into_iter()
-            .map(|model| model.into_entity())
-            .collect::<Vec<TodoEntity>>();
-
-        Ok(todos)
+            .map(todo_model_to_entity)
+            .collect::<Result<Vec<TodoEntity>, ()>>()
+            .map_err(|_| ListError::Internal)
     }
 }
 
@@ -131,4 +149,28 @@ impl Update for TodoStore {
 
         Ok(todo)
     }
+}
+
+fn todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
+    let id = Id::parse_str(model.id.to_string().as_str()).map_err(|err| {
+        let msg = err.to_string();
+        tracing::error!("todo model id is incompatible with entity id: {msg}");
+    })?;
+    let title = Title::new(model.title).map_err(|e| {
+        let msg = e.description();
+        tracing::error!("todo model title is incompatible with entity title: {msg}");
+    })?;
+    let description = Description::new(model.description).map_err(|err| {
+        let msg = err.description();
+        tracing::error!("todo model description is incompatible with entity description: {msg}");
+    })?;
+
+    Ok(TodoEntity {
+        id,
+        title,
+        description,
+        todo_at: model.todo_at.map(Date::from),
+        created_at: DateTime::from(model.created_at),
+        updated_at: DateTime::from(model.updated_at),
+    })
 }
