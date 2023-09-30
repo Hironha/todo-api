@@ -104,7 +104,7 @@ impl Delete for TodoStore {
 
 #[async_trait]
 impl Update for TodoStore {
-    async fn set(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
+    async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
         let q = r#"
             UPDATE "Todo" 
             SET title, description, todo_at

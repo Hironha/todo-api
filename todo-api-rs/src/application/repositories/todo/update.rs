@@ -5,7 +5,7 @@ use crate::domain::types::{Date, Id};
 
 #[async_trait]
 pub trait Update {
-    async fn set(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError>;
+    async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError>;
 }
 
 #[derive(Clone, Debug)]

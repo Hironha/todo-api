@@ -12,7 +12,7 @@ pub async fn update_todo<T: Update>(
         todo_at: input.todo_at,
     };
 
-    match ctx.store.set(payload).await {
+    match ctx.store.update(payload).await {
         Ok(todo) => UpdateTodoOutput::ok(todo),
         Err(err) => UpdateTodoOutput::err(match err {
             UpdateError::NotFound => UpdateTodoError::NotFound,
