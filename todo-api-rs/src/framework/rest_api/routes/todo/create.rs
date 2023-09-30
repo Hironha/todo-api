@@ -18,7 +18,7 @@ pub(super) async fn create_todo(
     let input_schema = extract_input_schema(body);
     let controller = CreateController::new(state.todo_store);
 
-    let output = match controller.run(input_schema).await.value() {
+    let output = match controller.run(input_schema).await.into_result() {
         Ok(output) => output,
         Err(err) => {
             tracing::info!("CREATE TODO ERROR ->> {err:#?}");

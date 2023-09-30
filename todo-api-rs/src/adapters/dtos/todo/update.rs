@@ -1,26 +1,26 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
-use crate::application::functions::todo::UpdateTodoInput;
-use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
+use crate::application::dto::todo::update::UpdateTodoInput;
+use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, Todo};
 use crate::domain::types::{Date, Id};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Output(Result<TodoView, RunError>);
 impl Output {
-    pub const fn ok(view: TodoView) -> Self {
-        Self(Ok(view))
+    pub fn from_todo(todo: Todo) -> Self {
+        Self(Ok(TodoView::from(todo)))
     }
 
     pub const fn err(error: RunError) -> Self {
         Self(Err(error))
     }
 
-    pub fn value(self) -> Result<TodoView, RunError> {
+    pub fn into_result(self) -> Result<TodoView, RunError> {
         self.0
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RawInput {
     pub id: Option<String>,
     pub title: Option<String>,
@@ -57,14 +57,14 @@ impl ParsableInput<UpdateTodoInput, ParseError> for RawInput {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RunError {
     Validation(ParseError),
     NotFound,
     Internal,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParseError {
     EmptyId,
     InvalidId,

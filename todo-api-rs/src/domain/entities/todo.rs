@@ -49,7 +49,7 @@ impl Description {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TitleError {
     Empty,
     Length,
@@ -64,7 +64,7 @@ impl TitleError {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptionError {
     Length,
 }

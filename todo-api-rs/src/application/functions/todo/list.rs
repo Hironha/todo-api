@@ -1,16 +1,16 @@
+use crate::application::dto::todo::list::{ListTodoError, ListTodoOutput};
 use crate::application::repositories::todo::list::{List, ListError};
-use crate::domain::entities::todo::Todo;
 
-pub async fn list_todo<T: List>(ctx: ListContext<T>) -> Result<Vec<Todo>, ListTodoError> {
-    ctx.store.list().await.map_err(|e| match e {
-        ListError::Internal => ListTodoError::Internal,
-    })
+pub async fn list_todo<T: List>(ctx: ListContext<T>) -> ListTodoOutput {
+    match ctx.store.list().await {
+        Ok(todos) => ListTodoOutput::ok(todos),
+        Err(err) => ListTodoOutput::err(match err {
+            ListError::Internal => ListTodoError::Internal,
+        }),
+    }
 }
 
-pub enum ListTodoError {
-    Internal,
-}
-
+#[derive(Clone, Debug)]
 pub struct ListContext<T: List> {
     pub store: T,
 }

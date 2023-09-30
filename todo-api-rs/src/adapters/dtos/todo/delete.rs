@@ -1,9 +1,10 @@
 use crate::adapters::dtos::ParsableInput;
-use crate::application::functions::todo::DeleteTodoInput;
+use crate::application::dto::todo::delete::DeleteTodoInput;
 use crate::domain::types::Id;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Output(Result<(), RunError>);
+
 impl Output {
     pub const fn ok() -> Self {
         Self(Ok(()))
@@ -13,12 +14,12 @@ impl Output {
         Self(Err(error))
     }
 
-    pub fn value(self) -> Result<(), RunError> {
+    pub fn into_result(self) -> Result<(), RunError> {
         self.0
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RawInput {
     pub id: Option<String>,
 }
@@ -36,14 +37,14 @@ impl ParsableInput<DeleteTodoInput, ParseError> for RawInput {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RunError {
     Parsing(ParseError),
     TodoNotFound,
     Internal,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParseError {
     EmptyId,
     InvalidId,

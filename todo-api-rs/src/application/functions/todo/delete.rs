@@ -1,31 +1,20 @@
+use crate::application::dto::todo::delete::{DeleteTodoError, DeleteTodoInput, DeleteTodoOutput};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
-use crate::domain::types::Id;
 
 pub async fn delete_todo<S: Delete>(
     ctx: DeleteTodoContext<S>,
-    DeleteTodoInput(id): DeleteTodoInput,
-) -> Result<(), DeleteTodoError> {
-    ctx.store.delete(id).await.map_err(|e| match e {
-        DeleteError::NotFound => DeleteTodoError::NotFound,
-        DeleteError::Internal => DeleteTodoError::Internal,
-    })
-}
-
-#[derive(Clone, Debug)]
-pub struct DeleteTodoInput(Id);
-impl DeleteTodoInput {
-    pub fn new(id: Id) -> Self {
-        Self(id)
+    input: DeleteTodoInput,
+) -> DeleteTodoOutput {
+    match ctx.store.delete(input.into_id()).await {
+        Ok(_) => DeleteTodoOutput::ok(),
+        Err(err) => DeleteTodoOutput::err(match err {
+            DeleteError::NotFound => DeleteTodoError::NotFound,
+            DeleteError::Internal => DeleteTodoError::Internal,
+        }),
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct DeleteTodoContext<T: Delete> {
     pub store: T,
-}
-
-#[derive(Clone, Debug)]
-pub enum DeleteTodoError {
-    NotFound,
-    Internal,
 }

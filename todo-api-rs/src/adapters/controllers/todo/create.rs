@@ -1,9 +1,7 @@
 use crate::adapters::dtos::todo::create::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::adapters::views::todo::TodoView;
-use crate::application::functions::todo::{
-    create_todo, CreateContext, CreateTodoError, CreateTodoInput,
-};
+use crate::application::dto::todo::create::{CreateTodoError, CreateTodoInput};
+use crate::application::functions::todo::{create_todo, CreateContext};
 use crate::application::repositories::todo::create::Create;
 
 pub struct CreateController<S: Create> {
@@ -22,13 +20,13 @@ impl<S: Create> CreateController<S> {
         };
 
         let ctx = CreateContext { store: self.store };
-        let result = create_todo(ctx, create_input).await.map_err(|e| match e {
-            CreateTodoError::Internal => RunError::Internal,
-        });
+        let result = create_todo(ctx, create_input).await.into_result();
 
         match result {
-            Ok(todo) => Output::ok(TodoView::from(todo)),
-            Err(err) => Output::err(err),
+            Ok(todo) => Output::from_todo(todo),
+            Err(err) => Output::err(match err {
+                CreateTodoError::Internal => RunError::Internal,
+            }),
         }
     }
 }

@@ -1,9 +1,7 @@
 use crate::adapters::dtos::todo::find::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::adapters::views::todo::TodoView;
-use crate::application::functions::todo::{
-    find_todo, FindTodoContext, FindTodoError, FindTodoInput,
-};
+use crate::application::dto::todo::find::{FindTodoError, FindTodoInput};
+use crate::application::functions::todo::{find_todo, FindTodoContext};
 use crate::application::repositories::todo::find::Find;
 
 pub struct FindController<S: Find> {
@@ -22,14 +20,14 @@ impl<S: Find> FindController<S> {
         };
 
         let ctx = FindTodoContext { store: self.store };
-        let result = find_todo(ctx, input).await.map_err(|err| match err {
-            FindTodoError::Internal => RunError::Internal,
-            FindTodoError::NotFound => RunError::NotFound,
-        });
+        let result = find_todo(ctx, input).await.into_result();
 
         match result {
-            Ok(todo) => Output::ok(TodoView::from(todo)),
-            Err(err) => Output::err(err),
+            Ok(todo) => Output::from_todo(todo),
+            Err(err) => Output::err(match err {
+                FindTodoError::Internal => RunError::Internal,
+                FindTodoError::NotFound => RunError::NotFound,
+            }),
         }
     }
 }

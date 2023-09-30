@@ -1,6 +1,6 @@
-use crate::adapters::dtos::todo::list::{Output, OutputData, RunError};
-use crate::adapters::views::todo::TodoView;
-use crate::application::functions::todo::{list_todo, ListContext, ListTodoError};
+use crate::adapters::dtos::todo::list::{Output, RunError};
+use crate::application::dto::todo::list::ListTodoError;
+use crate::application::functions::todo::{list_todo, ListContext};
 use crate::application::repositories::todo::list::List;
 
 pub struct ListController<S: List> {
@@ -14,18 +14,13 @@ impl<S: List> ListController<S> {
 
     pub async fn run(self) -> Output {
         let context = ListContext { store: self.store };
-        let result = list_todo(context).await.map_err(|e| match e {
-            ListTodoError::Internal => RunError::Internal,
-        });
+        let result = list_todo(context).await.into_result();
 
-        let output_data = match result {
-            Ok(todos) => OutputData {
-                count: todos.len(),
-                items: todos.into_iter().map(TodoView::from).collect(),
-            },
-            Err(err) => return Output::err(err),
-        };
-
-        Output::ok(output_data)
+        match result {
+            Ok(todos) => Output::from_todos(todos),
+            Err(err) => Output::err(match err {
+                ListTodoError::Internal => RunError::Internal,
+            }),
+        }
     }
 }
