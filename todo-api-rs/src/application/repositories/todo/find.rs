@@ -8,7 +8,7 @@ pub trait Find {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError>;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FindError {
     NotFound,
     Internal,

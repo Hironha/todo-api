@@ -16,7 +16,7 @@ pub struct UpdatePayload {
     pub todo_at: Option<Date>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UpdateError {
     NotFound,
     Internal,

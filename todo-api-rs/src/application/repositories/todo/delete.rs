@@ -7,7 +7,7 @@ pub trait Delete {
     async fn delete(&self, id: Id) -> Result<(), DeleteError>;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DeleteError {
     NotFound,
     Internal,

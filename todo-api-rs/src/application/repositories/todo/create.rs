@@ -15,7 +15,7 @@ pub struct CreatePayload {
     pub todo_at: Option<Date>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CreateError {
     Internal,
 }

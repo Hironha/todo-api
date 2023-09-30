@@ -7,6 +7,7 @@ pub trait List {
     async fn list(&self) -> Result<Vec<TodoEntity>, ListError>;
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ListError {
     Internal,
 }
