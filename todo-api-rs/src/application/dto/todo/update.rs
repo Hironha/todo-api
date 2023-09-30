@@ -1,4 +1,4 @@
-use crate::domain::entities::todo::{Description, Title, Todo};
+use crate::domain::entities::todo::{Description, Title, TodoEntity};
 use crate::domain::types::{Date, Id};
 
 #[derive(Clone, Debug)]
@@ -10,10 +10,10 @@ pub struct UpdateTodoInput {
 }
 
 #[derive(Clone, Debug)]
-pub struct UpdateTodoOutput(Result<Todo, UpdateTodoError>);
+pub struct UpdateTodoOutput(Result<TodoEntity, UpdateTodoError>);
 
 impl UpdateTodoOutput {
-    pub const fn ok(todo: Todo) -> Self {
+    pub const fn ok(todo: TodoEntity) -> Self {
         Self(Ok(todo))
     }
 
@@ -21,7 +21,7 @@ impl UpdateTodoOutput {
         Self(Err(error))
     }
 
-    pub fn into_result(self) -> Result<Todo, UpdateTodoError> {
+    pub fn into_result(self) -> Result<TodoEntity, UpdateTodoError> {
         self.0
     }
 }

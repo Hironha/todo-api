@@ -1,9 +1,9 @@
-use crate::domain::entities::todo::Todo;
+use crate::domain::entities::todo::TodoEntity;
 
-pub struct ListTodoOutput(Result<Vec<Todo>, ListTodoError>);
+pub struct ListTodoOutput(Result<Vec<TodoEntity>, ListTodoError>);
 
 impl ListTodoOutput {
-    pub const fn ok(todos: Vec<Todo>) -> Self {
+    pub const fn ok(todos: Vec<TodoEntity>) -> Self {
         Self(Ok(todos))
     }
 
@@ -11,7 +11,7 @@ impl ListTodoOutput {
         Self(Err(error))
     }
 
-    pub fn into_result(self) -> Result<Vec<Todo>, ListTodoError> {
+    pub fn into_result(self) -> Result<Vec<TodoEntity>, ListTodoError> {
         self.0
     }
 }

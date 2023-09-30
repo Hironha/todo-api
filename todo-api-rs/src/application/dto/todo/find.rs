@@ -1,4 +1,4 @@
-use crate::domain::entities::todo::Todo;
+use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -15,10 +15,10 @@ impl FindTodoInput {
 }
 
 #[derive(Clone, Debug)]
-pub struct FindTodoOutput(Result<Todo, FindTodoError>);
+pub struct FindTodoOutput(Result<TodoEntity, FindTodoError>);
 
 impl FindTodoOutput {
-    pub const fn ok(todo: Todo) -> Self {
+    pub const fn ok(todo: TodoEntity) -> Self {
         Self(Ok(todo))
     }
 
@@ -26,7 +26,7 @@ impl FindTodoOutput {
         Self(Err(error))
     }
 
-    pub fn into_result(self) -> Result<Todo, FindTodoError> {
+    pub fn into_result(self) -> Result<TodoEntity, FindTodoError> {
         self.0
     }
 }

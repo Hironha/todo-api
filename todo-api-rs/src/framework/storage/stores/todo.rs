@@ -7,7 +7,7 @@ use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListError};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::todo::Todo;
+use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 
 #[derive(Clone)]
@@ -23,7 +23,7 @@ impl TodoStore {
 
 #[async_trait]
 impl Find for TodoStore {
-    async fn find(&self, id: Id) -> Result<Todo, FindError> {
+    async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
         let q = r#"SELECT * FROM "Todo" WHERE id = ($1)"#;
 
         let res = sqlx::query_as::<_, TodoModel>(q)
@@ -40,7 +40,7 @@ impl Find for TodoStore {
 
 #[async_trait]
 impl Create for TodoStore {
-    async fn create(&self, payload: CreatePayload) -> Result<Todo, CreateError> {
+    async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
         let q = r#"
             INSERT INTO "Todo" (id, title, description, todo_at, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -67,7 +67,7 @@ impl Create for TodoStore {
 
 #[async_trait]
 impl List for TodoStore {
-    async fn list(&self) -> Result<Vec<Todo>, ListError> {
+    async fn list(&self) -> Result<Vec<TodoEntity>, ListError> {
         let q = r#"SELECT * FROM "Todo""#;
 
         let res = sqlx::query_as::<_, TodoModel>(q)
@@ -78,7 +78,7 @@ impl List for TodoStore {
         let todos = res
             .into_iter()
             .map(|model| model.into_entity())
-            .collect::<Vec<Todo>>();
+            .collect::<Vec<TodoEntity>>();
 
         Ok(todos)
     }
@@ -104,7 +104,7 @@ impl Delete for TodoStore {
 
 #[async_trait]
 impl Update for TodoStore {
-    async fn set(&self, payload: UpdatePayload) -> Result<Todo, UpdateError> {
+    async fn set(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
         let q = r#"
             UPDATE "Todo" 
             SET title, description, todo_at
@@ -113,8 +113,8 @@ impl Update for TodoStore {
         "#;
 
         sqlx::query(q)
-            .bind(payload.title.value())
-            .bind(payload.description.value())
+            .bind(payload.title.into_string())
+            .bind(payload.description.into_opt_string())
             .bind(payload.todo_at.map(|at| at.into_date()))
             .bind(payload.id.into_uuid())
             .execute(&self.pool)

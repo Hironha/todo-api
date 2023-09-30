@@ -1,7 +1,7 @@
 use crate::domain::types::{Date, DateTime, Id};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Todo {
+pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
     pub description: Description,
@@ -24,7 +24,7 @@ impl Title {
         Ok(Self(title))
     }
 
-    pub fn value(self) -> String {
+    pub fn into_string(self) -> String {
         self.0
     }
 }
@@ -44,7 +44,7 @@ impl Description {
         Ok(Self(Some(d)))
     }
 
-    pub fn value(self) -> Option<String> {
+    pub fn into_opt_string(self) -> Option<String> {
         self.0
     }
 }

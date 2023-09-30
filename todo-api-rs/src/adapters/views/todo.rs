@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::domain::entities::todo::Todo;
+use crate::domain::entities::todo::TodoEntity;
 
 /// Presentable format of `Todo` entity, *i.e.* the most appropriate format
 /// to be used by framework layer
@@ -20,12 +20,12 @@ pub struct TodoView {
     pub updated_at: String,
 }
 
-impl From<Todo> for TodoView {
-    fn from(todo: Todo) -> Self {
+impl From<TodoEntity> for TodoView {
+    fn from(todo: TodoEntity) -> Self {
         TodoView {
             id: todo.id.to_string(),
-            title: todo.title.value(),
-            description: todo.description.value(),
+            title: todo.title.into_string(),
+            description: todo.description.into_opt_string(),
             todo_at: todo.todo_at.map(|at| at.to_ymd()),
             created_at: todo.created_at.to_rfc3339(),
             updated_at: todo.updated_at.to_rfc3339(),

@@ -1,7 +1,7 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
 use crate::application::dto::todo::find::FindTodoInput;
-use crate::domain::entities::todo::Todo;
+use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -12,7 +12,7 @@ impl Output {
         Self(Err(error))
     }
 
-    pub fn from_todo(todo: Todo) -> Self {
+    pub fn from_todo(todo: TodoEntity) -> Self {
         Self(Ok(TodoView::from(todo)))
     }
 

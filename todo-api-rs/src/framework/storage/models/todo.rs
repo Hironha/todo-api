@@ -3,7 +3,7 @@ use sqlx::types::Uuid;
 use sqlx::FromRow;
 
 use crate::application::repositories::todo::create::CreatePayload;
-use crate::domain::entities::todo::{Title, Todo, Description};
+use crate::domain::entities::todo::{Description, Title, TodoEntity};
 
 #[derive(Clone, Debug, FromRow)]
 pub struct TodoModel {
@@ -20,8 +20,8 @@ impl From<CreatePayload> for TodoModel {
         let current_date_time = OffsetDateTime::now_utc();
         Self {
             id: Uuid::new_v4(),
-            title: payload.title.value(),
-            description: payload.description.value(),
+            title: payload.title.into_string(),
+            description: payload.description.into_opt_string(),
             todo_at: payload.todo_at.map(|at| at.into_date()),
             created_at: current_date_time,
             updated_at: current_date_time,
@@ -30,8 +30,8 @@ impl From<CreatePayload> for TodoModel {
 }
 
 impl TodoModel {
-    pub fn into_entity(self) -> Todo {
-        Todo {
+    pub fn into_entity(self) -> TodoEntity {
+        TodoEntity {
             id: self.id.into(),
             title: Title::new(self.title).unwrap(),
             description: Description::new(self.description).unwrap(),
@@ -39,11 +39,5 @@ impl TodoModel {
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),
         }
-    }
-}
-
-impl PartialEq for TodoModel {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
     }
 }

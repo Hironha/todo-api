@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::adapters::views::todo::TodoView;
-use crate::domain::entities::todo::Todo;
+use crate::domain::entities::todo::TodoEntity;
 
 #[derive(Debug)]
 pub struct Output(Result<OutputData, RunError>);
@@ -10,7 +10,7 @@ impl Output {
         Self(Err(error))
     }
 
-    pub fn from_todos(todos: Vec<Todo>) -> Self {
+    pub fn from_todos(todos: Vec<TodoEntity>) -> Self {
         let data = OutputData {
             count: todos.len(),
             items: todos.into_iter().map(TodoView::from).collect(),

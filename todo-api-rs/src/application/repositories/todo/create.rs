@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 
-use crate::domain::entities::todo::{Description, Title, Todo};
+use crate::domain::entities::todo::{Description, Title, TodoEntity};
 use crate::domain::types::Date;
 
 #[async_trait]
 pub trait Create {
-    async fn create(&self, payload: CreatePayload) -> Result<Todo, CreateError>;
+    async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError>;
 }
 
 #[derive(Clone, Debug)]

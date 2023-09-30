@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 
-use crate::domain::entities::todo::Todo;
+use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 
 #[async_trait]
 pub trait Find {
-    async fn find(&self, id: Id) -> Result<Todo, FindError>;
+    async fn find(&self, id: Id) -> Result<TodoEntity, FindError>;
 }
 
 #[derive(Debug, PartialEq)]
