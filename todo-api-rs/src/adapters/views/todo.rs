@@ -26,9 +26,9 @@ impl From<Todo> for TodoView {
             id: todo.id.to_string(),
             title: todo.title.value(),
             description: todo.description.value(),
-            todo_at: todo.todo_at.map(|at| at.ymd()),
-            created_at: todo.created_at.rfc3339(),
-            updated_at: todo.updated_at.rfc3339(),
+            todo_at: todo.todo_at.map(|at| at.to_ymd()),
+            created_at: todo.created_at.to_rfc3339(),
+            updated_at: todo.updated_at.to_rfc3339(),
         }
     }
 }

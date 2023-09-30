@@ -17,7 +17,7 @@ impl Id {
         self.0.to_string()
     }
 
-    pub fn value(self) -> Uuid {
+    pub fn into_uuid(self) -> Uuid {
         self.0
     }
 }
