@@ -8,7 +8,7 @@ use crate::framework::rest_api::errors::ApiError;
 pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoResponse {
     let controller = ListController::new(state.todo_store);
 
-    let output = match controller.run().await.value() {
+    let output = match controller.run().await.into_result() {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);

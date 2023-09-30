@@ -1,8 +1,7 @@
 use crate::adapters::dtos::todo::delete::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::application::functions::todo::{
-    delete_todo, DeleteTodoContext, DeleteTodoError, DeleteTodoInput,
-};
+use crate::application::dto::todo::delete::{DeleteTodoError, DeleteTodoInput};
+use crate::application::functions::todo::{delete_todo, DeleteTodoContext};
 use crate::application::repositories::todo::delete::Delete;
 
 pub struct DeleteController<S: Delete> {
@@ -21,14 +20,14 @@ impl<S: Delete> DeleteController<S> {
         };
 
         let ctx = DeleteTodoContext { store: self.store };
-        let result = delete_todo(ctx, id).await.map_err(|err| match err {
-            DeleteTodoError::NotFound => RunError::TodoNotFound,
-            DeleteTodoError::Internal => RunError::Internal,
-        });
+        let result = delete_todo(ctx, id).await.into_result();
 
         match result {
             Ok(_) => Output::ok(),
-            Err(err) => Output::err(err),
+            Err(err) => Output::err(match err {
+                DeleteTodoError::NotFound => RunError::TodoNotFound,
+                DeleteTodoError::Internal => RunError::Internal,
+            }),
         }
     }
 }

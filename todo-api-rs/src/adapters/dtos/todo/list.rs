@@ -1,19 +1,25 @@
 use serde::Serialize;
 
 use crate::adapters::views::todo::TodoView;
+use crate::domain::entities::todo::Todo;
 
 #[derive(Debug)]
 pub struct Output(Result<OutputData, RunError>);
 impl Output {
-    pub const fn ok(data: OutputData) -> Self {
-        Self(Ok(data))
-    }
-
     pub const fn err(error: RunError) -> Self {
         Self(Err(error))
     }
 
-    pub fn value(self) -> Result<OutputData, RunError> {
+    pub fn from_todos(todos: Vec<Todo>) -> Self {
+        let data = OutputData {
+            count: todos.len(),
+            items: todos.into_iter().map(TodoView::from).collect(),
+        };
+
+        Self(Ok(data))
+    }
+
+    pub fn into_result(self) -> Result<OutputData, RunError> {
         self.0
     }
 }
@@ -24,7 +30,7 @@ pub struct OutputData {
     pub items: Vec<TodoView>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RunError {
     Internal,
 }

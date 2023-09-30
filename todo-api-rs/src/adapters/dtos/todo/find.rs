@@ -1,20 +1,22 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
-use crate::application::functions::todo::FindTodoInput;
+use crate::application::dto::todo::find::FindTodoInput;
+use crate::domain::entities::todo::Todo;
 use crate::domain::types::Id;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Output(Result<TodoView, RunError>);
-impl Output {
-    pub const fn ok(view: TodoView) -> Self {
-        Self(Ok(view))
-    }
 
+impl Output {
     pub const fn err(error: RunError) -> Self {
         Self(Err(error))
     }
 
-    pub fn value(self) -> Result<TodoView, RunError> {
+    pub fn from_todo(todo: Todo) -> Self {
+        Self(Ok(TodoView::from(todo)))
+    }
+
+    pub fn into_result(self) -> Result<TodoView, RunError> {
         self.0
     }
 }
@@ -37,14 +39,14 @@ impl ParsableInput<FindTodoInput, ParseError> for InputSchema {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RunError {
     Validation(ParseError),
     NotFound,
     Internal,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParseError {
     EmptyId,
     InvalidId,

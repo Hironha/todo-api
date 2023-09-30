@@ -20,7 +20,7 @@ pub(super) async fn update_todo(
     let input_schema = extract_input_schema(path, body);
     let controller = UpdateController::new(state.todo_store);
 
-    let output = match controller.run(input_schema).await.value() {
+    let output = match controller.run(input_schema).await.into_result() {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = config_error_response(err);

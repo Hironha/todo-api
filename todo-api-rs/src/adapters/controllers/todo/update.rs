@@ -1,9 +1,7 @@
 use crate::adapters::dtos::todo::update::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::adapters::views::todo::TodoView;
-use crate::application::functions::todo::{
-    update_todo, UpdateTodoContext, UpdateTodoError, UpdateTodoInput,
-};
+use crate::application::dto::todo::update::{UpdateTodoError, UpdateTodoInput};
+use crate::application::functions::todo::{update_todo, UpdateTodoContext};
 use crate::application::repositories::todo::update::Update;
 
 pub struct UpdateController<S: Update> {
@@ -22,14 +20,14 @@ impl<S: Update> UpdateController<S> {
         };
 
         let ctx = UpdateTodoContext { store: self.store };
-        let result = update_todo(ctx, input).await.map_err(|err| match err {
-            UpdateTodoError::NotFound => RunError::NotFound,
-            UpdateTodoError::Internal => RunError::Internal,
-        });
+        let result = update_todo(ctx, input).await.into_result();
 
         match result {
-            Ok(todo) => Output::ok(TodoView::from(todo)),
-            Err(err) => Output::err(err),
+            Ok(todo) => Output::from_todo(todo),
+            Err(err) => Output::err(match err {
+                UpdateTodoError::NotFound => RunError::NotFound,
+                UpdateTodoError::Internal => RunError::Internal,
+            }),
         }
     }
 }

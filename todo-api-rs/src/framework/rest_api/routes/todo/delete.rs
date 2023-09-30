@@ -20,7 +20,7 @@ pub(super) async fn delete_todo(
     };
     let controller = DeleteController::new(state.todo_store);
 
-    if let Err(err) = controller.run(input_schema).await.value() {
+    if let Err(err) = controller.run(input_schema).await.into_result() {
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {
