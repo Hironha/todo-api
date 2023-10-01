@@ -8,7 +8,7 @@ impl Date {
         self.0
     }
 
-    /// Stringifies into YYYY-MM-DD
+    /// Stringifies into YYYY-MM-DD using UTC date
     pub fn to_ymd(self) -> String {
         let ydm_description = format_description!("[year]-[month]-[day]");
         self.into_date().format(ydm_description).unwrap()
@@ -21,6 +21,7 @@ impl Date {
 }
 
 impl From<time::Date> for Date {
+    /// Create a new `Date` instance from `time::Date`
     fn from(date: time::Date) -> Self {
         Self(date)
     }
@@ -37,6 +38,7 @@ impl DateTime {
 }
 
 impl From<time::OffsetDateTime> for DateTime {
+    /// Creates a new `DateTime` instance from `time::OffsetDateTime`
     fn from(date_time: time::OffsetDateTime) -> Self {
         Self(date_time)
     }
