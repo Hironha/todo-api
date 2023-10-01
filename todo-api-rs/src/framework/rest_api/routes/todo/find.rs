@@ -43,7 +43,7 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
         }
         RunError::NotFound => {
             let error = ApiError::new("FTD-002", "Todo not found");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
+            (StatusCode::NOT_FOUND, error)
         }
         RunError::Internal => {
             let error = ApiError::new("FTD-003", "Internal server error");
