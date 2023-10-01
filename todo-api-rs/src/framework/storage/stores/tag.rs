@@ -38,11 +38,11 @@ impl Create for TagStore {
         };
 
         sqlx::query(q)
-            .bind(&model.id)
+            .bind(model.id)
             .bind(&model.name)
             .bind(&model.description)
-            .bind(&model.created_at)
-            .bind(&model.updated_at)
+            .bind(model.created_at)
+            .bind(model.updated_at)
             .execute(&self.pool)
             .await
             .map_err(|err| {
