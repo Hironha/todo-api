@@ -26,7 +26,8 @@ impl TodoStore {
 impl Find for TodoStore {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
         let q = r#"
-            SELECT * FROM todo 
+            SELECT id, title, description, todo_at, created_at, updated_at
+            FROM todo 
             WHERE id = ($1)
         "#;
 
