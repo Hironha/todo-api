@@ -2,11 +2,11 @@ use crate::domain::types::{DateTime, Id};
 
 #[derive(Clone, Debug)]
 pub struct TagEntity {
-    id: Id,
-    name: Name,
-    description: Description,
-    created_at: DateTime,
-    updated_at: DateTime,
+    pub id: Id,
+    pub name: Name,
+    pub description: Description,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 #[derive(Clone, Debug)]
@@ -22,6 +22,10 @@ impl Name {
         }
 
         Ok(Self(name))
+    }
+
+    pub fn into_string(self) -> String {
+        self.0
     }
 }
 
@@ -40,6 +44,10 @@ impl Description {
         }
 
         Ok(Self(Some(description)))
+    }
+
+    pub fn into_opt_string(self) -> Option<String> {
+        self.0
     }
 }
 
