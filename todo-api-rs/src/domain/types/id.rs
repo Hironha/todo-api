@@ -4,7 +4,6 @@ use uuid::{Error, Uuid};
 pub struct Id(Uuid);
 
 impl Id {
-    #[allow(dead_code)]
     pub fn new() -> Self {
         Self(Uuid::new_v4())
     }
@@ -23,6 +22,7 @@ impl Id {
 }
 
 impl From<Uuid> for Id {
+    /// Creates a new `Id` instance from `uuid::Uuid`
     fn from(value: Uuid) -> Self {
         Self(value)
     }
