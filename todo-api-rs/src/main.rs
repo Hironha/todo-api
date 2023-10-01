@@ -27,14 +27,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let pool = create_db_pool(5).await;
-    sqlx::migrate!("./migrations").run(&pool).await?;
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("failed to run migrations");
 
     let app = Router::new()
         .merge(todo::create_router(pool))
         .layer(create_tracing_layer());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-    tracing::info!("Server listening on {addr:?}");
+    tracing::info!("server listening on {addr:?}");
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
