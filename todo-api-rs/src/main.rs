@@ -18,7 +18,7 @@ use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().expect("Failed to load .env file");
+    dotenv().expect("failed to load .env file");
 
     tracing_subscriber::fmt()
         .without_time()
@@ -47,22 +47,22 @@ async fn create_db_pool(connections: u32) -> Pool<Postgres> {
     let env = std::env::vars().collect::<HashMap<String, String>>();
     let user = env
         .get("DB_USER")
-        .expect("Failed to load DB_USER from .env");
+        .expect("failed to load DB_USER from .env");
     let password = env
         .get("DB_PASSWORD")
-        .expect("Failed to load DB_PASSWORD from .env");
+        .expect("failed to load DB_PASSWORD from .env");
     let host = env
         .get("DB_HOST")
-        .expect("Failed to load DB_HOST from .env");
+        .expect("failed to load DB_HOST from .env");
     let db_name = env
         .get("DB_NAME")
-        .expect("Failed to load DB_NAME from .env");
+        .expect("failed to load DB_NAME from .env");
 
     PgPoolOptions::new()
         .max_connections(connections)
         .connect(&format!("postgres://{user}:{password}@{host}/{db_name}"))
         .await
-        .expect("Failed to connect to Postgres database")
+        .expect("failed to connect to Postgres database")
 }
 
 fn create_tracing_layer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
