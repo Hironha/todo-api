@@ -67,12 +67,12 @@ impl Create for TodoStore {
         };
 
         sqlx::query(q)
-            .bind(&todo_model.id)
+            .bind(todo_model.id)
             .bind(&todo_model.title)
             .bind(&todo_model.description)
-            .bind(&todo_model.todo_at)
-            .bind(&todo_model.created_at)
-            .bind(&todo_model.updated_at)
+            .bind(todo_model.todo_at)
+            .bind(todo_model.created_at)
+            .bind(todo_model.updated_at)
             .execute(&self.pool)
             .await
             .map_err(|err| {
@@ -116,7 +116,10 @@ impl Delete for TodoStore {
             .await
             .map_err(|e| match e {
                 SqlxError::RowNotFound => DeleteError::NotFound,
-                _ => DeleteError::Internal,
+                _ => {
+                    tracing::error!("delete todo repository error {e:?}");
+                    DeleteError::Internal
+                }
             })?;
 
         Ok(())
@@ -128,29 +131,27 @@ impl Update for TodoStore {
     async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
         let q = r#"
             UPDATE todo
-            SET title, description, todo_at
-            VALUES ($1), ($2), ($3)
+            SET title = ($1), description = ($2), todo_at = ($3)
             WHERE id = ($4)
+            RETURNING id, title, description, todo_at, created_at, updated_at
         "#;
 
-        sqlx::query(q)
+        let model = sqlx::query_as::<_, TodoModel>(q)
             .bind(payload.title.into_string())
             .bind(payload.description.into_opt_string())
             .bind(payload.todo_at.map(|at| at.into_date()))
             .bind(payload.id.into_uuid())
-            .execute(&self.pool)
+            .fetch_one(&self.pool)
             .await
-            .map_err(|e| match e {
+            .map_err(|err| match err {
                 SqlxError::RowNotFound => UpdateError::NotFound,
-                _ => UpdateError::Internal,
+                _ => {
+                    tracing::error!("update todo repository error: {err:?}");
+                    UpdateError::Internal
+                }
             })?;
 
-        let todo = self.find(payload.id).await.map_err(|err| match err {
-            FindError::NotFound => UpdateError::NotFound,
-            FindError::Internal => UpdateError::Internal,
-        })?;
-
-        Ok(todo)
+        todo_model_to_entity(model).map_err(|_| UpdateError::Internal)
     }
 }
 
