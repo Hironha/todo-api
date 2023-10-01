@@ -9,7 +9,7 @@ use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListError};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
 use crate::domain::entities::todo::{Description, Title, TodoEntity};
-use crate::domain::types::{Date, DateTime, Id};
+use crate::domain::types::{Date, Id};
 
 #[derive(Clone)]
 pub struct TodoStore {
@@ -155,10 +155,6 @@ impl Update for TodoStore {
 }
 
 fn todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
-    let id = Id::parse_str(model.id.to_string().as_str()).map_err(|err| {
-        let msg = err.to_string();
-        tracing::error!("todo model id is incompatible with entity id: {msg}");
-    })?;
     let title = Title::new(model.title).map_err(|e| {
         let msg = e.description();
         tracing::error!("todo model title is incompatible with entity title: {msg}");
@@ -169,11 +165,11 @@ fn todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
     })?;
 
     Ok(TodoEntity {
-        id,
+        id: model.id.into(),
         title,
         description,
         todo_at: model.todo_at.map(Date::from),
-        created_at: DateTime::from(model.created_at),
-        updated_at: DateTime::from(model.updated_at),
+        created_at: model.created_at.into(),
+        updated_at: model.updated_at.into(),
     })
 }
