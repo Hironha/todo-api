@@ -50,37 +50,27 @@ impl Find for TodoStore {
 impl Create for TodoStore {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
         let q = r#"
-            INSERT INTO todo
-                (id, title, description, todo_at, created_at, updated_at)
-            VALUES 
-                ($1, $2, $3, $4, $5, $6)
+            INSERT INTO todo (id, title, description, todo_at, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, title, description, todo_at, created_at, updated_at
         "#;
 
         let current_date_time = OffsetDateTime::now_utc();
-        let todo_model = TodoModel {
-            id: Id::new().into_uuid(),
-            title: payload.title.into_string(),
-            description: payload.description.into_opt_string(),
-            todo_at: payload.todo_at.map(|at| at.into_date()),
-            created_at: current_date_time,
-            updated_at: current_date_time,
-        };
-
-        sqlx::query(q)
-            .bind(todo_model.id)
-            .bind(&todo_model.title)
-            .bind(&todo_model.description)
-            .bind(todo_model.todo_at)
-            .bind(todo_model.created_at)
-            .bind(todo_model.updated_at)
-            .execute(&self.pool)
+        let model = sqlx::query_as::<_, TodoModel>(q)
+            .bind(Id::new().into_uuid())
+            .bind(payload.title.into_string())
+            .bind(payload.description.into_opt_string())
+            .bind(payload.todo_at.map(|at| at.into_date()))
+            .bind(current_date_time)
+            .bind(current_date_time)
+            .fetch_one(&self.pool)
             .await
             .map_err(|err| {
                 tracing::error!("create todo repository error {err:?}");
                 CreateError::Internal
             })?;
 
-        todo_model_to_entity(todo_model).map_err(|_| CreateError::Internal)
+        todo_model_to_entity(model).map_err(|_| CreateError::Internal)
     }
 }
 
