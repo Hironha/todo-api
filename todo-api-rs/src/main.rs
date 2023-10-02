@@ -7,14 +7,15 @@ use axum::Router;
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
+use std::collections::HashMap;
+use std::net::SocketAddr;
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::trace::{DefaultOnRequest, DefaultOnResponse, TraceLayer};
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
 
+use framework::rest_api::routes::tag;
 use framework::rest_api::routes::todo;
-use std::collections::HashMap;
-use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,7 +34,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("failed to run migrations");
 
     let app = Router::new()
-        .merge(todo::create_router(pool))
+        .merge(todo::create_router(pool.clone()))
+        .merge(tag::create_tag_router(pool))
         .layer(create_tracing_layer());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));

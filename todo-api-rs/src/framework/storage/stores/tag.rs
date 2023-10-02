@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 use time::OffsetDateTime;
 
-use crate::application::repositories::tag::create::{Create, CreateTagError, CreateTagPayload};
+use crate::application::repositories::tag::create::{Create, CreateError, CreateTagPayload};
 use crate::domain::entities::tag::{Description, Name, TagEntity};
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
@@ -20,37 +20,28 @@ impl TagStore {
 
 #[async_trait]
 impl Create for TagStore {
-    async fn create(&self, payload: CreateTagPayload) -> Result<TagEntity, CreateTagError> {
+    async fn create(&self, payload: CreateTagPayload) -> Result<TagEntity, CreateError> {
         let q = r#"
-            INSERT INTO tag
-                (id, name, description, created_at, updated_at)
-            VALUES
-                ($1, $2, $3, $4, $5)
+            INSERT INTO tag (id, name, description, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, name, description, created_at, updated_at
         "#;
 
         let current_date_time = OffsetDateTime::now_utc();
-        let model = TagModel {
-            id: Id::new().into_uuid(),
-            name: payload.name.into_string(),
-            description: payload.description.into_opt_string(),
-            created_at: current_date_time,
-            updated_at: current_date_time,
-        };
-
-        sqlx::query(q)
-            .bind(model.id)
-            .bind(&model.name)
-            .bind(&model.description)
-            .bind(model.created_at)
-            .bind(model.updated_at)
-            .execute(&self.pool)
+        let model = sqlx::query_as::<_, TagModel>(q)
+            .bind(Id::new().into_uuid())
+            .bind(payload.name.into_string())
+            .bind(payload.description.into_opt_string())
+            .bind(current_date_time)
+            .bind(current_date_time)
+            .fetch_one(&self.pool)
             .await
             .map_err(|err| {
                 tracing::error!("create tag repository error {err:?}");
-                CreateTagError::Internal
+                CreateError::Internal
             })?;
 
-        tag_model_to_entity(model).map_err(|_| CreateTagError::Internal)
+        tag_model_to_entity(model).map_err(|_| CreateError::Internal)
     }
 }
 

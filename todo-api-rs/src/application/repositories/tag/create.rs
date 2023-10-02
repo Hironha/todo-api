@@ -10,10 +10,10 @@ pub struct CreateTagPayload {
 
 #[async_trait]
 pub trait Create {
-    async fn create(&self, payload: CreateTagPayload) -> Result<TagEntity, CreateTagError>;
+    async fn create(&self, payload: CreateTagPayload) -> Result<TagEntity, CreateError>;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CreateTagError {
+pub enum CreateError {
     Internal,
 }
