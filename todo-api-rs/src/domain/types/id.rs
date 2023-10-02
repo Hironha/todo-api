@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use uuid::{Error, Uuid};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -12,12 +13,14 @@ impl Id {
         Uuid::parse_str(input).map(Self::from)
     }
 
-    pub fn to_string(&self) -> String {
-        self.0.to_string()
-    }
-
     pub fn into_uuid(self) -> Uuid {
         self.0
+    }
+}
+
+impl Display for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.0.to_string().as_str())
     }
 }
 
