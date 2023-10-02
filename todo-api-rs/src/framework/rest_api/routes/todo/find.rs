@@ -13,7 +13,7 @@ pub(super) async fn find_todo(
     State(state): State<TodoState>,
     Path(path): Path<Value>,
 ) -> impl IntoResponse {
-    tracing::info!("GET TODO -> path: {path:#?}");
+    tracing::info!("find todo path input {path:?}");
 
     let input_schema = InputSchema {
         id: path.as_str().map(|id| id.to_string()),

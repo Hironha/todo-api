@@ -13,7 +13,7 @@ pub(super) async fn create_tag(
     State(state): State<TagState>,
     Json(body): Json<Value>,
 ) -> impl IntoResponse {
-    tracing::info!("CREATE TAG ->> body {body:#?}");
+    tracing::info!("create tag body: {body:?}");
 
     let input_schema = extract_input_schema(body);
     let controller = CreateController::new(state.tag_store);

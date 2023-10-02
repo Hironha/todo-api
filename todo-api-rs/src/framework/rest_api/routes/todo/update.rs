@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
-use crate::adapters::dtos::todo::update::{RawInput, ParseError, RunError};
+use crate::adapters::dtos::todo::update::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::errors::{ApiError, ValidationError};
 
 pub(super) async fn update_todo(
@@ -14,8 +14,8 @@ pub(super) async fn update_todo(
     Path(path): Path<Value>,
     Json(body): Json<Value>,
 ) -> impl IntoResponse {
-    tracing::info!("UPDATE TODO -> path: {path:?}");
-    tracing::info!("UPDATE TODO -> body: {body:?}");
+    tracing::info!("update todo path input {path:?}");
+    tracing::info!("update todo body {body:?}");
 
     let input_schema = extract_input_schema(path, body);
     let controller = UpdateController::new(state.todo_store);

@@ -13,7 +13,7 @@ pub(super) async fn create_todo(
     State(state): State<TodoState>,
     Json(body): Json<Value>,
 ) -> impl IntoResponse {
-    tracing::info!("CREATE TODO ->> body {body:#?}");
+    tracing::info!("create todo body: {body:?}");
 
     let input_schema = extract_input_schema(body);
     let controller = CreateController::new(state.todo_store);
@@ -21,7 +21,6 @@ pub(super) async fn create_todo(
     let output = match controller.run(input_schema).await.into_result() {
         Ok(output) => output,
         Err(err) => {
-            tracing::info!("CREATE TODO ERROR ->> {err:#?}");
             let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }

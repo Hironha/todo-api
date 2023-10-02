@@ -13,7 +13,7 @@ pub(super) async fn delete_todo(
     State(state): State<TodoState>,
     Path(path): Path<Value>,
 ) -> impl IntoResponse {
-    tracing::info!("DELETE TODO ->> path {path:?}");
+    tracing::info!("delete todo path input {path:?}");
 
     let input_schema = RawInput {
         id: path.as_str().map(|id| id.to_string()),
