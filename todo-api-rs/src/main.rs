@@ -25,6 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .without_time()
         .with_target(false)
         .with_env_filter(EnvFilter::from_default_env())
+        .with_max_level(Level::INFO)
         .init();
 
     let pool = create_db_pool(5).await;
