@@ -1,5 +1,6 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::tag::TagView;
+use crate::application::dtos::tag::find::FindTagInput;
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
 
@@ -8,12 +9,13 @@ pub struct RawInput {
     pub id: Option<String>,
 }
 
-impl ParsableInput<Id, ParseError> for RawInput {
-    fn parse(self) -> Result<Id, ParseError> {
+impl ParsableInput<FindTagInput, ParseError> for RawInput {
+    fn parse(self) -> Result<FindTagInput, ParseError> {
         self.id
             .map(|id| Id::parse_str(&id))
             .ok_or(ParseError::EmptyId)?
             .map_err(|_| ParseError::InvalidId)
+            .map(FindTagInput::new)
     }
 }
 

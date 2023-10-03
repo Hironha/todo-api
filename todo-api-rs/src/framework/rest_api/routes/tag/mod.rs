@@ -1,11 +1,13 @@
 mod create;
+mod find;
 
 use axum::extract::FromRef;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::Router;
 use sqlx::{Pool, Postgres};
 
 use create::create_tag;
+use find::find_tag;
 
 use crate::framework::storage::TagStore;
 
@@ -21,5 +23,6 @@ pub fn create_tag_router(pool: Pool<Postgres>) -> Router {
 
     Router::new()
         .route("/tags", post(create_tag))
+        .route("/tags/:id", get(find_tag))
         .with_state(state)
 }
