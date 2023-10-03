@@ -1,6 +1,6 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
-use crate::application::dto::todo::find::FindTodoInput;
+use crate::application::dtos::todo::find::FindTodoInput;
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 
@@ -22,11 +22,11 @@ impl Output {
 }
 
 #[derive(Debug)]
-pub struct InputSchema {
+pub struct RawInput {
     pub id: Option<String>,
 }
 
-impl ParsableInput<FindTodoInput, ParseError> for InputSchema {
+impl ParsableInput<FindTodoInput, ParseError> for RawInput {
     fn parse(self) -> Result<FindTodoInput, ParseError> {
         let id = self
             .id
@@ -67,7 +67,7 @@ mod test {
 
     #[test]
     fn parse_success() {
-        let input_schema = super::InputSchema {
+        let input_schema = super::RawInput {
             id: Some(super::Id::new().to_string()),
         };
 
@@ -76,13 +76,13 @@ mod test {
 
     #[test]
     fn parse_fail() {
-        let none_id_schema = super::InputSchema { id: None };
+        let none_id_schema = super::RawInput { id: None };
         let none_id_input = none_id_schema.parse();
 
         assert!(none_id_input.is_err());
         assert_eq!(none_id_input.unwrap_err(), super::ParseError::EmptyId);
 
-        let invalid_id_schema = super::InputSchema {
+        let invalid_id_schema = super::RawInput {
             id: Some("invalid-id".to_string()),
         };
         let invalid_id_input = invalid_id_schema.parse();

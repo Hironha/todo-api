@@ -1,4 +1,4 @@
-use crate::application::dto::todo::list::{ListTodoError, ListTodoOutput};
+use crate::application::dtos::todo::list::{ListTodoError, ListTodoOutput};
 use crate::application::repositories::todo::list::{List, ListError};
 
 pub async fn list_todo<T: List>(ctx: ListContext<T>) -> ListTodoOutput {

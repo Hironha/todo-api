@@ -1,6 +1,6 @@
 use crate::adapters::dtos::todo::find::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::application::dto::todo::find::{FindTodoError, FindTodoInput};
+use crate::application::dtos::todo::find::{FindTodoError, FindTodoInput};
 use crate::application::functions::todo::{find_todo, FindTodoContext};
 use crate::application::repositories::todo::find::Find;
 

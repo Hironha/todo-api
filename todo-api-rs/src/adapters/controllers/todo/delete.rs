@@ -1,6 +1,6 @@
 use crate::adapters::dtos::todo::delete::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::application::dto::todo::delete::{DeleteTodoError, DeleteTodoInput};
+use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput};
 use crate::application::functions::todo::{delete_todo, DeleteTodoContext};
 use crate::application::repositories::todo::delete::Delete;
 

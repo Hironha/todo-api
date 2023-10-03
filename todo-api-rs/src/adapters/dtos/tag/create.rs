@@ -1,6 +1,6 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::tag::TagView;
-use crate::application::dto::tag::create::CreateTagInput;
+use crate::application::dtos::tag::create::CreateTagInput;
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
 
 #[derive(Clone, Debug)]

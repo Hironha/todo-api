@@ -1,6 +1,6 @@
 use crate::adapters::dtos::todo::create::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::application::dto::todo::create::{CreateTodoError, CreateTodoInput};
+use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
 use crate::application::functions::todo::{create_todo, CreateContext};
 use crate::application::repositories::todo::create::Create;
 

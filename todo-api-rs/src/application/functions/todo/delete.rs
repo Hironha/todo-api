@@ -1,4 +1,4 @@
-use crate::application::dto::todo::delete::{DeleteTodoError, DeleteTodoInput, DeleteTodoOutput};
+use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput, DeleteTodoOutput};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
 
 pub async fn delete_todo<S: Delete>(

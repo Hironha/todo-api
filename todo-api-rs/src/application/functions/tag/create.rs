@@ -1,4 +1,4 @@
-use crate::application::dto::tag::create::{CreateTagError, CreateTagInput, CreateTagOutput};
+use crate::application::dtos::tag::create::{CreateTagError, CreateTagInput, CreateTagOutput};
 use crate::application::repositories::tag::create::{Create, CreateError, CreateTagPayload};
 
 pub async fn create_tag<S: Create>(

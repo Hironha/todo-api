@@ -1,6 +1,6 @@
 use crate::adapters::dtos::ParsableInput;
 use crate::adapters::views::todo::TodoView;
-use crate::application::dto::todo::update::UpdateTodoInput;
+use crate::application::dtos::todo::update::UpdateTodoInput;
 use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
 use crate::domain::types::{Date, Id};
 

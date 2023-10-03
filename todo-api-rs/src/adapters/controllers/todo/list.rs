@@ -1,5 +1,5 @@
 use crate::adapters::dtos::todo::list::{Output, RunError};
-use crate::application::dto::todo::list::ListTodoError;
+use crate::application::dtos::todo::list::ListTodoError;
 use crate::application::functions::todo::{list_todo, ListContext};
 use crate::application::repositories::todo::list::List;
 

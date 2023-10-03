@@ -1,4 +1,4 @@
-use crate::application::dto::todo::update::{UpdateTodoError, UpdateTodoInput, UpdateTodoOutput};
+use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput, UpdateTodoOutput};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
 
 pub async fn update_todo<T: Update>(

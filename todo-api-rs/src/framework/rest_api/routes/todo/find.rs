@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::find::FindController;
-use crate::adapters::dtos::todo::find::{InputSchema, ParseError, RunError};
+use crate::adapters::dtos::todo::find::{RawInput, ParseError, RunError};
 use crate::framework::rest_api::errors::{ApiError, ValidationError};
 
 pub(super) async fn find_todo(
@@ -15,7 +15,7 @@ pub(super) async fn find_todo(
 ) -> impl IntoResponse {
     tracing::info!("find todo path input {path:?}");
 
-    let input_schema = InputSchema {
+    let input_schema = RawInput {
         id: path.as_str().map(|id| id.to_string()),
     };
     let controller = FindController::new(state.todo_store);

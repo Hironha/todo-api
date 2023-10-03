@@ -1,6 +1,6 @@
 use crate::adapters::dtos::tag::create::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::application::dto::tag::create::{CreateTagInput, CreateTagError};
+use crate::application::dtos::tag::create::{CreateTagInput, CreateTagError};
 use crate::application::functions::tag::create::{create_tag, CreateTagContext};
 use crate::application::repositories::tag::create::Create;
 

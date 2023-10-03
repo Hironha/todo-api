@@ -1,5 +1,5 @@
 use crate::adapters::dtos::ParsableInput;
-use crate::application::dto::todo::delete::DeleteTodoInput;
+use crate::application::dtos::todo::delete::DeleteTodoInput;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]

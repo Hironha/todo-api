@@ -1,6 +1,6 @@
 use crate::adapters::dtos::todo::update::{Output, ParseError, RunError};
 use crate::adapters::dtos::ParsableInput;
-use crate::application::dto::todo::update::{UpdateTodoError, UpdateTodoInput};
+use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
 use crate::application::functions::todo::{update_todo, UpdateTodoContext};
 use crate::application::repositories::todo::update::Update;
 

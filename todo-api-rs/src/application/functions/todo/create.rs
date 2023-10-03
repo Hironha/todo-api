@@ -1,4 +1,4 @@
-use crate::application::dto::todo::create::{CreateTodoError, CreateTodoInput, CreateTodoOutput};
+use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput, CreateTodoOutput};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 
 pub async fn create_todo<T: Create>(
