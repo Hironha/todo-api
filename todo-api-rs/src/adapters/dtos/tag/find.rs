@@ -15,7 +15,7 @@ impl ParsableInput<FindTagInput, ParseError> for RawInput {
             .map(|id| Id::parse_str(&id))
             .ok_or(ParseError::EmptyId)?
             .map_err(|_| ParseError::InvalidId)
-            .map(FindTagInput::new)
+            .map(FindTagInput)
     }
 }
 
