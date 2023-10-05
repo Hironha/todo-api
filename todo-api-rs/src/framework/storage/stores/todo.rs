@@ -103,7 +103,7 @@ impl Delete for TodoStore {
 
         sqlx::query(delete_q)
             .bind(id.into_uuid())
-            .execute(&self.pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| match e {
                 SqlxError::RowNotFound => DeleteError::NotFound,

@@ -82,7 +82,7 @@ impl Delete for TagStore {
 
         sqlx::query(q)
             .bind(id.into_uuid())
-            .execute(&self.pool)
+            .fetch_one(&self.pool)
             .await
             .map(|_| ())
             .map_err(|err| match err {
