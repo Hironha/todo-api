@@ -13,7 +13,7 @@ pub(super) async fn delete_tag(
     State(state): State<TagState>,
     Path(path): Path<Value>,
 ) -> impl IntoResponse {
-    tracing::info!("find tag path: {path:?}");
+    tracing::info!("delete tag path: {path:?}");
 
     let input = RawInput {
         id: path.as_str().map(|id| id.to_string()),
