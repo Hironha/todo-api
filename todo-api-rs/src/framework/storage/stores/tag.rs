@@ -3,6 +3,7 @@ use sqlx::{Error as SqlxError, Pool, Postgres};
 use time::OffsetDateTime;
 
 use crate::application::repositories::tag::create::{Create, CreateError, CreateTagPayload};
+use crate::application::repositories::tag::delete::{Delete, DeleteError};
 use crate::application::repositories::tag::find::{Find, FindError};
 use crate::domain::entities::tag::{Description, Name, TagEntity};
 use crate::domain::types::Id;
@@ -68,6 +69,29 @@ impl Find for TagStore {
             })?;
 
         tag_model_to_entity(model).map_err(|_| FindError::Internal)
+    }
+}
+
+#[async_trait]
+impl Delete for TagStore {
+    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
+        let q = r#"
+            DELETE FROM tag
+            WHERE id = ($1)
+        "#;
+
+        sqlx::query(q)
+            .bind(id.into_uuid())
+            .execute(&self.pool)
+            .await
+            .map(|_| ())
+            .map_err(|err| match err {
+                SqlxError::RowNotFound => DeleteError::NotFound,
+                _ => {
+                    tracing::error!("delete tag repository error {err:?}");
+                    DeleteError::Internal
+                }
+            })
     }
 }
 
