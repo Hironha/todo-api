@@ -28,7 +28,7 @@ pub(super) async fn find_tag(
         }
     };
 
-    (StatusCode::CREATED, Json(output)).into_response()
+    (StatusCode::OK, Json(output)).into_response()
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
