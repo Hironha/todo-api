@@ -46,7 +46,7 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             (StatusCode::NOT_FOUND, error)
         }
         RunError::Internal => {
-            let error = ApiError::new("FTG-002", "Internal server error");
+            let error = ApiError::new("FTG-003", "Internal server error");
             (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
     }
