@@ -51,7 +51,7 @@ impl Create for TagStore {
 impl Find for TagStore {
     async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
         let q = r#"
-            SELECT id, name description, created_at, updated_at
+            SELECT id, name, description, created_at, updated_at
             FROM tag
             WHERE id = ($1)
         "#;
