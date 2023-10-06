@@ -5,6 +5,7 @@ use time::OffsetDateTime;
 use crate::application::repositories::tag::create::{Create, CreateError, CreateTagPayload};
 use crate::application::repositories::tag::delete::{Delete, DeleteError};
 use crate::application::repositories::tag::find::{Find, FindError};
+use crate::application::repositories::tag::list::{List, ListError};
 use crate::domain::entities::tag::{Description, Name, TagEntity};
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
@@ -92,6 +93,27 @@ impl Delete for TagStore {
                     DeleteError::Internal
                 }
             })
+    }
+}
+
+#[async_trait]
+impl List for TagStore {
+    async fn list(&self) -> Result<Vec<TagEntity>, ListError> {
+        let q = r#"
+            SELECT id, name, description, created_at, updated_at
+            FROM tag
+        "#;
+
+        let tag_models = sqlx::query_as::<_, TagModel>(q)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|_| ListError::Internal)?;
+
+        tag_models
+            .into_iter()
+            .map(tag_model_to_entity)
+            .collect::<Result<Vec<TagEntity>, ()>>()
+            .map_err(|_| ListError::Internal)
     }
 }
 
