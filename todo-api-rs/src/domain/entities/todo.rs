@@ -12,6 +12,7 @@ pub struct TodoEntity {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Title(String);
+
 impl Title {
     pub fn new(title: impl Into<String>) -> Result<Self, TitleError> {
         let title: String = title.into();
@@ -31,17 +32,20 @@ impl Title {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Description(Option<String>);
+
 impl Description {
     pub fn new(description: Option<impl Into<String>>) -> Result<Self, DescriptionError> {
-        let description: Option<String> = description.map(|d| d.into()).filter(|d| !d.is_empty());
-        let Some(d) = description else {
+        let maybe_description: Option<String> =
+            description.map(|d| d.into()).filter(|d| !d.is_empty());
+        let Some(description) = maybe_description else {
             return Ok(Self(None));
         };
-        if d.len() > 256 {
+
+        if description.len() > 256 {
             return Err(DescriptionError::Length);
         }
 
-        Ok(Self(Some(d)))
+        Ok(Self(Some(description)))
     }
 
     pub fn into_opt_string(self) -> Option<String> {

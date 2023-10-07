@@ -6,6 +6,7 @@ use crate::application::repositories::tag::create::{Create, CreateError, CreateT
 use crate::application::repositories::tag::delete::{Delete, DeleteError};
 use crate::application::repositories::tag::find::{Find, FindError};
 use crate::application::repositories::tag::list::{List, ListError};
+use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
 use crate::domain::entities::tag::{Description, Name, TagEntity};
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
@@ -114,6 +115,34 @@ impl List for TagStore {
             .map(tag_model_to_entity)
             .collect::<Result<Vec<TagEntity>, ()>>()
             .map_err(|_| ListError::Internal)
+    }
+}
+
+#[async_trait]
+impl Update for TagStore {
+    async fn update(&self, payload: UpdatePayload) -> Result<TagEntity, UpdateError> {
+        let q = r#"
+            UPDATE tag
+            SET name = ($1), description = ($2)
+            WHERE id = ($3)
+            RETURNING id, name, description, created_at, updated_at
+        "#;
+
+        let model = sqlx::query_as::<_, TagModel>(q)
+            .bind(payload.id.into_uuid())
+            .bind(payload.name.into_string())
+            .bind(payload.description.into_opt_string())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|err| match err {
+                SqlxError::RowNotFound => UpdateError::NotFound,
+                _ => {
+                    tracing::error!("update tag repository error {err:?}");
+                    UpdateError::Internal
+                }
+            })?;
+
+        tag_model_to_entity(model).map_err(|_| UpdateError::Internal)
     }
 }
 
