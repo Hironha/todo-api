@@ -56,27 +56,6 @@ impl Create for TodoStore {
             CreateError::Internal
         })?;
 
-        let insert_q = r#"
-            INSERT INTO todo (id, title, description, todo_at, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, title, description, todo_at, created_at, updated_at
-        "#;
-
-        let current_date_time = OffsetDateTime::now_utc();
-        let model = sqlx::query_as::<_, TodoModel>(insert_q)
-            .bind(Id::new().into_uuid())
-            .bind(payload.title.into_string())
-            .bind(payload.description.into_opt_string())
-            .bind(payload.todo_at.map(|at| at.into_date()))
-            .bind(current_date_time)
-            .bind(current_date_time)
-            .fetch_one(trx.as_mut())
-            .await
-            .map_err(|err| {
-                tracing::error!("create todo repository error {err:?}");
-                CreateError::Internal
-            })?;
-
         let count_q = r#" SELECT COUNT(count) FROM todo_count "#;
         let todo_count = sqlx::query_scalar::<_, i64>(count_q)
             .fetch_one(trx.as_mut())
@@ -101,12 +80,35 @@ impl Create for TodoStore {
                 CreateError::Internal
             })?;
 
+        let insert_q = r#"
+            INSERT INTO todo (id, title, description, todo_at, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, title, description, todo_at, created_at, updated_at
+        "#;
+
+        let current_date_time = OffsetDateTime::now_utc();
+        let model = sqlx::query_as::<_, TodoModel>(insert_q)
+            .bind(Id::new().into_uuid())
+            .bind(payload.title.into_string())
+            .bind(payload.description.into_opt_string())
+            .bind(payload.todo_at.map(|at| at.into_date()))
+            .bind(current_date_time)
+            .bind(current_date_time)
+            .fetch_one(trx.as_mut())
+            .await
+            .map_err(|err| {
+                tracing::error!("create todo failed creating {err:?}");
+                CreateError::Internal
+            })?;
+
+        let entity = todo_model_to_entity(model).map_err(|_| CreateError::Internal)?;
+
         trx.commit().await.map_err(|err| {
             tracing::error!("create todo failed commiting transaction {err:?}");
             CreateError::Internal
         })?;
 
-        todo_model_to_entity(model).map_err(|_| CreateError::Internal)
+        Ok(entity)
     }
 }
 
