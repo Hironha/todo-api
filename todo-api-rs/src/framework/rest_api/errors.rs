@@ -22,6 +22,7 @@ impl ValidationError {
 pub struct ApiError<D: Serialize> {
     pub code: std::sync::Arc<str>,
     pub message: std::sync::Arc<str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<D>,
 }
 
