@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS todo (
     updated_at timestamptz NOT NULL,
     CONSTRAINT pk_todo PRIMARY KEY (id)
 );
+
+CREATE INDEX IF NOT EXISTS todo_created_at_idx ON todo(created_at);
