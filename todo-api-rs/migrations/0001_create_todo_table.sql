@@ -9,3 +9,8 @@ CREATE TABLE IF NOT EXISTS todo (
 );
 
 CREATE INDEX IF NOT EXISTS todo_created_at_idx ON todo(created_at);
+
+-- add count table to avoid COUNT(*) due bad performance for big tables
+CREATE TABLE IF NOT EXISTS todo_count( 
+    count BIGINT NOT NULL
+);
