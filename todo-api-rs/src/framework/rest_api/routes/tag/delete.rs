@@ -7,7 +7,7 @@ use serde_json::Value;
 use super::TagState;
 use crate::adapters::controllers::tag::delete::DeleteController;
 use crate::adapters::dtos::tag::delete::{ParseError, RawInput, RunError};
-use crate::framework::rest_api::errors::{ApiError, ValidationError};
+use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn delete_tag(
     State(state): State<TagState>,

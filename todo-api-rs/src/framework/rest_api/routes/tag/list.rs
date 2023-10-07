@@ -6,7 +6,7 @@ use axum::Json;
 use super::TagState;
 use crate::adapters::controllers::tag::list::ListController;
 use crate::adapters::dtos::tag::list::RunError;
-use crate::framework::rest_api::errors::{ApiError, ValidationError};
+use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoResponse {
     let controller = ListController::new(state.tag_store);

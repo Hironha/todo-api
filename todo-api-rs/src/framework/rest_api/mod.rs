@@ -1,2 +1,2 @@
-mod errors;
+mod error;
 pub mod routes;

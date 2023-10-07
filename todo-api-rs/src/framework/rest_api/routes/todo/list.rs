@@ -3,7 +3,7 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use super::TodoState;
 use crate::adapters::controllers::todo::list::ListController;
 use crate::adapters::dtos::todo::list::RunError;
-use crate::framework::rest_api::errors::ApiError;
+use crate::framework::rest_api::error::ApiError;
 
 pub(super) async fn list_todos(State(state): State<TodoState>) -> impl IntoResponse {
     let controller = ListController::new(state.todo_store);

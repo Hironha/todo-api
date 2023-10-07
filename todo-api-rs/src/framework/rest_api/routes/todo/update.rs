@@ -7,7 +7,7 @@ use serde_json::Value;
 use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
 use crate::adapters::dtos::todo::update::{ParseError, RawInput, RunError};
-use crate::framework::rest_api::errors::{ApiError, ValidationError};
+use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn update_todo(
     State(state): State<TodoState>,

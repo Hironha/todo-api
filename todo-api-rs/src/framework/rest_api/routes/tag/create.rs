@@ -7,7 +7,7 @@ use serde_json::Value;
 use super::TagState;
 use crate::adapters::controllers::tag::create::CreateController;
 use crate::adapters::dtos::tag::create::{ParseError, RawInput, RunError};
-use crate::framework::rest_api::errors::{ApiError, ValidationError};
+use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn create_tag(
     State(state): State<TagState>,

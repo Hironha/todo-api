@@ -7,7 +7,7 @@ use serde_json::Value;
 use super::TodoState;
 use crate::adapters::controllers::todo::find::FindController;
 use crate::adapters::dtos::todo::find::{RawInput, ParseError, RunError};
-use crate::framework::rest_api::errors::{ApiError, ValidationError};
+use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn find_todo(
     State(state): State<TodoState>,
