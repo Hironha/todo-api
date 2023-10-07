@@ -6,7 +6,7 @@ use super::models::todo::TodoModel;
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
-use crate::application::repositories::todo::list::{List, ListError};
+use crate::application::repositories::todo::list::{List, ListError, ListPayload};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
 use crate::domain::entities::todo::{Description, Title, TodoEntity};
 use crate::domain::types::{Date, Id};
@@ -77,10 +77,22 @@ impl Create for TodoStore {
 
 #[async_trait]
 impl List for TodoStore {
-    async fn list(&self) -> Result<Vec<TodoEntity>, ListError> {
-        let q = r#"SELECT * FROM todo"#;
+    async fn list(&self, payload: ListPayload) -> Result<Vec<TodoEntity>, ListError> {
+        let limit: i64 = u32::from(payload.per_page).into();
+        let page: i64 = u32::from(payload.page).into();
+        let offset = (page - 1) * limit;
+
+        let q = r#"
+            SELECT id, title, description, todo_at, created_at, updated_at
+            FROM todo
+            ORDER BY created_at DESC
+            LIMIT ($1)
+            OFFSET ($2)
+        "#;
 
         let todo_models = sqlx::query_as::<_, TodoModel>(q)
+            .bind(limit)
+            .bind(offset)
             .fetch_all(&self.pool)
             .await
             .map_err(|_| ListError::Internal)?;

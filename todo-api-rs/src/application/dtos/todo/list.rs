@@ -1,5 +1,14 @@
+use std::num::NonZeroU32;
+
 use crate::domain::entities::todo::TodoEntity;
 
+#[derive(Clone, Debug)]
+pub struct ListTodoInput {
+    pub page: NonZeroU32,
+    pub per_page: NonZeroU32,
+}
+
+#[derive(Clone, Debug)]
 pub struct ListTodoOutput(Result<Vec<TodoEntity>, ListTodoError>);
 
 impl ListTodoOutput {

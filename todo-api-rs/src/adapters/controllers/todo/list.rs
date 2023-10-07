@@ -1,8 +1,10 @@
-use crate::adapters::dtos::todo::list::{Output, RunError};
-use crate::application::dtos::todo::list::ListTodoError;
+use crate::adapters::dtos::todo::list::{Output, ParseError, RunError};
+use crate::adapters::dtos::ParsableInput;
+use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput};
 use crate::application::functions::todo::{list_todo, ListContext};
 use crate::application::repositories::todo::list::List;
 
+#[derive(Clone, Debug)]
 pub struct ListController<S: List> {
     store: S,
 }
@@ -12,9 +14,14 @@ impl<S: List> ListController<S> {
         Self { store }
     }
 
-    pub async fn run(self) -> Output {
-        let context = ListContext { store: self.store };
-        let result = list_todo(context).await.into_result();
+    pub async fn run(self, input: impl ParsableInput<ListTodoInput, ParseError>) -> Output {
+        let input = match input.parse() {
+            Ok(input) => input,
+            Err(err) => return Output::err(RunError::Parsing(err)),
+        };
+
+        let context = ListContext::new(self.store);
+        let result = list_todo(context, input).await.into_result();
 
         match result {
             Ok(todos) => Output::from_todos(todos),
