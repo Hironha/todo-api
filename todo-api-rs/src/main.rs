@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::cors::CorsLayer;
-use tower_http::trace::{DefaultOnRequest, DefaultOnResponse, TraceLayer};
+use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
 
@@ -75,6 +75,11 @@ async fn create_db_pool(connections: u32) -> Pool<Postgres> {
 
 fn create_tracing_layer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
     TraceLayer::new_for_http()
+        .make_span_with(
+            DefaultMakeSpan::new()
+                .include_headers(false)
+                .level(Level::INFO),
+        )
         .on_request(DefaultOnRequest::new().level(Level::INFO))
         .on_response(
             DefaultOnResponse::new()
