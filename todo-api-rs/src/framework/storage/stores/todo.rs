@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use sqlx::types::Uuid;
 use sqlx::{Error as SqlxError, Pool, Postgres};
 use time::OffsetDateTime;
 
@@ -50,26 +51,60 @@ impl Find for TodoStore {
 #[async_trait]
 impl Create for TodoStore {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
-        let q = r#"
+        let mut trx = self.pool.begin().await.map_err(|err| {
+            tracing::error!("create todo failed beginning transaction {err:?}");
+            CreateError::Internal
+        })?;
+
+        let insert_q = r#"
             INSERT INTO todo (id, title, description, todo_at, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, title, description, todo_at, created_at, updated_at
         "#;
 
         let current_date_time = OffsetDateTime::now_utc();
-        let model = sqlx::query_as::<_, TodoModel>(q)
+        let model = sqlx::query_as::<_, TodoModel>(insert_q)
             .bind(Id::new().into_uuid())
             .bind(payload.title.into_string())
             .bind(payload.description.into_opt_string())
             .bind(payload.todo_at.map(|at| at.into_date()))
             .bind(current_date_time)
             .bind(current_date_time)
-            .fetch_one(&self.pool)
+            .fetch_one(trx.as_mut())
             .await
             .map_err(|err| {
                 tracing::error!("create todo repository error {err:?}");
                 CreateError::Internal
             })?;
+
+        let count_q = r#" SELECT COUNT(count) FROM todo_count "#;
+        let todo_count = sqlx::query_scalar::<_, i64>(count_q)
+            .fetch_one(trx.as_mut())
+            .await
+            .map_err(|err| {
+                tracing::error!("create todo failed counting {err:?}");
+                CreateError::Internal
+            })?;
+
+        let update_count_q = match todo_count {
+            0 => r#" INSERT INTO todo_count (count) VALUES (1) "#,
+            1 => r#" UPDATE todo_count SET count = count + 1 "#,
+            // `todo_count` table must either be empty or have one item
+            _ => return Err(CreateError::Internal),
+        };
+
+        sqlx::query(update_count_q)
+            .execute(trx.as_mut())
+            .await
+            .map_err(|err| {
+                tracing::error!("create todo failed updating count {err:?}");
+                CreateError::Internal
+            })?;
+
+        trx.commit().await.map_err(|err| {
+            tracing::error!("create todo failed commiting transaction {err:?}");
+            CreateError::Internal
+        })?;
 
         todo_model_to_entity(model).map_err(|_| CreateError::Internal)
     }
@@ -108,24 +143,49 @@ impl List for TodoStore {
 #[async_trait]
 impl Delete for TodoStore {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        let delete_q = r#"
-            DELETE FROM todo 
-            WHERE id = ($1)
-        "#;
+        let mut trx = self.pool.begin().await.map_err(|err| {
+            tracing::error!("delete todo failed beginning transaction {err:?}");
+            DeleteError::Internal
+        })?;
 
-        sqlx::query(delete_q)
+        let delete_q = r#" DELETE FROM todo WHERE id = ($1) RETURNING id "#;
+        sqlx::query_scalar::<_, Uuid>(delete_q)
             .bind(id.into_uuid())
-            .fetch_one(&self.pool)
+            .fetch_one(trx.as_mut())
             .await
-            .map_err(|e| match e {
+            .map_err(|err| match err {
                 SqlxError::RowNotFound => DeleteError::NotFound,
                 _ => {
-                    tracing::error!("delete todo repository error {e:?}");
+                    tracing::error!("delete todo failed deleting {err:?}");
                     DeleteError::Internal
                 }
             })?;
 
-        Ok(())
+        let count_q = r#" SELECT COUNT(count) FROM todo_count "#;
+        let count = sqlx::query_scalar::<_, i64>(count_q)
+            .fetch_one(trx.as_mut())
+            .await
+            .map_err(|err| {
+                tracing::error!("delete todo failed counting {err:?}");
+                DeleteError::Internal
+            })?;
+
+        // update `todo_count` only if already exists an item
+        if count > 0 {
+            let decrement_count_q = r#" UPDATE todo_count SET count = count - 1 "#;
+            sqlx::query(decrement_count_q)
+                .execute(trx.as_mut())
+                .await
+                .map_err(|err| {
+                    tracing::error!("delete todo failed updating count {err:?}");
+                    DeleteError::Internal
+                })?;
+        }
+
+        trx.commit().await.map_err(|err| {
+            tracing::error!("delete todo failed commiting transaction {err:?}");
+            DeleteError::Internal
+        })
     }
 }
 
