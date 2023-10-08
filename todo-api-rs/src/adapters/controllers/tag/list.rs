@@ -1,6 +1,6 @@
 use crate::adapters::dtos::tag::list::{Output, RunError};
 use crate::application::dtos::tag::list::ListTagError;
-use crate::application::functions::tag::list::{list_tags, ListTagContext};
+use crate::application::functions::tag::list::{list_tag, ListTagContext};
 use crate::application::repositories::tag::list::List;
 
 #[derive(Clone, Debug)]
@@ -15,7 +15,7 @@ impl<S: List> ListController<S> {
 
     pub async fn run(&self) -> Output {
         let ctx = ListTagContext::new(&self.store);
-        match list_tags(ctx).await.into_result() {
+        match list_tag(ctx).await.into_result() {
             Ok(tags) => Output::from_tags(tags),
             Err(err) => Output::err(match err {
                 ListTagError::Internal => RunError::Internal,

@@ -1,7 +1,7 @@
 use crate::application::dtos::tag::list::{ListTagError, ListTagOutput};
 use crate::application::repositories::tag::list::{List, ListError};
 
-pub async fn list_tags<S: List>(ctx: ListTagContext<'_, S>) -> ListTagOutput {
+pub async fn list_tag<S: List>(ctx: ListTagContext<'_, S>) -> ListTagOutput {
     match ctx.store.list().await {
         Ok(tags) => ListTagOutput::ok(tags),
         Err(err) => ListTagOutput::err(match err {
