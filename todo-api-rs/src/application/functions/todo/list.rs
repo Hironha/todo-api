@@ -1,7 +1,10 @@
 use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput, ListTodoOutput};
 use crate::application::repositories::todo::list::{List, ListError, ListPayload};
 
-pub async fn list_todo<S: List>(ctx: ListContext<S>, input: ListTodoInput) -> ListTodoOutput {
+pub async fn list_todo<S: List>(
+    ctx: ListTodoContext<'_, S>,
+    input: ListTodoInput,
+) -> ListTodoOutput {
     let payload = ListPayload {
         page: input.page,
         per_page: input.per_page,
@@ -16,12 +19,12 @@ pub async fn list_todo<S: List>(ctx: ListContext<S>, input: ListTodoInput) -> Li
 }
 
 #[derive(Clone, Debug)]
-pub struct ListContext<S: List> {
-    store: S,
+pub struct ListTodoContext<'a, S: List> {
+    store: &'a S,
 }
 
-impl<S: List> ListContext<S> {
-    pub const fn new(store: S) -> Self {
+impl<'a, S: List> ListTodoContext<'a, S> {
+    pub const fn new(store: &'a S) -> Self {
         Self { store }
     }
 }
