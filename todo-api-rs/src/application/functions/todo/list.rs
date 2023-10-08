@@ -1,4 +1,6 @@
-use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput, ListTodoOutput};
+use crate::application::dtos::todo::list::{
+    TodoList, ListTodoError, ListTodoInput, ListTodoOutput,
+};
 use crate::application::repositories::todo::list::{List, ListError, ListPayload};
 
 pub async fn list_todo<S: List>(
@@ -11,7 +13,10 @@ pub async fn list_todo<S: List>(
     };
 
     match ctx.store.list(payload).await {
-        Ok(todos) => ListTodoOutput::ok(todos),
+        Ok(list) => ListTodoOutput::ok(TodoList {
+            count: list.count,
+            items: list.items,
+        }),
         Err(err) => ListTodoOutput::err(match err {
             ListError::Internal => ListTodoError::Internal,
         }),

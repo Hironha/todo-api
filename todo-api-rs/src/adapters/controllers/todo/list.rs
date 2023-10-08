@@ -22,7 +22,7 @@ impl<S: List> ListController<S> {
 
         let context = ListTodoContext::new(&self.store);
         match list_todo(context, input).await.into_result() {
-            Ok(todos) => Output::from_todos(todos),
+            Ok(list) => Output::from_list(list),
             Err(err) => Output::err(match err {
                 ListTodoError::Internal => RunError::Internal,
             }),

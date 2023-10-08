@@ -5,13 +5,19 @@ use crate::domain::entities::todo::TodoEntity;
 
 #[async_trait]
 pub trait List {
-    async fn list(&self, payload: ListPayload) -> Result<Vec<TodoEntity>, ListError>;
+    async fn list(&self, payload: ListPayload) -> Result<ListData, ListError>;
 }
 
 #[derive(Clone, Debug)]
-pub struct ListPayload{
+pub struct ListPayload {
     pub page: NonZeroU32,
     pub per_page: NonZeroU32,
+}
+
+#[derive(Clone, Debug)]
+pub struct ListData {
+    pub count: u64,
+    pub items: Vec<TodoEntity>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -7,7 +7,7 @@ use super::models::todo::TodoModel;
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
-use crate::application::repositories::todo::list::{List, ListError, ListPayload};
+use crate::application::repositories::todo::list::{List, ListData, ListError, ListPayload};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
 use crate::domain::entities::todo::{Description, Title, TodoEntity};
 use crate::domain::types::{Date, Id};
@@ -114,12 +114,11 @@ impl Create for TodoStore {
 
 #[async_trait]
 impl List for TodoStore {
-    async fn list(&self, payload: ListPayload) -> Result<Vec<TodoEntity>, ListError> {
+    async fn list(&self, payload: ListPayload) -> Result<ListData, ListError> {
         let limit: i64 = u32::from(payload.per_page).into();
         let page: i64 = u32::from(payload.page).into();
         let offset = (page - 1) * limit;
-
-        let q = r#"
+        let list_q = r#"
             SELECT id, title, description, todo_at, created_at, updated_at
             FROM todo
             ORDER BY created_at DESC
@@ -127,18 +126,46 @@ impl List for TodoStore {
             OFFSET ($2)
         "#;
 
-        let todo_models = sqlx::query_as::<_, TodoModel>(q)
+        let todo_models = sqlx::query_as::<_, TodoModel>(list_q)
             .bind(limit)
             .bind(offset)
             .fetch_all(&self.pool)
             .await
-            .map_err(|_| ListError::Internal)?;
+            .map_err(|err| {
+                tracing::error!("list todo failed {err:?}");
+                ListError::Internal
+            })?;
 
-        todo_models
+        // count `todo` by querying from `todo_count` table 
+        let count_q = r#" SELECT count FROM todo_count LIMIT 1 "#;
+        let count_res = sqlx::query_scalar::<_, i64>(count_q)
+            .fetch_one(&self.pool)
+            .await;
+
+        let db_count: i64 = match count_res {
+            Ok(count) => count,
+            Err(SqlxError::RowNotFound) => 0,
+            Err(err) => {
+                tracing::error!("list todo failed counting {err:?}");
+                return Err(ListError::Internal);
+            }
+        };
+
+        let count: u64 = db_count.try_into().map_err(|err| {
+            tracing::error!("list todo with invalid count {err:?}");
+            ListError::Internal
+        })?;
+
+        let todo_entities = todo_models
             .into_iter()
             .map(todo_model_to_entity)
             .collect::<Result<Vec<TodoEntity>, ()>>()
-            .map_err(|_| ListError::Internal)
+            .map_err(|_| ListError::Internal)?;
+
+        Ok(ListData {
+            count,
+            items: todo_entities,
+        })
     }
 }
 

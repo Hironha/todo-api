@@ -9,20 +9,26 @@ pub struct ListTodoInput {
 }
 
 #[derive(Clone, Debug)]
-pub struct ListTodoOutput(Result<Vec<TodoEntity>, ListTodoError>);
+pub struct ListTodoOutput(Result<TodoList, ListTodoError>);
 
 impl ListTodoOutput {
-    pub const fn ok(todos: Vec<TodoEntity>) -> Self {
-        Self(Ok(todos))
+    pub const fn ok(data: TodoList) -> Self {
+        Self(Ok(data))
     }
 
     pub const fn err(error: ListTodoError) -> Self {
         Self(Err(error))
     }
 
-    pub fn into_result(self) -> Result<Vec<TodoEntity>, ListTodoError> {
+    pub fn into_result(self) -> Result<TodoList, ListTodoError> {
         self.0
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct TodoList {
+    pub count: u64,
+    pub items: Vec<TodoEntity>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
