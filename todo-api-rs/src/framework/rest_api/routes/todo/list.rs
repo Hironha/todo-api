@@ -10,7 +10,7 @@ use crate::adapters::dtos::todo::list::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct QueryParams {
+pub(super) struct QueryParams {
     page: Option<u32>,
     #[serde(rename(deserialize = "perPage"))]
     per_page: Option<u32>,
@@ -24,7 +24,6 @@ pub(super) async fn list_todos(
         page: query.page,
         per_page: query.per_page,
     };
-
     let controller = ListController::new(state.todo_store);
 
     let output = match controller.run(input).await.into_result() {

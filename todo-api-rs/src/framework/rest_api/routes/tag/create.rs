@@ -2,23 +2,32 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use serde_json::Value;
+use serde::Deserialize;
 
 use super::TagState;
 use crate::adapters::controllers::tag::create::CreateController;
 use crate::adapters::dtos::tag::create::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
+#[derive(Clone, Debug, Deserialize)]
+pub(super) struct CreateBody {
+    name: Option<String>,
+    description: Option<String>,
+}
+
 pub(super) async fn create_tag(
     State(state): State<TagState>,
-    Json(body): Json<Value>,
+    Json(body): Json<CreateBody>,
 ) -> impl IntoResponse {
     tracing::info!("create tag body: {body:?}");
 
-    let input_schema = extract_input_schema(body);
+    let input = RawInput {
+        name: body.name,
+        description: body.description,
+    };
     let controller = CreateController::new(state.tag_store);
 
-    let output = match controller.run(input_schema).await.into_result() {
+    let output = match controller.run(input).await.into_result() {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);
@@ -27,13 +36,6 @@ pub(super) async fn create_tag(
     };
 
     (StatusCode::CREATED, Json(output)).into_response()
-}
-
-fn extract_input_schema(body: Value) -> RawInput {
-    let name = body["name"].as_str().map(|t| t.to_string());
-    let description = body["description"].as_str().map(|d| d.to_string());
-
-    RawInput { name, description }
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {

@@ -2,23 +2,39 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use serde_json::Value;
+use serde::Deserialize;
 
 use super::TagState;
 use crate::adapters::controllers::tag::update::UpdateController;
 use crate::adapters::dtos::tag::update::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
+#[derive(Clone, Debug, Deserialize)]
+pub(super) struct UpdatePathParams {
+    id: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(super) struct UpdateBody {
+    name: Option<String>,
+    description: Option<String>,
+}
+
 pub(super) async fn update_tag(
     State(state): State<TagState>,
-    Path(path): Path<Value>,
-    Json(body): Json<Value>,
+    Path(path): Path<UpdatePathParams>,
+    Json(body): Json<UpdateBody>,
 ) -> impl IntoResponse {
     tracing::info!("update tag path: {path:?}");
     tracing::info!("update tag body: {body:?}");
 
-    let input = extract_input(path, body);
+    let input = RawInput {
+        id: path.id,
+        name: body.name,
+        description: body.description,
+    };
     let controller = UpdateController::new(state.tag_store);
+
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,
         Err(err) => {
@@ -28,18 +44,6 @@ pub(super) async fn update_tag(
     };
 
     (StatusCode::OK, Json(output)).into_response()
-}
-
-fn extract_input(path: Value, body: Value) -> RawInput {
-    let id = path["id"].as_str().map(|str| str.to_string());
-    let name = body["name"].as_str().map(|str| str.to_string());
-    let description = body["description"].as_str().map(|str| str.to_string());
-
-    RawInput {
-        id,
-        name,
-        description,
-    }
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {

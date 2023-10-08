@@ -2,24 +2,27 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use serde_json::Value;
+use serde::Deserialize;
 
 use super::TagState;
 use crate::adapters::controllers::tag::find::FindController;
 use crate::adapters::dtos::tag::find::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
+#[derive(Clone, Debug, Deserialize)]
+pub(super) struct FindPathParams {
+    id: Option<String>,
+}
+
 pub(super) async fn find_tag(
     State(state): State<TagState>,
-    Path(path): Path<Value>,
+    Path(path): Path<FindPathParams>,
 ) -> impl IntoResponse {
     tracing::info!("find tag path: {path:?}");
 
-    let input = RawInput {
-        id: path.as_str().map(|id| id.to_string()),
-    };
-
+    let input = RawInput { id: path.id };
     let controller = FindController::new(state.tag_store);
+
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,
         Err(err) => {

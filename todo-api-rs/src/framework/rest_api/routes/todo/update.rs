@@ -2,25 +2,43 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use serde_json::Value;
+use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
 use crate::adapters::dtos::todo::update::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
+#[derive(Clone, Debug, Deserialize)]
+pub(super) struct UpdatePathParams {
+    id: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(super) struct UpdateBody {
+    title: Option<String>,
+    description: Option<String>,
+    #[serde(rename(deserialize = "todoAt"))]
+    todo_at: Option<String>,
+}
+
 pub(super) async fn update_todo(
     State(state): State<TodoState>,
-    Path(path): Path<Value>,
-    Json(body): Json<Value>,
+    Path(path): Path<UpdatePathParams>,
+    Json(body): Json<UpdateBody>,
 ) -> impl IntoResponse {
     tracing::info!("update todo path input {path:?}");
     tracing::info!("update todo body {body:?}");
 
-    let input_schema = extract_input_schema(path, body);
+    let input = RawInput {
+        id: path.id,
+        title: body.title,
+        description: body.description,
+        todo_at: body.todo_at,
+    };
     let controller = UpdateController::new(state.todo_store);
 
-    let output = match controller.run(input_schema).await.into_result() {
+    let output = match controller.run(input).await.into_result() {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = config_error_response(err);
@@ -29,20 +47,6 @@ pub(super) async fn update_todo(
     };
 
     (StatusCode::OK, Json(output)).into_response()
-}
-
-fn extract_input_schema(path: Value, body: Value) -> RawInput {
-    let id = path.as_str().map(|id| id.to_string());
-    let title = body["title"].as_str().map(|t| t.to_string());
-    let description = body["description"].as_str().map(|d| d.to_string());
-    let todo_at = body["todoAt"].as_str().map(|at| at.to_string());
-
-    RawInput {
-        id,
-        title,
-        description,
-        todo_at,
-    }
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {

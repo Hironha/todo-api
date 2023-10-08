@@ -2,23 +2,25 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use serde_json::Value;
+use serde::Deserialize;
 
 use super::TagState;
 use crate::adapters::controllers::tag::delete::DeleteController;
 use crate::adapters::dtos::tag::delete::{ParseError, RawInput, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
+#[derive(Clone, Debug, Deserialize)]
+pub(super) struct DeletePathParams {
+    id: Option<String>,
+}
+
 pub(super) async fn delete_tag(
     State(state): State<TagState>,
-    Path(path): Path<Value>,
+    Path(path): Path<DeletePathParams>,
 ) -> impl IntoResponse {
     tracing::info!("delete tag path: {path:?}");
 
-    let input = RawInput {
-        id: path.as_str().map(|id| id.to_string()),
-    };
-
+    let input = RawInput { id: path.id };
     let controller = DeleteController::new(state.tag_store);
 
     if let Err(err) = controller.run(input).await.into_result() {
