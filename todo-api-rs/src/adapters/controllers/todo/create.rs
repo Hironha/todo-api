@@ -13,16 +13,14 @@ impl<S: Create> CreateController<S> {
         Self { store }
     }
 
-    pub async fn run(self, input: impl ParsableInput<CreateTodoInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl ParsableInput<CreateTodoInput, ParseError>) -> Output {
         let create_input = match input.parse() {
-            Ok(i) => i,
+            Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),
         };
 
-        let ctx = CreateContext { store: self.store };
-        let result = create_todo(ctx, create_input).await.into_result();
-
-        match result {
+        let ctx = CreateContext::new(&self.store);
+        match create_todo(ctx, create_input).await.into_result() {
             Ok(todo) => Output::from_todo(todo),
             Err(err) => Output::err(match err {
                 CreateTodoError::Internal => RunError::Internal,
