@@ -2,7 +2,7 @@ use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput, D
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
 
 pub async fn delete_todo<S: Delete>(
-    ctx: DeleteTodoContext<S>,
+    ctx: DeleteTodoContext<'_, S>,
     input: DeleteTodoInput,
 ) -> DeleteTodoOutput {
     match ctx.store.delete(input.into_id()).await {
@@ -15,6 +15,12 @@ pub async fn delete_todo<S: Delete>(
 }
 
 #[derive(Clone, Debug)]
-pub struct DeleteTodoContext<T: Delete> {
-    pub store: T,
+pub struct DeleteTodoContext<'a, S: Delete> {
+    store: &'a S,
+}
+
+impl<'a, S: Delete> DeleteTodoContext<'a, S> {
+    pub const fn new(store: &'a S) -> Self {
+        Self { store }
+    }
 }

@@ -13,16 +13,14 @@ impl<S: Delete> DeleteController<S> {
         Self { store }
     }
 
-    pub async fn run(self, input: impl ParsableInput<DeleteTodoInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl ParsableInput<DeleteTodoInput, ParseError>) -> Output {
         let id = match input.parse() {
             Ok(id) => id,
             Err(err) => return Output::err(RunError::Parsing(err)),
         };
 
-        let ctx = DeleteTodoContext { store: self.store };
-        let result = delete_todo(ctx, id).await.into_result();
-
-        match result {
+        let ctx = DeleteTodoContext::new(&self.store);
+        match delete_todo(ctx, id).await.into_result() {
             Ok(_) => Output::ok(),
             Err(err) => Output::err(match err {
                 DeleteTodoError::NotFound => RunError::TodoNotFound,
