@@ -13,9 +13,8 @@ impl<S: List> ListController<S> {
         Self { store }
     }
 
-    pub async fn run(self) -> Output {
-        let ctx = ListTagContext::new(self.store);
-
+    pub async fn run(&self) -> Output {
+        let ctx = ListTagContext::new(&self.store);
         match list_tags(ctx).await.into_result() {
             Ok(tags) => Output::from_tags(tags),
             Err(err) => Output::err(match err {

@@ -14,13 +14,13 @@ impl<S: Update> UpdateController<S> {
         Self { store }
     }
 
-    pub async fn run(self, input: impl ParsableInput<UpdateTagInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl ParsableInput<UpdateTagInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),
         };
 
-        let ctx = UpdateTagContext::new(self.store);
+        let ctx = UpdateTagContext::new(&self.store);
         match update_tag(ctx, input).await.into_result() {
             Ok(tag) => Output::from_tag(tag),
             Err(err) => Output::err(match err {

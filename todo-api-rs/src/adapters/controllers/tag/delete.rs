@@ -14,13 +14,13 @@ impl<S: Delete> DeleteController<S> {
         Self { store }
     }
 
-    pub async fn run(self, input: impl ParsableInput<DeleteTagInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl ParsableInput<DeleteTagInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),
         };
 
-        let ctx = DeleteTagContext { store: self.store };
+        let ctx =  DeleteTagContext::new(&self.store);
         match delete_tag(ctx, input).await.into_result() {
             Ok(_) => Output::ok(),
             Err(err) => Output::err(match err {

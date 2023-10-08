@@ -2,7 +2,7 @@ use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput, Upda
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
 
 pub async fn update_tag<S: Update>(
-    ctx: UpdateTagContext<S>,
+    ctx: UpdateTagContext<'_, S>,
     input: UpdateTagInput,
 ) -> UpdateTagOutput {
     let payload = UpdatePayload {
@@ -21,12 +21,12 @@ pub async fn update_tag<S: Update>(
 }
 
 #[derive(Clone, Debug)]
-pub struct UpdateTagContext<S: Update> {
-    store: S,
+pub struct UpdateTagContext<'a, S: Update> {
+    store: &'a S,
 }
 
-impl<S: Update> UpdateTagContext<S> {
-    pub const fn new(store: S) -> Self {
+impl<'a, S: Update> UpdateTagContext<'a, S> {
+    pub const fn new(store: &'a S) -> Self {
         Self { store }
     }
 }

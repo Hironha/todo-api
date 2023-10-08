@@ -2,7 +2,7 @@ use crate::application::dtos::tag::find::{FindTagError, FindTagInput, FindTagOut
 use crate::application::repositories::tag::find::{Find, FindError};
 
 pub async fn find_tag<S: Find>(
-    ctx: FindTagContext<S>,
+    ctx: FindTagContext<'_, S>,
     FindTagInput(id): FindTagInput,
 ) -> FindTagOutput {
     match ctx.store.find(id).await {
@@ -15,6 +15,12 @@ pub async fn find_tag<S: Find>(
 }
 
 #[derive(Clone, Debug)]
-pub struct FindTagContext<S: Find> {
-    pub store: S,
+pub struct FindTagContext<'a, S: Find> {
+    store: &'a S,
+}
+
+impl<'a, S: Find> FindTagContext<'a, S> {
+    pub const fn new(store: &'a S) -> Self {
+        Self { store }
+    }
 }

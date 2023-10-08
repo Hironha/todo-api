@@ -14,13 +14,13 @@ impl<S: Find> FindController<S> {
         Self { store }
     }
 
-    pub async fn run(self, input: impl ParsableInput<FindTagInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl ParsableInput<FindTagInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),
         };
 
-        let ctx = FindTagContext { store: self.store };
+        let ctx = FindTagContext::new(&self.store);
         match find_tag(ctx, input).await.into_result() {
             Ok(tag) => Output::from_tag(tag),
             Err(err) => Output::err(match err {

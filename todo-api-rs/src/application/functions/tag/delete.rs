@@ -2,7 +2,7 @@ use crate::application::dtos::tag::delete::{DeleteTagError, DeleteTagInput, Dele
 use crate::application::repositories::tag::delete::{Delete, DeleteError};
 
 pub async fn delete_tag<S: Delete>(
-    ctx: DeleteTagContext<S>,
+    ctx: DeleteTagContext<'_, S>,
     DeleteTagInput(id): DeleteTagInput,
 ) -> DeleteTagOutput {
     match ctx.store.delete(id).await {
@@ -15,6 +15,12 @@ pub async fn delete_tag<S: Delete>(
 }
 
 #[derive(Clone, Debug)]
-pub struct DeleteTagContext<S: Delete> {
-    pub store: S,
+pub struct DeleteTagContext<'a, S: Delete> {
+    store: &'a S,
+}
+
+impl<'a, S: Delete> DeleteTagContext<'a, S> {
+    pub const fn new(store: &'a S) -> Self {
+        Self { store }
+    }
 }

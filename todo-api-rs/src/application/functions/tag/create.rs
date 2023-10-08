@@ -2,7 +2,7 @@ use crate::application::dtos::tag::create::{CreateTagError, CreateTagInput, Crea
 use crate::application::repositories::tag::create::{Create, CreateError, CreateTagPayload};
 
 pub async fn create_tag<S: Create>(
-    ctx: CreateTagContext<S>,
+    ctx: CreateTagContext<'_, S>,
     input: CreateTagInput,
 ) -> CreateTagOutput {
     let payload = CreateTagPayload {
@@ -19,6 +19,12 @@ pub async fn create_tag<S: Create>(
 }
 
 #[derive(Clone, Debug)]
-pub struct CreateTagContext<S: Create> {
-    pub store: S,
+pub struct CreateTagContext<'a, S: Create> {
+    store: &'a S,
+}
+
+impl<'a, S: Create> CreateTagContext<'a, S> {
+    pub const fn new(store: &'a S) -> Self {
+        Self { store }
+    }
 }
