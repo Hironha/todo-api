@@ -2,7 +2,7 @@ use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput, C
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 
 pub async fn create_todo<S: Create>(
-    ctx: CreateContext<'_, S>,
+    ctx: CreateTodoContext<'_, S>,
     input: CreateTodoInput,
 ) -> CreateTodoOutput {
     let payload = CreatePayload {
@@ -20,11 +20,11 @@ pub async fn create_todo<S: Create>(
 }
 
 #[derive(Clone, Debug)]
-pub struct CreateContext<'a, S: Create> {
+pub struct CreateTodoContext<'a, S: Create> {
     store: &'a S,
 }
 
-impl<'a, S: Create> CreateContext<'a, S> {
+impl<'a, S: Create> CreateTodoContext<'a, S> {
     pub const fn new(store: &'a S) -> Self {
         Self { store }
     }
