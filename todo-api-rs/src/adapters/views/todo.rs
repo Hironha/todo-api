@@ -10,7 +10,7 @@ pub struct TodoView {
     pub title: String,
     pub description: Option<String>,
     /// `None` or `Date` stringified with UTC YYYY-MM-DD format
-    #[serde(rename(serialize = "createdAt"))]
+    #[serde(rename(serialize = "todoAt"))]
     pub todo_at: Option<String>,
     /// `Date` stringified with `RFC-3339` format
     #[serde(rename(serialize = "createdAt"))]
