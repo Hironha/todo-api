@@ -3,12 +3,13 @@ mod application;
 mod domain;
 mod framework;
 
+use std::collections::HashMap;
+use std::net::SocketAddr;
+
 use axum::Router;
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
-use std::collections::HashMap;
-use std::net::SocketAddr;
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::cors::CorsLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
@@ -20,7 +21,7 @@ use framework::rest_api::routes::todo;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().expect("failed to load .env file");
+    dotenv().expect("failed loading .env");
 
     tracing_subscriber::fmt()
         .without_time()
@@ -33,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
-        .expect("failed to run migrations");
+        .expect("failed running migrations");
 
     let app = Router::new()
         .merge(todo::create_router(pool.clone()))
@@ -53,24 +54,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn create_db_pool(connections: u32) -> Pool<Postgres> {
     let env = std::env::vars().collect::<HashMap<String, String>>();
-    let user = env
-        .get("DB_USER")
-        .expect("failed to load DB_USER from .env");
-    let password = env
-        .get("DB_PASSWORD")
-        .expect("failed to load DB_PASSWORD from .env");
-    let host = env
-        .get("DB_HOST")
-        .expect("failed to load DB_HOST from .env");
-    let db_name = env
-        .get("DB_NAME")
-        .expect("failed to load DB_NAME from .env");
+    let url = env.get("DB_URL").expect("missing DB_URL env");
 
     PgPoolOptions::new()
         .max_connections(connections)
-        .connect(&format!("postgres://{user}:{password}@{host}/{db_name}"))
+        .connect(url.as_str())
         .await
-        .expect("failed to connect to Postgres database")
+        .expect("failed connecting to postgres database")
 }
 
 fn create_tracing_layer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
