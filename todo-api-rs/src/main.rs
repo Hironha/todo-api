@@ -47,8 +47,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
-        .await?;
-
+        .await
+        .expect("failed initiating server");
+    
     Ok(())
 }
 
