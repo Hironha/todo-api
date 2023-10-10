@@ -72,13 +72,17 @@ impl Create for TodoStore {
             _ => return Err(CreateError::Internal),
         };
 
-        sqlx::query(update_count_q)
+        let update_count_result = sqlx::query(update_count_q)
             .execute(trx.as_mut())
             .await
             .map_err(|err| {
                 tracing::error!("create todo failed updating count {err:?}");
                 CreateError::Internal
             })?;
+
+        if update_count_result.rows_affected() == 0 {
+            return Err(CreateError::Internal);
+        }
 
         let insert_q = r#"
             INSERT INTO todo (id, title, description, todo_at, created_at, updated_at)
@@ -101,14 +105,14 @@ impl Create for TodoStore {
                 CreateError::Internal
             })?;
 
-        let entity = todo_model_to_entity(model).map_err(|_| CreateError::Internal)?;
+        let todo_entity = todo_model_to_entity(model).map_err(|_| CreateError::Internal)?;
 
         trx.commit().await.map_err(|err| {
             tracing::error!("create todo failed committing transaction {err:?}");
             CreateError::Internal
         })?;
 
-        Ok(entity)
+        Ok(todo_entity)
     }
 }
 
@@ -136,13 +140,13 @@ impl List for TodoStore {
                 ListError::Internal
             })?;
 
-        // count `todo` by querying from `todo_count` table 
+        // count `todo` by querying from `todo_count` table
         let count_q = r#" SELECT count FROM todo_count LIMIT 1 "#;
-        let count_res = sqlx::query_scalar::<_, i64>(count_q)
+        let count_result = sqlx::query_scalar::<_, i64>(count_q)
             .fetch_one(&self.pool)
             .await;
 
-        let db_count: i64 = match count_res {
+        let db_count = match count_result {
             Ok(count) => count,
             Err(SqlxError::RowNotFound) => 0,
             Err(err) => {
