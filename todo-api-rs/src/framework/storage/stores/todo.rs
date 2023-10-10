@@ -104,7 +104,7 @@ impl Create for TodoStore {
         let entity = todo_model_to_entity(model).map_err(|_| CreateError::Internal)?;
 
         trx.commit().await.map_err(|err| {
-            tracing::error!("create todo failed commiting transaction {err:?}");
+            tracing::error!("create todo failed committing transaction {err:?}");
             CreateError::Internal
         })?;
 
@@ -212,7 +212,7 @@ impl Delete for TodoStore {
         }
 
         trx.commit().await.map_err(|err| {
-            tracing::error!("delete todo failed commiting transaction {err:?}");
+            tracing::error!("delete todo failed committing transaction {err:?}");
             DeleteError::Internal
         })
     }
