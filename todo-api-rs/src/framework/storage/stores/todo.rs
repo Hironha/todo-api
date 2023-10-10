@@ -194,26 +194,17 @@ impl Delete for TodoStore {
                 }
             })?;
 
-        let count_q = r#" SELECT COUNT(count) FROM todo_count "#;
-        let count = sqlx::query_scalar::<_, i64>(count_q)
-            .fetch_one(trx.as_mut())
+        let decrement_count_q = r#"
+            UPDATE todo_count SET count = count - 1 WHERE count > 0
+        "#;
+
+        sqlx::query(decrement_count_q)
+            .execute(trx.as_mut())
             .await
             .map_err(|err| {
-                tracing::error!("delete todo failed counting {err:?}");
+                tracing::error!("delete todo failed updating count {err:?}");
                 DeleteError::Internal
             })?;
-
-        // update `todo_count` only if already exists an item
-        if count > 0 {
-            let decrement_count_q = r#" UPDATE todo_count SET count = count - 1 "#;
-            sqlx::query(decrement_count_q)
-                .execute(trx.as_mut())
-                .await
-                .map_err(|err| {
-                    tracing::error!("delete todo failed updating count {err:?}");
-                    DeleteError::Internal
-                })?;
-        }
 
         trx.commit().await.map_err(|err| {
             tracing::error!("delete todo failed committing transaction {err:?}");
