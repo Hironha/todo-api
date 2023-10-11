@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS tag (
     description varchar(128),
     created_at timestamptz NOT NULL,
     updated_at timestamptz NOT NULL,
-    CONSTRAINT pk_tag PRIMARY KEY (id)
+    CONSTRAINT tag_pk PRIMARY KEY (id),
+    CONSTRAINT tag_ak_name UNIQUE (name)
 );
