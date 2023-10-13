@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use sqlx::types::Uuid;
-use sqlx::{Error as SqlxError, Pool, Postgres};
+use sqlx::{Error as SqlxError, Pool, Postgres, QueryBuilder};
 use time::OffsetDateTime;
 
 use super::models::todo::TodoModel;
@@ -122,17 +122,26 @@ impl List for TodoStore {
         let limit: i64 = u32::from(payload.per_page).into();
         let page: i64 = u32::from(payload.page).into();
         let offset = (page - 1) * limit;
-        let list_q = r#"
-            SELECT id, title, description, todo_at, created_at, updated_at
-            FROM todo
-            ORDER BY created_at DESC
-            LIMIT ($1)
-            OFFSET ($2)
-        "#;
+        let mut list_q = QueryBuilder::<'_, Postgres>::new(
+            r#"
+                SELECT id, title, description, todo_at, created_at, updated_at
+                FROM todo
+            "#,
+        );
 
-        let todo_models = sqlx::query_as::<_, TodoModel>(list_q)
-            .bind(limit)
-            .bind(offset)
+        if let Some(title) = payload.title {
+            list_q.push(" WHERE title LIKE ");
+            list_q.push_bind(format!("%{title}%"));
+        }
+
+        list_q.push(r#" ORDER BY created_at DESC LIMIT "#);
+        list_q.push_bind(limit);
+
+        list_q.push(r#" OFFSET "#);
+        list_q.push_bind(offset);
+
+        let todo_models = list_q
+            .build_query_as::<TodoModel>()
             .fetch_all(&self.pool)
             .await
             .map_err(|err| {
