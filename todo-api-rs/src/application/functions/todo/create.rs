@@ -9,6 +9,8 @@ pub async fn create_todo<S: Create>(
         title: input.title,
         description: input.description,
         todo_at: input.todo_at,
+        // default `done` to `false`
+        done: false,
     };
 
     match ctx.store.create(payload).await {

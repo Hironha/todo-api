@@ -13,6 +13,7 @@ pub struct UpdatePayload {
     pub id: Id,
     pub title: Title,
     pub description: Description,
+    pub done: bool,
     pub todo_at: Option<Date>,
 }
 

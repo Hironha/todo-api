@@ -20,6 +20,7 @@ pub(super) struct UpdateBody {
     description: Option<String>,
     #[serde(rename(deserialize = "todoAt"))]
     todo_at: Option<String>,
+    done: Option<bool>,
 }
 
 pub(super) async fn update_todo(
@@ -35,6 +36,7 @@ pub(super) async fn update_todo(
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
+        done: body.done,
     };
     let controller = UpdateController::new(state.todo_store);
 
@@ -57,6 +59,7 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
+                ParseError::EmptyDone => "done"
             };
             let details = ValidationError::new(field, e.description());
             let error = ApiError::new("UTD-001", "Invalid input").with_details(details);

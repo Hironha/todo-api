@@ -10,6 +10,7 @@ pub async fn update_todo<T: Update>(
         title: input.title,
         description: input.description,
         todo_at: input.todo_at,
+        done: input.done,
     };
 
     match ctx.store.update(payload).await {

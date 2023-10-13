@@ -8,6 +8,7 @@ pub struct TodoModel {
     pub title: String,
     pub description: Option<String>,
     pub todo_at: Option<Date>,
+    pub done: bool,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
 }

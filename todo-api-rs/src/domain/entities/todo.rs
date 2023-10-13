@@ -5,6 +5,7 @@ pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
     pub description: Description,
+    pub done: bool,
     pub todo_at: Option<Date>,
     pub created_at: DateTime,
     pub updated_at: DateTime,

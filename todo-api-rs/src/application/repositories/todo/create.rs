@@ -13,6 +13,7 @@ pub struct CreatePayload {
     pub title: Title,
     pub description: Description,
     pub todo_at: Option<Date>,
+    pub done: bool
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

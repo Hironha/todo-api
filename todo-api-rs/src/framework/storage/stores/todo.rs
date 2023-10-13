@@ -27,9 +27,9 @@ impl TodoStore {
 impl Find for TodoStore {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
         let q = r#"
-            SELECT id, title, description, todo_at, created_at, updated_at
+            SELECT id, title, description, todo_at, done, created_at, updated_at
             FROM todo 
-            WHERE id = ($1)
+            WHERE id = $1
         "#;
 
         let todo_model = sqlx::query_as::<_, TodoModel>(q)
@@ -52,9 +52,9 @@ impl Find for TodoStore {
 impl Create for TodoStore {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
         let insert_q = r#"
-            INSERT INTO todo (id, title, description, todo_at, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, title, description, todo_at, created_at, updated_at
+            INSERT INTO todo (id, title, description, todo_at, done, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, title, description, todo_at, done, created_at, updated_at
         "#;
 
         let current_date_time = OffsetDateTime::now_utc();
@@ -63,6 +63,7 @@ impl Create for TodoStore {
             .bind(payload.title.into_string())
             .bind(payload.description.into_opt_string())
             .bind(payload.todo_at.map(|at| at.into_date()))
+            .bind(payload.done)
             .bind(current_date_time)
             .bind(current_date_time)
             .fetch_one(&self.pool)
@@ -87,7 +88,7 @@ impl List for TodoStore {
         let mut count_q = QueryBuilder::<'_, Postgres>::new(r#"SELECT COUNT(*) FROM todo"#);
         let mut list_q = QueryBuilder::<'_, Postgres>::new(
             r#"
-                SELECT id, title, description, todo_at, created_at, updated_at
+                SELECT id, title, description, todo_at, done, created_at, updated_at
                 FROM todo
             "#,
         );
@@ -164,15 +165,17 @@ impl Update for TodoStore {
     async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
         let q = r#"
             UPDATE todo
-            SET title = ($1), description = ($2), todo_at = ($3)
-            WHERE id = ($4)
-            RETURNING id, title, description, todo_at, created_at, updated_at
+            SET title = $1, description = $2, todo_at = $3, done = $4, updated_at = $5
+            WHERE id = $6
+            RETURNING id, title, description, todo_at, done, created_at, updated_at
         "#;
 
         let model = sqlx::query_as::<_, TodoModel>(q)
             .bind(payload.title.into_string())
             .bind(payload.description.into_opt_string())
             .bind(payload.todo_at.map(|at| at.into_date()))
+            .bind(payload.done)
+            .bind(OffsetDateTime::now_utc())
             .bind(payload.id.into_uuid())
             .fetch_one(&self.pool)
             .await
@@ -202,6 +205,7 @@ fn todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
         id: model.id.into(),
         title,
         description,
+        done: model.done,
         todo_at: model.todo_at.map(Date::from),
         created_at: model.created_at.into(),
         updated_at: model.updated_at.into(),

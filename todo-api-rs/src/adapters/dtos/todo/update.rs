@@ -26,6 +26,7 @@ pub struct RawInput {
     pub title: Option<String>,
     pub description: Option<String>,
     pub todo_at: Option<String>,
+    pub done: Option<bool>,
 }
 
 impl ParsableInput<UpdateTodoInput, ParseError> for RawInput {
@@ -42,6 +43,8 @@ impl ParsableInput<UpdateTodoInput, ParseError> for RawInput {
 
         let description = self.description.filter(|d| !d.is_empty());
 
+        let done = self.done.ok_or(ParseError::EmptyDone)?;
+
         let todo_at = self
             .todo_at
             .map(|at| Date::parse_str(&at))
@@ -53,6 +56,7 @@ impl ParsableInput<UpdateTodoInput, ParseError> for RawInput {
             title: Title::new(title).map_err(ParseError::InvalidTitle)?,
             description: Description::new(description).map_err(ParseError::InvalidDescription)?,
             todo_at,
+            done,
         })
     }
 }
@@ -72,6 +76,7 @@ pub enum ParseError {
     InvalidTitle(TitleError),
     InvalidDescription(DescriptionError),
     TodoAt,
+    EmptyDone,
 }
 
 impl ParseError {
@@ -85,6 +90,7 @@ impl ParseError {
             Self::TodoAt => {
                 "optional string, but if defined, should be a date on YYYY-MM-DD format".into()
             }
+            Self::EmptyDone => "required boolean".into(),
         }
     }
 }
@@ -100,6 +106,7 @@ mod tests {
             title: Some("title".to_string()),
             description: Some("description".to_string()),
             todo_at: Some("2023-08-12".to_string()),
+            done: Some(false),
         };
 
         assert!(input_schema.parse().is_ok());
@@ -112,6 +119,7 @@ mod tests {
             title: Some("title".to_string()),
             description: Some("description".to_string()),
             todo_at: Some("2023-08-12".to_string()),
+            done: Some(false),
         };
         let none_id_input = none_id_schema.parse();
 
@@ -122,6 +130,7 @@ mod tests {
             title: Some("title".to_string()),
             description: None,
             todo_at: None,
+            done: Some(false),
         };
         let invalid_id_input = invalid_id_schema.parse();
 
@@ -135,6 +144,7 @@ mod tests {
             title: None,
             description: None,
             todo_at: None,
+            done: Some(false),
         };
         let none_title_input = none_title_schema.parse();
 
@@ -145,6 +155,7 @@ mod tests {
             title: Some("".to_string()),
             description: None,
             todo_at: None,
+            done: Some(false),
         };
         let empty_title_input = empty_title_schema.parse();
 
@@ -158,6 +169,7 @@ mod tests {
             title: Some("title".to_string()),
             description: None,
             todo_at: Some("todo_at".to_string()),
+            done: Some(false),
         };
         let invalid_todo_at_input = invalid_todo_at_schema.parse();
 
