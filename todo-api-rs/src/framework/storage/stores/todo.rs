@@ -93,10 +93,10 @@ impl List for TodoStore {
         );
 
         if let Some(title) = payload.title {
-            list_q.push(" WHERE title LIKE ");
+            list_q.push(" WHERE title ILIKE ");
             list_q.push_bind(format!("%{title}%"));
 
-            count_q.push(" WHERE title LIKE ");
+            count_q.push(" WHERE title ILIKE ");
             count_q.push_bind(format!("%{title}%"));
         }
 
