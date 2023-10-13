@@ -14,6 +14,7 @@ pub(super) struct QueryParams {
     page: Option<u32>,
     #[serde(rename(deserialize = "perPage"))]
     per_page: Option<u32>,
+    title: Option<String>,
 }
 
 pub(super) async fn list_todos(
@@ -23,6 +24,7 @@ pub(super) async fn list_todos(
     let input = RawInput {
         page: query.page,
         per_page: query.per_page,
+        title: query.title,
     };
     let controller = ListController::new(state.todo_store);
 
@@ -43,6 +45,7 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             let field = match err {
                 ParseError::InvalidPage => "page",
                 ParseError::InvalidPerPage => "perPage",
+                ParseError::TitleLength => "title"
             };
             let details = ValidationError::new(field, err.description());
             let error = ApiError::new("LTD-001", "Invalid input").with_details(details);

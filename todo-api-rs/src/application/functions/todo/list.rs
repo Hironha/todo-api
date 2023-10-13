@@ -1,5 +1,5 @@
 use crate::application::dtos::todo::list::{
-    TodoList, ListTodoError, ListTodoInput, ListTodoOutput,
+    ListTodoError, ListTodoInput, ListTodoOutput, TodoList,
 };
 use crate::application::repositories::todo::list::{List, ListError, ListPayload};
 
@@ -10,6 +10,7 @@ pub async fn list_todo<S: List>(
     let payload = ListPayload {
         page: input.page,
         per_page: input.per_page,
+        title: input.title,
     };
 
     match ctx.store.list(payload).await {

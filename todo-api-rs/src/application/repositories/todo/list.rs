@@ -12,6 +12,7 @@ pub trait List {
 pub struct ListPayload {
     pub page: NonZeroU32,
     pub per_page: NonZeroU32,
+    pub title: Option<String> 
 }
 
 #[derive(Clone, Debug)]

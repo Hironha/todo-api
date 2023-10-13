@@ -43,6 +43,7 @@ pub enum RunError {
 pub struct RawInput {
     pub page: Option<u32>,
     pub per_page: Option<u32>,
+    pub title: Option<String>,
 }
 
 impl ParsableInput<ListTodoInput, ParseError> for RawInput {
@@ -51,7 +52,18 @@ impl ParsableInput<ListTodoInput, ParseError> for RawInput {
         let per_page =
             NonZeroU32::new(self.per_page.unwrap_or(10u32)).ok_or(ParseError::InvalidPerPage)?;
 
-        Ok(ListTodoInput { page, per_page })
+        // title cannot have more than 256 characters
+        let title = self
+            .title
+            .filter(|t| !t.is_empty())
+            .map(|t| (t.len() <= 256).then_some(t).ok_or(ParseError::TitleLength))
+            .transpose()?;
+
+        Ok(ListTodoInput {
+            page,
+            per_page,
+            title,
+        })
     }
 }
 
@@ -59,14 +71,14 @@ impl ParsableInput<ListTodoInput, ParseError> for RawInput {
 pub enum ParseError {
     InvalidPage,
     InvalidPerPage,
+    TitleLength,
 }
 
 impl ParseError {
     pub fn description(&self) -> String {
         match self {
-            Self::InvalidPage | Self::InvalidPerPage => {
-                "optional non zero positive interger".into()
-            }
+            Self::InvalidPage | Self::InvalidPerPage => "optional non zero positive integer".into(),
+            Self::TitleLength => "optional string with less than 256 characters".into(),
         }
     }
 }
