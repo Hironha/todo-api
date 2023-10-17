@@ -19,12 +19,12 @@ use update::update_todo;
 
 #[derive(Clone, FromRef)]
 pub struct TodoState {
-    todo_store: TodoRepository,
+    todo_repository: TodoRepository,
 }
 
 pub fn create_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
-        todo_store: TodoRepository::new(pool),
+        todo_repository: TodoRepository::new(pool),
     };
 
     Router::new()

@@ -28,7 +28,7 @@ pub(super) async fn create_todo(
         description: body.description,
         todo_at: body.todo_at,
     };
-    let controller = CreateController::new(state.todo_store);
+    let controller = CreateController::new(state.todo_repository);
 
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,

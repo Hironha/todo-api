@@ -38,7 +38,7 @@ pub(super) async fn update_todo(
         todo_at: body.todo_at,
         done: body.done,
     };
-    let controller = UpdateController::new(state.todo_store);
+    let controller = UpdateController::new(state.todo_repository);
 
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,

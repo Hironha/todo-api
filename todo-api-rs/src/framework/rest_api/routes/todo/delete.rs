@@ -21,7 +21,7 @@ pub(super) async fn delete_todo(
     tracing::info!("delete todo path input {path:?}");
 
     let input = RawInput { id: path.id };
-    let controller = DeleteController::new(state.todo_store);
+    let controller = DeleteController::new(state.todo_repository);
 
     if let Err(err) = controller.run(input).await.into_result() {
         let (status_code, message) = config_error_response(err);

@@ -21,7 +21,7 @@ pub(super) async fn find_todo(
     tracing::info!("find todo path input {path:?}");
 
     let input = RawInput { id: path.id };
-    let controller = FindController::new(state.todo_store);
+    let controller = FindController::new(state.todo_repository);
 
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,

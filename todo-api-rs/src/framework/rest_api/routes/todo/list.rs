@@ -26,7 +26,7 @@ pub(super) async fn list_todos(
         per_page: query.per_page,
         title: query.title,
     };
-    let controller = ListController::new(state.todo_store);
+    let controller = ListController::new(state.todo_repository);
 
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,
