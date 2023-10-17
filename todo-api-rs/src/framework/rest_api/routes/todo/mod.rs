@@ -4,12 +4,12 @@ mod find;
 mod list;
 mod update;
 
-use axum::{
-    extract::FromRef,
-    routing::{get, post},
-    Router,
-};
+use axum::extract::FromRef;
+use axum::routing::{get, post};
+use axum::Router;
 use sqlx::{Pool, Postgres};
+
+use crate::framework::storage::repositories::todo::TodoRepository;
 
 use create::create_todo;
 use delete::delete_todo;
@@ -17,16 +17,14 @@ use find::find_todo;
 use list::list_todos;
 use update::update_todo;
 
-use crate::framework::storage::TodoStore;
-
 #[derive(Clone, FromRef)]
 pub struct TodoState {
-    todo_store: TodoStore,
+    todo_store: TodoRepository,
 }
 
 pub fn create_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
-        todo_store: TodoStore::new(pool),
+        todo_store: TodoRepository::new(pool),
     };
 
     Router::new()
