@@ -19,18 +19,20 @@ pub(super) async fn list_todo(
     );
 
     if let Some(title) = payload.title {
-        list_q.push(" WHERE title ILIKE ");
-        list_q.push_bind(format!("%{title}%"));
+        list_q
+            .push(" WHERE title ILIKE ")
+            .push_bind(format!("%{title}%"));
 
-        count_q.push(" WHERE title ILIKE ");
-        count_q.push_bind(format!("%{title}%"));
+        count_q
+            .push(" WHERE title ILIKE ")
+            .push_bind(format!("%{title}%"));
     }
 
-    list_q.push(r#" ORDER BY created_at DESC LIMIT "#);
-    list_q.push_bind(limit);
-
-    list_q.push(r#" OFFSET "#);
-    list_q.push_bind(offset);
+    list_q
+        .push(" ORDER BY created_at DESC LIMIT ")
+        .push_bind(limit)
+        .push(" OFFSET ")
+        .push_bind(offset);
 
     let db_count = count_q
         .build_query_scalar::<i64>()
