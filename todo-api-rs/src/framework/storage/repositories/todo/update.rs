@@ -1,11 +1,11 @@
 use sqlx::types::time::OffsetDateTime;
-use sqlx::{Error as SqlxError, PgPool};
+use sqlx::{Error as SqlxError, Executor, Postgres};
 
 use crate::application::repositories::todo::update::{UpdateError, UpdatePayload};
 use crate::framework::storage::models::todo::TodoModel;
 
 pub(super) async fn update_todo(
-    pool: &PgPool,
+    executor: impl Executor<'_, Database = Postgres>,
     payload: UpdatePayload,
 ) -> Result<TodoModel, UpdateError> {
     let q = r#"
@@ -22,7 +22,7 @@ pub(super) async fn update_todo(
         .bind(payload.done)
         .bind(OffsetDateTime::now_utc())
         .bind(payload.id.into_uuid())
-        .fetch_one(pool)
+        .fetch_one(executor)
         .await
         .map_err(|err| match err {
             SqlxError::RowNotFound => UpdateError::NotFound,
