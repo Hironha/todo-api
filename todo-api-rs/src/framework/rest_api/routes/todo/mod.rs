@@ -22,7 +22,7 @@ pub struct TodoState {
     todo_repository: TodoRepository,
 }
 
-pub fn create_router(pool: Pool<Postgres>) -> Router {
+pub fn create_todo_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
         todo_repository: TodoRepository::new(pool),
     };
