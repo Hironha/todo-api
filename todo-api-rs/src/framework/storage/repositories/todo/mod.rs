@@ -1,3 +1,4 @@
+mod count;
 mod create;
 mod delete;
 mod find;
@@ -16,6 +17,7 @@ use crate::domain::entities::todo::{Description, Title, TodoEntity};
 use crate::domain::types::{Date, Id};
 use crate::framework::storage::models::todo::TodoModel;
 
+use count::{count_todo, CountTodoFilters};
 use create::create_todo;
 use delete::delete_todo;
 use find::find_todo;
@@ -42,6 +44,13 @@ impl Create for TodoRepository {
 }
 
 #[async_trait]
+impl Delete for TodoRepository {
+    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
+        delete_todo(&self.pool, id).await
+    }
+}
+
+#[async_trait]
 impl Find for TodoRepository {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
         let model = find_todo(&self.pool, id).await?;
@@ -52,25 +61,31 @@ impl Find for TodoRepository {
 #[async_trait]
 impl List for TodoRepository {
     async fn list(&self, payload: ListPayload) -> Result<ListData, ListError> {
-        let data = list_todo(&self.pool, payload).await?;
-        let todo_entities = data
-            .items
+        let count_filters = CountTodoFilters {
+            title: payload.title.as_deref(),
+        };
+
+        let db_count = count_todo(&self.pool, count_filters).await.map_err(|err| {
+            tracing::error!("count todo error: {err:?}");
+            ListError::Internal
+        })?;
+
+        let count = u64::try_from(db_count).map_err(|err| {
+            tracing::error!("todo count parsing to u64 error: {err:?}");
+            ListError::Internal
+        })?;
+
+        let todo_models = list_todo(&self.pool, payload).await?;
+        let todo_entities = todo_models
             .into_iter()
             .map(map_todo_model_to_entity)
             .collect::<Result<Vec<TodoEntity>, ()>>()
             .map_err(|_| ListError::Internal)?;
 
         Ok(ListData {
-            count: data.count,
+            count,
             items: todo_entities,
         })
-    }
-}
-
-#[async_trait]
-impl Delete for TodoRepository {
-    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        delete_todo(&self.pool, id).await
     }
 }
 
