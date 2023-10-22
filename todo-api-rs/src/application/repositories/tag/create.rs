@@ -3,14 +3,14 @@ use async_trait::async_trait;
 use crate::domain::entities::tag::{Description, Name, TagEntity};
 
 #[derive(Clone, Debug)]
-pub struct CreateTagPayload {
+pub struct CreatePayload {
     pub name: Name,
     pub description: Description,
 }
 
 #[async_trait]
 pub trait Create {
-    async fn create(&self, payload: CreateTagPayload) -> Result<TagEntity, CreateError>;
+    async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError>;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

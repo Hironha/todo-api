@@ -21,7 +21,7 @@ pub(super) async fn delete_tag(
     tracing::info!("delete tag path: {path:?}");
 
     let input = RawInput { id: path.id };
-    let controller = DeleteController::new(state.tag_store);
+    let controller = DeleteController::new(state.tag_repository);
 
     if let Err(err) = controller.run(input).await.into_result() {
         let (status_code, message) = config_error_response(err);

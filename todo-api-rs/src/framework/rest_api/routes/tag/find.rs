@@ -21,7 +21,7 @@ pub(super) async fn find_tag(
     tracing::info!("find tag path: {path:?}");
 
     let input = RawInput { id: path.id };
-    let controller = FindController::new(state.tag_store);
+    let controller = FindController::new(state.tag_repository);
 
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,

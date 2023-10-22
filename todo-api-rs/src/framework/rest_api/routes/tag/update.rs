@@ -33,7 +33,7 @@ pub(super) async fn update_tag(
         name: body.name,
         description: body.description,
     };
-    let controller = UpdateController::new(state.tag_store);
+    let controller = UpdateController::new(state.tag_repository);
 
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,

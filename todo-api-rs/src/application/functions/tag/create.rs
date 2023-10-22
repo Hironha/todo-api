@@ -1,11 +1,11 @@
 use crate::application::dtos::tag::create::{CreateTagError, CreateTagInput, CreateTagOutput};
-use crate::application::repositories::tag::create::{Create, CreateError, CreateTagPayload};
+use crate::application::repositories::tag::create::{Create, CreateError, CreatePayload};
 
 pub async fn create_tag<S: Create>(
     ctx: CreateTagContext<'_, S>,
     input: CreateTagInput,
 ) -> CreateTagOutput {
-    let payload = CreateTagPayload {
+    let payload = CreatePayload {
         name: input.name,
         description: input.description,
     };

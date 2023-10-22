@@ -25,7 +25,7 @@ pub(super) async fn create_tag(
         name: body.name,
         description: body.description,
     };
-    let controller = CreateController::new(state.tag_store);
+    let controller = CreateController::new(state.tag_repository);
 
     let output = match controller.run(input).await.into_result() {
         Ok(output) => output,
