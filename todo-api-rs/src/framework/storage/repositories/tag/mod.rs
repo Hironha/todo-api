@@ -42,17 +42,17 @@ impl Create for TagRepository {
 }
 
 #[async_trait]
-impl Find for TagRepository {
-    async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
-        let model = find_tag(&self.pool, id).await?;
-        map_tag_model_to_entity(model).map_err(|_| FindError::Internal)
+impl Delete for TagRepository {
+    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
+        delete_tag(&self.pool, id).await
     }
 }
 
 #[async_trait]
-impl Delete for TagRepository {
-    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        delete_tag(&self.pool, id).await
+impl Find for TagRepository {
+    async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
+        let model = find_tag(&self.pool, id).await?;
+        map_tag_model_to_entity(model).map_err(|_| FindError::Internal)
     }
 }
 
