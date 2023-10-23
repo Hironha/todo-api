@@ -16,8 +16,7 @@ impl Parse<UpdateTagInput, ParseError> for RawInput {
         let id = self
             .id
             .ok_or(ParseError::EmptyId)
-            .and_then(|id| Id::parse_str(&id).map_err(|_| ParseError::InvalidId))
-            .map_err(|_| ParseError::InvalidId)?;
+            .and_then(|id| Id::parse_str(&id).map_err(|_| ParseError::InvalidId))?;
 
         let name = self
             .name
