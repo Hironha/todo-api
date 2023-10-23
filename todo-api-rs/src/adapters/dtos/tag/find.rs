@@ -12,9 +12,8 @@ pub struct RawInput {
 impl Parse<FindTagInput, ParseError> for RawInput {
     fn parse(self) -> Result<FindTagInput, ParseError> {
         self.id
-            .map(|id| Id::parse_str(&id))
-            .ok_or(ParseError::EmptyId)?
-            .map_err(|_| ParseError::InvalidId)
+            .ok_or(ParseError::EmptyId)
+            .and_then(|id| Id::parse_str(&id).map_err(|_| ParseError::InvalidId))
             .map(FindTagInput)
     }
 }

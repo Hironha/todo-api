@@ -15,15 +15,14 @@ impl Parse<UpdateTagInput, ParseError> for RawInput {
     fn parse(self) -> Result<UpdateTagInput, ParseError> {
         let id = self
             .id
-            .map(|id| Id::parse_str(&id))
-            .ok_or(ParseError::EmptyId)?
+            .ok_or(ParseError::EmptyId)
+            .and_then(|id| Id::parse_str(&id).map_err(|_| ParseError::InvalidId))
             .map_err(|_| ParseError::InvalidId)?;
 
         let name = self
             .name
-            .map(Name::new)
-            .ok_or(ParseError::EmptyName)?
-            .map_err(ParseError::InvalidName)?;
+            .ok_or(ParseError::EmptyName)
+            .and_then(|name| Name::new(name).map_err(ParseError::InvalidName))?;
 
         let description =
             Description::new(self.description).map_err(ParseError::InvalidDescription)?;

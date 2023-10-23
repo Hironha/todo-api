@@ -14,9 +14,8 @@ impl Parse<CreateTagInput, ParseError> for RawInput {
         let name = self
             .name
             .filter(|t| !t.is_empty())
-            .map(Name::new)
-            .ok_or(ParseError::EmptyName)?
-            .map_err(ParseError::InvalidName)?;
+            .ok_or(ParseError::EmptyName)
+            .and_then(|name| Name::new(name).map_err(ParseError::InvalidName))?;
 
         let description = Description::new(self.description.filter(|d| !d.is_empty()))
             .map_err(ParseError::InvalidDescription)?;
