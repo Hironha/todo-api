@@ -1,4 +1,4 @@
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::delete::DeleteTagInput;
 use crate::domain::types::Id;
 
@@ -7,7 +7,7 @@ pub struct RawInput {
     pub id: Option<String>,
 }
 
-impl ParsableInput<DeleteTagInput, ParseError> for RawInput {
+impl Parse<DeleteTagInput, ParseError> for RawInput {
     fn parse(self) -> Result<DeleteTagInput, ParseError> {
         let id_source = self
             .id

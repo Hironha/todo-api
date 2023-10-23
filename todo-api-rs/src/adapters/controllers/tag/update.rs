@@ -1,5 +1,5 @@
 use crate::adapters::dtos::tag::update::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput};
 use crate::application::functions::tag::update::{update_tag, UpdateTagContext};
 use crate::application::repositories::tag::update::Update;
@@ -14,7 +14,7 @@ impl<S: Update> UpdateController<S> {
         Self { store }
     }
 
-    pub async fn run(&self, input: impl ParsableInput<UpdateTagInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl Parse<UpdateTagInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),

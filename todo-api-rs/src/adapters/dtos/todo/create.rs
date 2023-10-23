@@ -1,4 +1,4 @@
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::adapters::views::todo::TodoView;
 use crate::application::dtos::todo::create::CreateTodoInput;
 use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
@@ -27,7 +27,7 @@ pub struct RawInput {
     pub todo_at: Option<String>,
 }
 
-impl ParsableInput<CreateTodoInput, ParseError> for RawInput {
+impl Parse<CreateTodoInput, ParseError> for RawInput {
     fn parse(self) -> Result<CreateTodoInput, ParseError> {
         let title = self
             .title

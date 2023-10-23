@@ -1,4 +1,4 @@
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::delete::DeleteTodoInput;
 use crate::domain::types::Id;
 
@@ -24,7 +24,7 @@ pub struct RawInput {
     pub id: Option<String>,
 }
 
-impl ParsableInput<DeleteTodoInput, ParseError> for RawInput {
+impl Parse<DeleteTodoInput, ParseError> for RawInput {
     fn parse(self) -> Result<DeleteTodoInput, ParseError> {
         let id = self
             .id

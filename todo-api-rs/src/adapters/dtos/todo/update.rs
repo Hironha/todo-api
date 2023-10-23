@@ -1,4 +1,4 @@
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::adapters::views::todo::TodoView;
 use crate::application::dtos::todo::update::UpdateTodoInput;
 use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
@@ -29,7 +29,7 @@ pub struct RawInput {
     pub done: Option<bool>,
 }
 
-impl ParsableInput<UpdateTodoInput, ParseError> for RawInput {
+impl Parse<UpdateTodoInput, ParseError> for RawInput {
     fn parse(self) -> Result<UpdateTodoInput, ParseError> {
         let id = self
             .id
@@ -97,7 +97,7 @@ impl ParseError {
 
 #[cfg(test)]
 mod tests {
-    use super::ParsableInput;
+    use super::Parse;
 
     #[test]
     fn parse_success() {

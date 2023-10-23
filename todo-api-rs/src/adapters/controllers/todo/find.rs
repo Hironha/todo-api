@@ -1,5 +1,5 @@
 use crate::adapters::dtos::todo::find::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::find::{FindTodoError, FindTodoInput};
 use crate::application::functions::todo::{find_todo, FindTodoContext};
 use crate::application::repositories::todo::find::Find;
@@ -14,7 +14,7 @@ impl<S: Find> FindController<S> {
         Self { store }
     }
 
-    pub async fn run(&self, input: impl ParsableInput<FindTodoInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl Parse<FindTodoInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Validation(err)),

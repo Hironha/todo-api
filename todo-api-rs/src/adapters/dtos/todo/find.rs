@@ -1,4 +1,4 @@
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::adapters::views::todo::TodoView;
 use crate::application::dtos::todo::find::FindTodoInput;
 use crate::domain::entities::todo::TodoEntity;
@@ -26,7 +26,7 @@ pub struct RawInput {
     pub id: Option<String>,
 }
 
-impl ParsableInput<FindTodoInput, ParseError> for RawInput {
+impl Parse<FindTodoInput, ParseError> for RawInput {
     fn parse(self) -> Result<FindTodoInput, ParseError> {
         let id = self
             .id
@@ -63,7 +63,7 @@ impl ParseError {
 
 #[cfg(test)]
 mod test {
-    use super::ParsableInput;
+    use super::Parse;
 
     #[test]
     fn parse_success() {

@@ -1,5 +1,5 @@
 use crate::adapters::dtos::todo::update::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
 use crate::application::functions::todo::{update_todo, UpdateTodoContext};
 use crate::application::repositories::todo::update::Update;
@@ -13,7 +13,7 @@ impl<S: Update> UpdateController<S> {
         Self { store }
     }
 
-    pub async fn run(self, input: impl ParsableInput<UpdateTodoInput, ParseError>) -> Output {
+    pub async fn run(self, input: impl Parse<UpdateTodoInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Validation(err)),

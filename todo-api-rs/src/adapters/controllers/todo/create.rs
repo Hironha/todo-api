@@ -1,5 +1,5 @@
 use crate::adapters::dtos::todo::create::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
 use crate::application::functions::todo::{create_todo, CreateTodoContext};
 use crate::application::repositories::todo::create::Create;
@@ -13,7 +13,7 @@ impl<S: Create> CreateController<S> {
         Self { store }
     }
 
-    pub async fn run(&self, input: impl ParsableInput<CreateTodoInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl Parse<CreateTodoInput, ParseError>) -> Output {
         let create_input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),

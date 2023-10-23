@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::num::NonZeroU32;
 
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::adapters::views::todo::TodoView;
 use crate::application::dtos::todo::list::{ListTodoInput, TodoList};
 
@@ -46,7 +46,7 @@ pub struct RawInput {
     pub title: Option<String>,
 }
 
-impl ParsableInput<ListTodoInput, ParseError> for RawInput {
+impl Parse<ListTodoInput, ParseError> for RawInput {
     fn parse(self) -> Result<ListTodoInput, ParseError> {
         let page = NonZeroU32::new(self.page.unwrap_or(1u32)).ok_or(ParseError::InvalidPage)?;
         let per_page =

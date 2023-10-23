@@ -1,5 +1,5 @@
 use crate::adapters::dtos::tag::find::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::find::{FindTagError, FindTagInput};
 use crate::application::functions::tag::find::{find_tag, FindTagContext};
 use crate::application::repositories::tag::find::Find;
@@ -14,7 +14,7 @@ impl<S: Find> FindController<S> {
         Self { store }
     }
 
-    pub async fn run(&self, input: impl ParsableInput<FindTagInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl Parse<FindTagInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),

@@ -1,4 +1,4 @@
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::adapters::views::tag::TagView;
 use crate::application::dtos::tag::create::CreateTagInput;
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
@@ -9,7 +9,7 @@ pub struct RawInput {
     pub description: Option<String>,
 }
 
-impl ParsableInput<CreateTagInput, ParseError> for RawInput {
+impl Parse<CreateTagInput, ParseError> for RawInput {
     fn parse(self) -> Result<CreateTagInput, ParseError> {
         let name = self
             .name

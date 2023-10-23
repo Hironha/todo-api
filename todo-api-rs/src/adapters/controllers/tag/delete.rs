@@ -1,5 +1,5 @@
 use crate::adapters::dtos::tag::delete::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::delete::{DeleteTagError, DeleteTagInput};
 use crate::application::functions::tag::delete::{delete_tag, DeleteTagContext};
 use crate::application::repositories::tag::delete::Delete;
@@ -14,7 +14,7 @@ impl<S: Delete> DeleteController<S> {
         Self { store }
     }
 
-    pub async fn run(&self, input: impl ParsableInput<DeleteTagInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl Parse<DeleteTagInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),

@@ -1,5 +1,5 @@
 use crate::adapters::dtos::todo::delete::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput};
 use crate::application::functions::todo::{delete_todo, DeleteTodoContext};
 use crate::application::repositories::todo::delete::Delete;
@@ -13,7 +13,7 @@ impl<S: Delete> DeleteController<S> {
         Self { store }
     }
 
-    pub async fn run(&self, input: impl ParsableInput<DeleteTodoInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl Parse<DeleteTodoInput, ParseError>) -> Output {
         let id = match input.parse() {
             Ok(id) => id,
             Err(err) => return Output::err(RunError::Parsing(err)),

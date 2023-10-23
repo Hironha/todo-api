@@ -1,5 +1,5 @@
 use crate::adapters::dtos::tag::create::{Output, ParseError, RunError};
-use crate::adapters::dtos::ParsableInput;
+use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::create::{CreateTagError, CreateTagInput};
 use crate::application::functions::tag::create::{create_tag, CreateTagContext};
 use crate::application::repositories::tag::create::Create;
@@ -13,7 +13,7 @@ impl<S: Create> CreateController<S> {
         Self { store }
     }
 
-    pub async fn run(&self, input: impl ParsableInput<CreateTagInput, ParseError>) -> Output {
+    pub async fn run(&self, input: impl Parse<CreateTagInput, ParseError>) -> Output {
         let input = match input.parse() {
             Ok(input) => input,
             Err(err) => return Output::err(RunError::Parsing(err)),
