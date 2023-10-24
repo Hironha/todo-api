@@ -13,7 +13,7 @@ pub async fn update_tag<S: Update>(
         updated_at: DateTime::new(),
     };
 
-    match ctx.store.update(payload).await {
+    match ctx.repository.update(payload).await {
         Ok(tag) => UpdateTagOutput::ok(tag),
         Err(err) => UpdateTagOutput::err(match err {
             UpdateError::NotFound => UpdateTagError::NotFound,
@@ -24,11 +24,11 @@ pub async fn update_tag<S: Update>(
 
 #[derive(Clone, Debug)]
 pub struct UpdateTagContext<'a, S: Update> {
-    store: &'a S,
+    repository: &'a S,
 }
 
 impl<'a, S: Update> UpdateTagContext<'a, S> {
-    pub const fn new(store: &'a S) -> Self {
-        Self { store }
+    pub const fn new(repository: &'a S) -> Self {
+        Self { repository }
     }
 }
