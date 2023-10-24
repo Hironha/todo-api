@@ -1,10 +1,10 @@
-use sqlx::{Error as SqlxError, Executor, Postgres};
+use sqlx::{Error as SqlxError, PgConnection};
 
 use crate::application::repositories::tag::update::{UpdateError, UpdatePayload};
 use crate::framework::storage::models::tag::TagModel;
 
 pub(super) async fn update_tag(
-    executor: impl Executor<'_, Database = Postgres>,
+    conn: &mut PgConnection,
     payload: UpdatePayload,
 ) -> Result<TagModel, UpdateError> {
     let q = r#"
@@ -18,7 +18,7 @@ pub(super) async fn update_tag(
         .bind(payload.id.into_uuid())
         .bind(payload.name.into_string())
         .bind(payload.description.into_opt_string())
-        .fetch_one(executor)
+        .fetch_one(conn)
         .await
         .map_err(|err| match err {
             SqlxError::RowNotFound => UpdateError::NotFound,

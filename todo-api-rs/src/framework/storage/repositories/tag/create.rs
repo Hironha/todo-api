@@ -1,12 +1,12 @@
 use sqlx::types::time::OffsetDateTime;
-use sqlx::{Executor, Postgres};
+use sqlx::PgConnection;
 
 use crate::application::repositories::tag::create::{CreateError, CreatePayload};
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
 
 pub(super) async fn create_tag(
-    executor: impl Executor<'_, Database = Postgres>,
+    conn: &mut PgConnection,
     payload: CreatePayload,
 ) -> Result<TagModel, CreateError> {
     let q = r#"
@@ -22,7 +22,7 @@ pub(super) async fn create_tag(
         .bind(payload.description.into_opt_string())
         .bind(current_datetime)
         .bind(current_datetime)
-        .fetch_one(executor)
+        .fetch_one(conn)
         .await
         .map_err(|err| {
             tracing::error!("create tag error: {err:?}");

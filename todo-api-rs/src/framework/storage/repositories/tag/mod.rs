@@ -36,44 +36,49 @@ impl TagRepository {
 #[async_trait]
 impl Create for TagRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError> {
-        let model = create_tag(&self.pool, payload).await?;
-        map_tag_model_to_entity(model).map_err(|_| CreateError::Internal)
+        let mut conn = self.pool.acquire().await.or(Err(CreateError::Internal))?;
+        let model = create_tag(conn.as_mut(), payload).await?;
+        map_tag_model_to_entity(model).or(Err(CreateError::Internal))
     }
 }
 
 #[async_trait]
 impl Delete for TagRepository {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        delete_tag(&self.pool, id).await
+        let mut conn = self.pool.acquire().await.or(Err(DeleteError::Internal))?;
+        delete_tag(conn.as_mut(), id).await
     }
 }
 
 #[async_trait]
 impl Find for TagRepository {
     async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
-        let model = find_tag(&self.pool, id).await?;
-        map_tag_model_to_entity(model).map_err(|_| FindError::Internal)
+        let mut conn = self.pool.acquire().await.or(Err(FindError::Internal))?;
+        let model = find_tag(conn.as_mut(), id).await?;
+        map_tag_model_to_entity(model).or(Err(FindError::Internal))
     }
 }
 
 #[async_trait]
 impl List for TagRepository {
     async fn list(&self) -> Result<Vec<TagEntity>, ListError> {
-        let tag_models = list_tag(&self.pool).await?;
+        let mut conn = self.pool.acquire().await.or(Err(ListError::Internal))?;
+        let tag_models = list_tag(conn.as_mut()).await?;
 
         tag_models
             .into_iter()
             .map(map_tag_model_to_entity)
             .collect::<Result<Vec<TagEntity>, ()>>()
-            .map_err(|_| ListError::Internal)
+            .or(Err(ListError::Internal))
     }
 }
 
 #[async_trait]
 impl Update for TagRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TagEntity, UpdateError> {
-        let tag_model = update_tag(&self.pool, payload).await?;
-        map_tag_model_to_entity(tag_model).map_err(|_| UpdateError::Internal)
+        let mut conn = self.pool.acquire().await.or(Err(UpdateError::Internal))?;
+        let tag_model = update_tag(conn.as_mut(), payload).await?;
+        map_tag_model_to_entity(tag_model).or(Err(UpdateError::Internal))
     }
 }
 
