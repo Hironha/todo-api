@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::domain::entities::tag::{Description, Name, TagEntity};
-use crate::domain::types::Id;
+use crate::domain::types::{DateTime, Id};
 
 #[async_trait]
 pub trait Update {
@@ -13,6 +13,7 @@ pub struct UpdatePayload {
     pub id: Id,
     pub name: Name,
     pub description: Description,
+    pub updated_at: DateTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

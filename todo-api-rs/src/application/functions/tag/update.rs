@@ -1,5 +1,6 @@
 use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput, UpdateTagOutput};
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
+use crate::domain::types::DateTime;
 
 pub async fn update_tag<S: Update>(
     ctx: UpdateTagContext<'_, S>,
@@ -9,6 +10,7 @@ pub async fn update_tag<S: Update>(
         id: input.id,
         name: input.name,
         description: input.description,
+        updated_at: DateTime::new(),
     };
 
     match ctx.store.update(payload).await {
