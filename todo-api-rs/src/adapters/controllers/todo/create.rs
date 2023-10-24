@@ -1,7 +1,7 @@
 use crate::adapters::dtos::todo::create::{Output, ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
-use crate::application::functions::todo::{create_todo, CreateTodoContext};
+use crate::application::functions::todo::create::{create_todo, CreateTodoContext};
 use crate::application::repositories::todo::create::Create;
 
 pub struct CreateController<S: Create> {

@@ -1,7 +1,7 @@
 use crate::adapters::dtos::todo::update::{Output, ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
-use crate::application::functions::todo::{update_todo, UpdateTodoContext};
+use crate::application::functions::todo::update::{update_todo, UpdateTodoContext};
 use crate::application::repositories::todo::update::Update;
 
 pub struct UpdateController<S: Update> {

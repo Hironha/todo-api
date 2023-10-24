@@ -1,3 +1,4 @@
+mod bind_tags;
 mod count;
 mod create;
 mod delete;
@@ -38,44 +39,50 @@ impl TodoRepository {
 #[async_trait]
 impl Create for TodoRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
-        let model = create_todo(&self.pool, payload).await?;
-        map_todo_model_to_entity(model).map_err(|_| CreateError::Internal)
+        let mut conn = self.pool.acquire().await.or(Err(CreateError::Internal))?;
+        let model = create_todo(conn.as_mut(), payload).await?;
+        map_todo_model_to_entity(model).or(Err(CreateError::Internal))
     }
 }
 
 #[async_trait]
 impl Delete for TodoRepository {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        delete_todo(&self.pool, id).await
+        let mut conn = self.pool.acquire().await.or(Err(DeleteError::Internal))?;
+        delete_todo(conn.as_mut(), id).await
     }
 }
 
 #[async_trait]
 impl Find for TodoRepository {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
-        let model = find_todo(&self.pool, id).await?;
-        map_todo_model_to_entity(model).map_err(|_| FindError::Internal)
+        let mut conn = self.pool.acquire().await.or(Err(FindError::Internal))?;
+        let model = find_todo(conn.as_mut(), id).await?;
+        map_todo_model_to_entity(model).or(Err(FindError::Internal))
     }
 }
 
 #[async_trait]
 impl List for TodoRepository {
     async fn list(&self, payload: ListPayload) -> Result<ListData, ListError> {
+        let mut conn = self.pool.acquire().await.or(Err(ListError::Internal))?;
         let count_filters = CountTodoFilters {
             title: payload.title.as_deref(),
         };
 
-        let db_count = count_todo(&self.pool, count_filters).await.map_err(|err| {
-            tracing::error!("count todo error: {err:?}");
-            ListError::Internal
-        })?;
+        let db_count = count_todo(conn.as_mut(), count_filters)
+            .await
+            .map_err(|err| {
+                tracing::error!("count todo error: {err:?}");
+                ListError::Internal
+            })?;
 
         let count = u64::try_from(db_count).map_err(|err| {
             tracing::error!("todo count parsing to u64 error: {err:?}");
             ListError::Internal
         })?;
 
-        let todo_models = list_todo(&self.pool, payload).await?;
+        let todo_models = list_todo(conn.as_mut(), payload).await?;
         let todo_entities = todo_models
             .into_iter()
             .map(map_todo_model_to_entity)
@@ -93,7 +100,7 @@ impl List for TodoRepository {
 impl Update for TodoRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
         let todo = update_todo(&self.pool, payload).await?;
-        map_todo_model_to_entity(todo).map_err(|_| UpdateError::Internal)
+        map_todo_model_to_entity(todo).or(Err(UpdateError::Internal))
     }
 }
 

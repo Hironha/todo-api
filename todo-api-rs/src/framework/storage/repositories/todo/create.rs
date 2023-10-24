@@ -1,4 +1,4 @@
-use sqlx::{Executor, Postgres};
+use sqlx::PgConnection;
 use time::OffsetDateTime;
 
 use crate::application::repositories::todo::create::{CreateError, CreatePayload};
@@ -6,7 +6,7 @@ use crate::domain::types::Id;
 use crate::framework::storage::models::todo::TodoModel;
 
 pub(super) async fn create_todo(
-    executor: impl Executor<'_, Database = Postgres>,
+    conn: &mut PgConnection,
     payload: CreatePayload,
 ) -> Result<TodoModel, CreateError> {
     let insert_q = r#"
@@ -24,7 +24,7 @@ pub(super) async fn create_todo(
         .bind(payload.done)
         .bind(current_date_time)
         .bind(current_date_time)
-        .fetch_one(executor)
+        .fetch_one(conn.as_mut())
         .await
         .map_err(|err| {
             tracing::error!("create todo failed creating {err:?}");

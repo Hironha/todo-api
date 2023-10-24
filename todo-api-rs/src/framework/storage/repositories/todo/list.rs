@@ -1,10 +1,10 @@
-use sqlx::{Executor, Postgres, QueryBuilder};
+use sqlx::{PgConnection, Postgres, QueryBuilder};
 
 use crate::application::repositories::todo::list::{ListError, ListPayload};
 use crate::framework::storage::models::todo::TodoModel;
 
 pub(super) async fn list_todo(
-    executor: impl Executor<'_, Database = Postgres>,
+    conn: &mut PgConnection,
     payload: ListPayload,
 ) -> Result<Vec<TodoModel>, ListError> {
     let limit: i64 = u32::from(payload.per_page).into();
@@ -30,7 +30,7 @@ pub(super) async fn list_todo(
         .push(" OFFSET ")
         .push_bind(offset)
         .build_query_as::<TodoModel>()
-        .fetch_all(executor)
+        .fetch_all(conn)
         .await
         .map_err(|err| {
             tracing::error!("list todo failed {err:?}");

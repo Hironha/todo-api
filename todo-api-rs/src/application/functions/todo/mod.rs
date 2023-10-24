@@ -1,11 +1,7 @@
-mod create;
-mod delete;
-mod find;
-mod list;
-mod update;
+pub mod create;
+pub mod delete;
+pub mod find;
+pub mod list;
+pub mod update;
+pub mod bind_tags;
 
-pub use create::*;
-pub use delete::*;
-pub use find::*;
-pub use list::*;
-pub use update::*;

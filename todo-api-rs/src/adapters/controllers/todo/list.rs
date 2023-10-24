@@ -1,7 +1,7 @@
 use crate::adapters::dtos::todo::list::{Output, ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput};
-use crate::application::functions::todo::{list_todo, ListTodoContext};
+use crate::application::functions::todo::list::{list_todo, ListTodoContext};
 use crate::application::repositories::todo::list::List;
 
 #[derive(Clone, Debug)]
