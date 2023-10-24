@@ -1,5 +1,6 @@
 use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput, UpdateTodoOutput};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
+use crate::domain::types::DateTime;
 
 pub async fn update_todo<T: Update>(
     ctx: UpdateTodoContext<T>,
@@ -11,6 +12,7 @@ pub async fn update_todo<T: Update>(
         description: input.description,
         todo_at: input.todo_at,
         done: input.done,
+        updated_at: DateTime::new(),
     };
 
     match ctx.store.update(payload).await {

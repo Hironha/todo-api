@@ -1,19 +1,22 @@
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput, CreateTodoOutput};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
+use crate::domain::types::DateTime;
 
 pub async fn create_todo<S: Create>(
     ctx: CreateTodoContext<'_, S>,
     input: CreateTodoInput,
 ) -> CreateTodoOutput {
+    let current_dt = DateTime::new();
     let payload = CreatePayload {
         title: input.title,
         description: input.description,
         todo_at: input.todo_at,
-        // default `done` to `false`
         done: false,
+        created_at: current_dt,
+        updated_at: current_dt,
     };
 
-    match ctx.store.create(payload).await {
+    match ctx.repository.create(payload).await {
         Ok(todo) => CreateTodoOutput::ok(todo),
         Err(err) => CreateTodoOutput::err(match err {
             CreateError::Internal => CreateTodoError::Internal,
@@ -23,11 +26,11 @@ pub async fn create_todo<S: Create>(
 
 #[derive(Clone, Debug)]
 pub struct CreateTodoContext<'a, S: Create> {
-    store: &'a S,
+    repository: &'a S,
 }
 
 impl<'a, S: Create> CreateTodoContext<'a, S> {
-    pub const fn new(store: &'a S) -> Self {
-        Self { store }
+    pub const fn new(repository: &'a S) -> Self {
+        Self { repository }
     }
 }

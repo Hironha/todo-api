@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::domain::entities::todo::{Description, Title, TodoEntity};
-use crate::domain::types::Date;
+use crate::domain::types::{Date, DateTime};
 
 #[async_trait]
 pub trait Create {
@@ -13,7 +13,9 @@ pub struct CreatePayload {
     pub title: Title,
     pub description: Description,
     pub todo_at: Option<Date>,
-    pub done: bool
+    pub done: bool,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

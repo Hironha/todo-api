@@ -77,10 +77,7 @@ impl List for TodoRepository {
                 ListError::Internal
             })?;
 
-        let count = u64::try_from(db_count).map_err(|err| {
-            tracing::error!("todo count parsing to u64 error: {err:?}");
-            ListError::Internal
-        })?;
+        let count = u64::try_from(db_count).or(Err(ListError::Internal))?;
 
         let todo_models = list_todo(conn.as_mut(), payload).await?;
         let todo_entities = todo_models

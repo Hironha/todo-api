@@ -1,5 +1,4 @@
 use sqlx::PgConnection;
-use time::OffsetDateTime;
 
 use crate::application::repositories::todo::create::{CreateError, CreatePayload};
 use crate::domain::types::Id;
@@ -15,15 +14,14 @@ pub(super) async fn create_todo(
         RETURNING id, title, description, todo_at, done, created_at, updated_at
     "#;
 
-    let current_date_time = OffsetDateTime::now_utc();
     sqlx::query_as::<_, TodoModel>(insert_q)
         .bind(Id::new().into_uuid())
         .bind(payload.title.into_string())
         .bind(payload.description.into_opt_string())
         .bind(payload.todo_at.map(|at| at.into_date()))
         .bind(payload.done)
-        .bind(current_date_time)
-        .bind(current_date_time)
+        .bind(payload.created_at.into_date_time())
+        .bind(payload.updated_at.into_date_time())
         .fetch_one(conn.as_mut())
         .await
         .map_err(|err| {

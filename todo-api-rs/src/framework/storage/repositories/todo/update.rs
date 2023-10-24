@@ -1,4 +1,3 @@
-use sqlx::types::time::OffsetDateTime;
 use sqlx::{Error as SqlxError, Executor, Postgres};
 
 use crate::application::repositories::todo::update::{UpdateError, UpdatePayload};
@@ -20,7 +19,7 @@ pub(super) async fn update_todo(
         .bind(payload.description.into_opt_string())
         .bind(payload.todo_at.map(|at| at.into_date()))
         .bind(payload.done)
-        .bind(OffsetDateTime::now_utc())
+        .bind(payload.updated_at.into_date_time())
         .bind(payload.id.into_uuid())
         .fetch_one(executor)
         .await
