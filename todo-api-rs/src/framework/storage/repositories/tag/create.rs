@@ -1,13 +1,12 @@
-use sqlx::types::time::OffsetDateTime;
 use sqlx::PgConnection;
 
-use crate::application::repositories::tag::create::{CreateError, CreatePayload};
-use crate::domain::types::Id;
+use crate::application::repositories::tag::create::CreateError;
+use crate::domain::entities::tag::TagEntity;
 use crate::framework::storage::models::tag::TagModel;
 
 pub(super) async fn create_tag(
     conn: &mut PgConnection,
-    payload: CreatePayload,
+    entity: TagEntity,
 ) -> Result<TagModel, CreateError> {
     let q = r#"
         INSERT INTO tag (id, name, description, created_at, updated_at)
@@ -15,13 +14,12 @@ pub(super) async fn create_tag(
         RETURNING id, name, description, created_at, updated_at
     "#;
 
-    let current_datetime = OffsetDateTime::now_utc();
     sqlx::query_as::<_, TagModel>(q)
-        .bind(Id::new().into_uuid())
-        .bind(payload.name.into_string())
-        .bind(payload.description.into_opt_string())
-        .bind(current_datetime)
-        .bind(current_datetime)
+        .bind(entity.id.into_uuid())
+        .bind(entity.name.into_string())
+        .bind(entity.description.into_opt_string())
+        .bind(entity.created_at.into_date_time())
+        .bind(entity.updated_at.into_date_time())
         .fetch_one(conn)
         .await
         .map_err(|err| {

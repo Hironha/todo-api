@@ -1,16 +1,10 @@
 use async_trait::async_trait;
 
-use crate::domain::entities::tag::{Description, Name, TagEntity};
-
-#[derive(Clone, Debug)]
-pub struct CreatePayload {
-    pub name: Name,
-    pub description: Description,
-}
+use crate::domain::entities::tag::TagEntity;
 
 #[async_trait]
 pub trait Create {
-    async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError>;
+    async fn create(&self, entity: TagEntity) -> Result<TagEntity, CreateError>;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

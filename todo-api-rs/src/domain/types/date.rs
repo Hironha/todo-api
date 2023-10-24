@@ -1,4 +1,6 @@
-use time::{error, format_description::well_known::Rfc3339, macros::format_description};
+use time::format_description::well_known::Rfc3339;
+use time::macros::format_description;
+use time::{error, OffsetDateTime};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Date(time::Date);
@@ -8,7 +10,7 @@ impl Date {
         self.0
     }
 
-    /// Stringifies into YYYY-MM-DD using UTC date
+    /// Stringify into YYYY-MM-DD using UTC date
     pub fn to_ymd(self) -> String {
         let ydm_description = format_description!("[year]-[month]-[day]");
         self.into_date().format(ydm_description).unwrap()
@@ -27,19 +29,28 @@ impl From<time::Date> for Date {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct DateTime(time::OffsetDateTime);
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct DateTime(OffsetDateTime);
 
 impl DateTime {
-    /// Transforms into a string following RFC 3339 pattern
+    /// Create a new `DateTime`` with the current date and time in UTC.
+    pub fn new() -> Self {
+        Self(OffsetDateTime::now_utc())
+    }
+
+    pub fn into_date_time(self) -> OffsetDateTime {
+        self.0
+    }
+
+    /// Transform into a string following RFC 3339 pattern
     pub fn to_rfc3339(&self) -> String {
         self.0.format(&Rfc3339).unwrap()
     }
 }
 
-impl From<time::OffsetDateTime> for DateTime {
-    /// Creates a new `DateTime` instance from `time::OffsetDateTime`
-    fn from(date_time: time::OffsetDateTime) -> Self {
+impl From<OffsetDateTime> for DateTime {
+    /// Create a new `DateTime` instance from `OffsetDateTime`
+    fn from(date_time: OffsetDateTime) -> Self {
         Self(date_time)
     }
 }

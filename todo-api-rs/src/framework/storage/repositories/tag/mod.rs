@@ -7,7 +7,7 @@ mod update;
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::application::repositories::tag::create::{Create, CreateError, CreatePayload};
+use crate::application::repositories::tag::create::{Create, CreateError};
 use crate::application::repositories::tag::delete::{Delete, DeleteError};
 use crate::application::repositories::tag::find::{Find, FindError};
 use crate::application::repositories::tag::list::{List, ListError};
@@ -35,9 +35,9 @@ impl TagRepository {
 
 #[async_trait]
 impl Create for TagRepository {
-    async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError> {
+    async fn create(&self, entity: TagEntity) -> Result<TagEntity, CreateError> {
         let mut conn = self.pool.acquire().await.or(Err(CreateError::Internal))?;
-        let model = create_tag(conn.as_mut(), payload).await?;
+        let model = create_tag(conn.as_mut(), entity).await?;
         map_tag_model_to_entity(model).or(Err(CreateError::Internal))
     }
 }
