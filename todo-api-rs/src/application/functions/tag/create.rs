@@ -16,7 +16,7 @@ pub async fn create_tag<S: Create>(
         updated_at: current_dt,
     };
 
-    match ctx.store.create(entity).await {
+    match ctx.repository.create(entity).await {
         Ok(tag) => CreateTagOutput::ok(tag),
         Err(err) => CreateTagOutput::err(match err {
             CreateError::Internal => CreateTagError::Internal,
@@ -26,11 +26,11 @@ pub async fn create_tag<S: Create>(
 
 #[derive(Clone, Debug)]
 pub struct CreateTagContext<'a, S: Create> {
-    store: &'a S,
+    repository: &'a S,
 }
 
 impl<'a, S: Create> CreateTagContext<'a, S> {
-    pub const fn new(store: &'a S) -> Self {
-        Self { store }
+    pub const fn new(repository: &'a S) -> Self {
+        Self { repository }
     }
 }
