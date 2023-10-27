@@ -1,15 +1,14 @@
 use crate::adapters::dtos::Parse;
-use crate::adapters::views::tag::TagView;
 use crate::application::dtos::tag::create::CreateTagInput;
-use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
+use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
 
 #[derive(Clone, Debug)]
-pub struct RawInput {
+pub struct CreateRequest {
     pub name: Option<String>,
     pub description: Option<String>,
 }
 
-impl Parse<CreateTagInput, ParseError> for RawInput {
+impl Parse<CreateTagInput, ParseError> for CreateRequest {
     fn parse(self) -> Result<CreateTagInput, ParseError> {
         let name = self
             .name
@@ -21,23 +20,6 @@ impl Parse<CreateTagInput, ParseError> for RawInput {
             .map_err(ParseError::InvalidDescription)?;
 
         Ok(CreateTagInput { name, description })
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Output(Result<TagView, RunError>);
-
-impl Output {
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
-
-    pub fn from_tag(tag: TagEntity) -> Self {
-        Self(Ok(TagView::from(tag)))
-    }
-
-    pub fn into_result(self) -> Result<TagView, RunError> {
-        self.0
     }
 }
 

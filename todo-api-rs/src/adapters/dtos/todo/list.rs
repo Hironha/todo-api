@@ -2,7 +2,7 @@ use serde::Serialize;
 use std::num::NonZeroU32;
 
 use crate::adapters::dtos::Parse;
-use crate::adapters::views::todo::TodoView;
+use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::list::{ListTodoInput, TodoList};
 
 #[derive(Clone, Debug)]
@@ -16,7 +16,7 @@ impl Output {
     pub fn from_list(list: TodoList) -> Self {
         let data = OutputData {
             count: list.count,
-            items: list.items.into_iter().map(TodoView::from).collect(),
+            items: list.items.into_iter().map(TodoPresenter::from).collect(),
         };
 
         Self(Ok(data))
@@ -30,7 +30,7 @@ impl Output {
 #[derive(Clone, Debug, Serialize)]
 pub struct OutputData {
     pub count: u64,
-    pub items: Vec<TodoView>,
+    pub items: Vec<TodoPresenter>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

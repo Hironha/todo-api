@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TagState;
 use crate::adapters::controllers::tag::update::UpdateController;
-use crate::adapters::dtos::tag::update::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::tag::update::{ParseError, RunError, UpdateRequest};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -28,14 +28,14 @@ pub(super) async fn update_tag(
     tracing::info!("update tag path: {path:?}");
     tracing::info!("update tag body: {body:?}");
 
-    let input = RawInput {
+    let input = UpdateRequest {
         id: path.id,
         name: body.name,
         description: body.description,
     };
     let controller = UpdateController::new(state.tag_repository);
 
-    let output = match controller.run(input).await.into_result() {
+    let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);

@@ -10,7 +10,7 @@ use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoResponse {
     let controller = ListController::new(state.tag_repository);
-    let output = match controller.run().await.into_result() {
+    let output = match controller.run().await {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);

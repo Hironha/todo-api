@@ -3,11 +3,11 @@ use crate::application::dtos::tag::delete::DeleteTagInput;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
-pub struct RawInput {
+pub struct DeleteRequest {
     pub id: Option<String>,
 }
 
-impl Parse<DeleteTagInput, ParseError> for RawInput {
+impl Parse<DeleteTagInput, ParseError> for DeleteRequest {
     fn parse(self) -> Result<DeleteTagInput, ParseError> {
         let id_source = self
             .id
@@ -20,28 +20,11 @@ impl Parse<DeleteTagInput, ParseError> for RawInput {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct Output(Result<(), RunError>);
-
-impl Output {
-    pub const fn ok() -> Self {
-        Self(Ok(()))
-    }
-
-    pub const fn err(err: RunError) -> Self {
-        Self(Err(err))
-    }
-
-    pub fn into_result(self) -> Result<(), RunError> {
-        self.0
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RunError {
     Parsing(ParseError),
     NotFound,
-    Internal
+    Internal,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

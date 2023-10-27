@@ -5,7 +5,7 @@ use crate::domain::entities::todo::TodoEntity;
 /// Presentable format of `Todo` entity, *i.e.* the most appropriate format
 /// to be used by framework layer
 #[derive(Clone, Debug, Serialize)]
-pub struct TodoView {
+pub struct TodoPresenter {
     pub id: String,
     pub title: String,
     pub description: Option<String>,
@@ -20,9 +20,9 @@ pub struct TodoView {
     pub updated_at: String,
 }
 
-impl From<TodoEntity> for TodoView {
+impl From<TodoEntity> for TodoPresenter {
     fn from(todo: TodoEntity) -> Self {
-        TodoView {
+        TodoPresenter {
             id: todo.id.to_string(),
             title: todo.title.into_string(),
             description: todo.description.into_opt_string(),

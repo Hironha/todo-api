@@ -1,21 +1,21 @@
 use crate::adapters::dtos::Parse;
-use crate::adapters::views::todo::TodoView;
+use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::create::CreateTodoInput;
 use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
 use crate::domain::types::Date;
 
 #[derive(Clone, Debug)]
-pub struct Output(Result<TodoView, RunError>);
+pub struct Output(Result<TodoPresenter, RunError>);
 impl Output {
     pub fn from_todo(todo: TodoEntity) -> Self {
-        Self(Ok(TodoView::from(todo)))
+        Self(Ok(TodoPresenter::from(todo)))
     }
 
     pub const fn err(error: RunError) -> Self {
         Self(Err(error))
     }
 
-    pub fn into_result(self) -> Result<TodoView, RunError> {
+    pub fn into_result(self) -> Result<TodoPresenter, RunError> {
         self.0
     }
 }

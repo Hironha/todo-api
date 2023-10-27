@@ -1,32 +1,34 @@
-use crate::adapters::dtos::tag::update::{Output, ParseError, RunError};
+use crate::adapters::dtos::tag::update::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
+use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput};
 use crate::application::functions::tag::update::{update_tag, UpdateTagContext};
 use crate::application::repositories::tag::update::Update;
 
 #[derive(Clone, Debug)]
-pub struct UpdateController<S: Update> {
-    store: S,
+pub struct UpdateController<Repo: Update> {
+    repository: Repo,
 }
 
-impl<S: Update> UpdateController<S> {
-    pub const fn new(store: S) -> Self {
-        Self { store }
+impl<Repo: Update> UpdateController<Repo> {
+    pub const fn new(repository: Repo) -> Self {
+        Self { repository }
     }
 
-    pub async fn run(&self, input: impl Parse<UpdateTagInput, ParseError>) -> Output {
-        let input = match input.parse() {
-            Ok(input) => input,
-            Err(err) => return Output::err(RunError::Parsing(err)),
-        };
-
-        let ctx = UpdateTagContext::new(&self.store);
-        match update_tag(ctx, input).await.into_result() {
-            Ok(tag) => Output::from_tag(tag),
-            Err(err) => Output::err(match err {
+    pub async fn run<Req>(&self, req: Req) -> Result<TagPresenter, RunError>
+    where
+        Req: Parse<UpdateTagInput, ParseError>,
+    {
+        let input = req.parse().map_err(RunError::Parsing)?;
+        let ctx = UpdateTagContext::new(&self.repository);
+        let tag = update_tag(ctx, input)
+            .await
+            .into_result()
+            .map_err(|err| match err {
                 UpdateTagError::NotFound => RunError::NotFound,
                 UpdateTagError::Internal => RunError::Internal,
-            }),
-        }
+            })?;
+
+        Ok(TagPresenter::from(tag))
     }
 }

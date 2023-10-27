@@ -1,17 +1,16 @@
 use crate::adapters::dtos::Parse;
-use crate::adapters::views::tag::TagView;
 use crate::application::dtos::tag::update::UpdateTagInput;
-use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
+use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
-pub struct RawInput {
+pub struct UpdateRequest {
     pub id: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
 }
 
-impl Parse<UpdateTagInput, ParseError> for RawInput {
+impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
     fn parse(self) -> Result<UpdateTagInput, ParseError> {
         let id = self
             .id
@@ -31,23 +30,6 @@ impl Parse<UpdateTagInput, ParseError> for RawInput {
             name,
             description,
         })
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Output(Result<TagView, RunError>);
-
-impl Output {
-    pub const fn err(err: RunError) -> Self {
-        Self(Err(err))
-    }
-
-    pub fn from_tag(tag: TagEntity) -> Self {
-        Self(Ok(TagView::from(tag)))
-    }
-
-    pub fn into_result(self) -> Result<TagView, RunError> {
-        self.0
     }
 }
 

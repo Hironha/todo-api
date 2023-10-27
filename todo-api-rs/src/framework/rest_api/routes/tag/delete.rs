@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TagState;
 use crate::adapters::controllers::tag::delete::DeleteController;
-use crate::adapters::dtos::tag::delete::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::tag::delete::{DeleteRequest, ParseError, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -20,10 +20,10 @@ pub(super) async fn delete_tag(
 ) -> impl IntoResponse {
     tracing::info!("delete tag path: {path:?}");
 
-    let input = RawInput { id: path.id };
+    let input = DeleteRequest { id: path.id };
     let controller = DeleteController::new(state.tag_repository);
 
-    if let Err(err) = controller.run(input).await.into_result() {
+    if let Err(err) = controller.run(input).await {
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {

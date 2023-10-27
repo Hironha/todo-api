@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TagState;
 use crate::adapters::controllers::tag::find::FindController;
-use crate::adapters::dtos::tag::find::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::tag::find::{FindRequest, ParseError, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -20,10 +20,10 @@ pub(super) async fn find_tag(
 ) -> impl IntoResponse {
     tracing::info!("find tag path: {path:?}");
 
-    let input = RawInput { id: path.id };
+    let input = FindRequest { id: path.id };
     let controller = FindController::new(state.tag_repository);
 
-    let output = match controller.run(input).await.into_result() {
+    let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);
