@@ -21,14 +21,13 @@ impl<Repo: Update> UpdateController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = UpdateTagContext::new(&self.repository);
-        let tag = update_tag(ctx, input)
+
+        update_tag(ctx, input)
             .await
-            .into_result()
+            .map(TagPresenter::from)
             .map_err(|err| match err {
                 UpdateTagError::NotFound => RunError::NotFound,
                 UpdateTagError::Internal => RunError::Internal,
-            })?;
-
-        Ok(TagPresenter::from(tag))
+            })
     }
 }

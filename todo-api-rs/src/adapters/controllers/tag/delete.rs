@@ -20,9 +20,8 @@ impl<Repo: Delete> DeleteController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = DeleteTagContext::new(&self.repository);
-        let result = delete_tag(ctx, input).await.into_result();
 
-        result.map_err(|err| match err {
+        delete_tag(ctx, input).await.map_err(|err| match err {
             DeleteTagError::NotFound => RunError::NotFound,
             DeleteTagError::Internal => RunError::Internal,
         })

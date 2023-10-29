@@ -1,26 +1,23 @@
-use crate::application::dtos::tag::delete::{DeleteTagError, DeleteTagInput, DeleteTagOutput};
+use crate::application::dtos::tag::delete::{DeleteTagError, DeleteTagInput};
 use crate::application::repositories::tag::delete::{Delete, DeleteError};
 
-pub async fn delete_tag<S: Delete>(
-    ctx: DeleteTagContext<'_, S>,
+pub async fn delete_tag<Repo: Delete>(
+    ctx: DeleteTagContext<'_, Repo>,
     DeleteTagInput(id): DeleteTagInput,
-) -> DeleteTagOutput {
-    match ctx.store.delete(id).await {
-        Ok(_) => DeleteTagOutput::ok(),
-        Err(err) => DeleteTagOutput::err(match err {
-            DeleteError::NotFound => DeleteTagError::NotFound,
-            DeleteError::Internal => DeleteTagError::Internal,
-        }),
-    }
+) -> Result<(), DeleteTagError> {
+    ctx.repository.delete(id).await.map_err(|err| match err {
+        DeleteError::NotFound => DeleteTagError::NotFound,
+        DeleteError::Internal => DeleteTagError::Internal,
+    })
 }
 
 #[derive(Clone, Debug)]
-pub struct DeleteTagContext<'a, S: Delete> {
-    store: &'a S,
+pub struct DeleteTagContext<'a, Repo: Delete> {
+    repository: &'a Repo,
 }
 
-impl<'a, S: Delete> DeleteTagContext<'a, S> {
-    pub const fn new(store: &'a S) -> Self {
-        Self { store }
+impl<'a, Repo: Delete> DeleteTagContext<'a, Repo> {
+    pub const fn new(repository: &'a Repo) -> Self {
+        Self { repository }
     }
 }

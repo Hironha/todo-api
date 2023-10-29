@@ -21,14 +21,13 @@ impl<Repo: Find> FindController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = FindTagContext::new(&self.repository);
-        let tag = find_tag(ctx, input)
+
+        find_tag(ctx, input)
             .await
-            .into_result()
+            .map(TagPresenter::from)
             .map_err(|err| match err {
                 FindTagError::NotFound => RunError::NotFound,
                 FindTagError::Internal => RunError::Internal,
-            })?;
-
-        Ok(TagPresenter::from(tag))
+            })
     }
 }

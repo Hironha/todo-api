@@ -1,11 +1,12 @@
-use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput, UpdateTagOutput};
+use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput};
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
+use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::DateTime;
 
-pub async fn update_tag<S: Update>(
-    ctx: UpdateTagContext<'_, S>,
+pub async fn update_tag<Repo: Update>(
+    ctx: UpdateTagContext<'_, Repo>,
     input: UpdateTagInput,
-) -> UpdateTagOutput {
+) -> Result<TagEntity, UpdateTagError> {
     let payload = UpdatePayload {
         id: input.id,
         name: input.name,
@@ -13,22 +14,22 @@ pub async fn update_tag<S: Update>(
         updated_at: DateTime::new(),
     };
 
-    match ctx.repository.update(payload).await {
-        Ok(tag) => UpdateTagOutput::ok(tag),
-        Err(err) => UpdateTagOutput::err(match err {
+    ctx.repository
+        .update(payload)
+        .await
+        .map_err(|err| match err {
             UpdateError::NotFound => UpdateTagError::NotFound,
             UpdateError::Internal => UpdateTagError::Internal,
-        }),
-    }
+        })
 }
 
 #[derive(Clone, Debug)]
-pub struct UpdateTagContext<'a, S: Update> {
-    repository: &'a S,
+pub struct UpdateTagContext<'a, Repo: Update> {
+    repository: &'a Repo,
 }
 
-impl<'a, S: Update> UpdateTagContext<'a, S> {
-    pub const fn new(repository: &'a S) -> Self {
+impl<'a, Repo: Update> UpdateTagContext<'a, Repo> {
+    pub const fn new(repository: &'a Repo) -> Self {
         Self { repository }
     }
 }

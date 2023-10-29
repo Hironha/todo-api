@@ -20,13 +20,12 @@ impl<Repo: Create> CreateController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = CreateTagContext::new(&self.repository);
-        let tag = create_tag(ctx, input)
+
+        create_tag(ctx, input)
             .await
-            .into_result()
+            .map(TagPresenter::from)
             .map_err(|err| match err {
                 CreateTagError::Internal => RunError::Internal,
-            })?;
-
-        Ok(TagPresenter::from(tag))
+            })
     }
 }

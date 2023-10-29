@@ -1,22 +1,22 @@
-use crate::application::dtos::tag::list::{ListTagError, ListTagOutput};
+use crate::application::dtos::tag::list::ListTagError;
 use crate::application::repositories::tag::list::{List, ListError};
+use crate::domain::entities::tag::TagEntity;
 
-pub async fn list_tag<S: List>(ctx: ListTagContext<'_, S>) -> ListTagOutput {
-    match ctx.store.list().await {
-        Ok(tags) => ListTagOutput::ok(tags),
-        Err(err) => ListTagOutput::err(match err {
-            ListError::Internal => ListTagError::Internal,
-        }),
-    }
+pub async fn list_tag<Repo: List>(
+    ctx: ListTagContext<'_, Repo>,
+) -> Result<Vec<TagEntity>, ListTagError> {
+    ctx.repository.list().await.map_err(|err| match err {
+        ListError::Internal => ListTagError::Internal,
+    })
 }
 
 #[derive(Clone, Debug)]
-pub struct ListTagContext<'a, S: List> {
-    store: &'a S,
+pub struct ListTagContext<'a, Repo: List> {
+    repository: &'a Repo,
 }
 
-impl<'a, S: List> ListTagContext<'a, S> {
-    pub const fn new(store: &'a S) -> Self {
-        Self { store }
+impl<'a, Repo: List> ListTagContext<'a, Repo> {
+    pub const fn new(repository: &'a Repo) -> Self {
+        Self { repository }
     }
 }

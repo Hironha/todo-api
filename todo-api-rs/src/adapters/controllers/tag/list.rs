@@ -16,7 +16,7 @@ impl<Repo: List> ListController<Repo> {
 
     pub async fn run(&self) -> Result<TagList, RunError> {
         let ctx = ListTagContext::new(&self.repository);
-        let tags = list_tag(ctx).await.into_result().map_err(|err| match err {
+        let tags = list_tag(ctx).await.map_err(|err| match err {
             ListTagError::Internal => RunError::Internal,
         })?;
 
