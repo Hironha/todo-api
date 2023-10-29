@@ -9,14 +9,11 @@ pub struct DeleteRequest {
 
 impl Parse<DeleteTagInput, ParseError> for DeleteRequest {
     fn parse(self) -> Result<DeleteTagInput, ParseError> {
-        let id_source = self
-            .id
+        self.id
             .filter(|id| !id.is_empty())
-            .ok_or(ParseError::EmptyId)?;
-
-        Id::parse_str(id_source.as_str())
+            .ok_or(ParseError::EmptyId)
+            .and_then(|id| Id::parse_str(&id).or(Err(ParseError::InvalidId)))
             .map(DeleteTagInput)
-            .map_err(|_| ParseError::InvalidId)
     }
 }
 
