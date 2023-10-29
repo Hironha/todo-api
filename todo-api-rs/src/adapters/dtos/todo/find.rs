@@ -9,13 +9,10 @@ pub struct FindRequest {
 
 impl Parse<FindTodoInput, ParseError> for FindRequest {
     fn parse(self) -> Result<FindTodoInput, ParseError> {
-        let id = self
-            .id
+        self.id
             .filter(|id| !id.is_empty())
-            .ok_or(ParseError::EmptyId)?;
-
-        Id::parse_str(&id)
-            .map_err(|_| ParseError::InvalidId)
+            .ok_or(ParseError::EmptyId)
+            .and_then(|id| Id::parse_str(&id).or(Err(ParseError::InvalidId)))
             .map(FindTodoInput)
     }
 }
