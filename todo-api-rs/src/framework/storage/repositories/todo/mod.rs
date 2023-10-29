@@ -67,7 +67,7 @@ impl List for TodoRepository {
     async fn list(&self, payload: ListPayload) -> Result<ListData, ListError> {
         let mut conn = self.pool.acquire().await.or(Err(ListError::Internal))?;
         let count_filters = CountTodoFilters {
-            title: payload.title.as_deref(),
+            title: payload.title.as_ref().map(|t| t.as_str()),
         };
 
         let db_count = count_todo(conn.as_mut(), count_filters)

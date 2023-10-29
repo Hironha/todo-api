@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::delete::DeleteController;
-use crate::adapters::dtos::todo::delete::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::todo::delete::{ParseError, DeleteRequest, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -20,10 +20,10 @@ pub(super) async fn delete_todo(
 ) -> impl IntoResponse {
     tracing::info!("delete todo path input {path:?}");
 
-    let input = RawInput { id: path.id };
+    let input = DeleteRequest { id: path.id };
     let controller = DeleteController::new(state.todo_repository);
 
-    if let Err(err) = controller.run(input).await.into_result() {
+    if let Err(err) = controller.run(input).await {
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {

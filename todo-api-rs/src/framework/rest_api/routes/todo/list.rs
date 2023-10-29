@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::list::ListController;
-use crate::adapters::dtos::todo::list::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::todo::list::{ListRequest, ParseError, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -21,14 +21,14 @@ pub(super) async fn list_todos(
     State(state): State<TodoState>,
     Query(query): Query<QueryParams>,
 ) -> impl IntoResponse {
-    let input = RawInput {
+    let input = ListRequest {
         page: query.page,
         per_page: query.per_page,
         title: query.title,
     };
     let controller = ListController::new(state.todo_repository);
 
-    let output = match controller.run(input).await.into_result() {
+    let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);
@@ -45,7 +45,7 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             let field = match err {
                 ParseError::InvalidPage => "page",
                 ParseError::InvalidPerPage => "perPage",
-                ParseError::TitleLength => "title"
+                ParseError::Title(_) => "title",
             };
             let details = ValidationError::new(field, err.description());
             let error = ApiError::new("LTD-001", "Invalid input").with_details(details);

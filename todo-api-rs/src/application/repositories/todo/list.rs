@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use std::num::NonZeroU32;
 
-use crate::domain::entities::todo::TodoEntity;
+use crate::domain::entities::todo::{TodoEntity, Title};
 
 #[async_trait]
 pub trait List {
@@ -12,7 +12,7 @@ pub trait List {
 pub struct ListPayload {
     pub page: NonZeroU32,
     pub per_page: NonZeroU32,
-    pub title: Option<String> 
+    pub title: Option<Title> 
 }
 
 #[derive(Clone, Debug)]

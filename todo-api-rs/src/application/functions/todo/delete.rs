@@ -1,26 +1,23 @@
-use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput, DeleteTodoOutput};
+use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
 
-pub async fn delete_todo<S: Delete>(
-    ctx: DeleteTodoContext<'_, S>,
-    input: DeleteTodoInput,
-) -> DeleteTodoOutput {
-    match ctx.store.delete(input.into_id()).await {
-        Ok(_) => DeleteTodoOutput::ok(),
-        Err(err) => DeleteTodoOutput::err(match err {
-            DeleteError::NotFound => DeleteTodoError::NotFound,
-            DeleteError::Internal => DeleteTodoError::Internal,
-        }),
-    }
+pub async fn delete_todo<Repo: Delete>(
+    ctx: DeleteTodoContext<'_, Repo>,
+    DeleteTodoInput(id): DeleteTodoInput,
+) -> Result<(), DeleteTodoError> {
+    ctx.repository.delete(id).await.map_err(|err| match err {
+        DeleteError::NotFound => DeleteTodoError::NotFound,
+        DeleteError::Internal => DeleteTodoError::Internal,
+    })
 }
 
 #[derive(Clone, Debug)]
-pub struct DeleteTodoContext<'a, S: Delete> {
-    store: &'a S,
+pub struct DeleteTodoContext<'a, Repo: Delete> {
+    repository: &'a Repo,
 }
 
 impl<'a, S: Delete> DeleteTodoContext<'a, S> {
-    pub const fn new(store: &'a S) -> Self {
-        Self { store }
+    pub const fn new(repository: &'a S) -> Self {
+        Self { repository }
     }
 }

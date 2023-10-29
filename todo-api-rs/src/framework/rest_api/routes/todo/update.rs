@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
-use crate::adapters::dtos::todo::update::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::todo::update::{ParseError, RunError, UpdateRequest};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -31,7 +31,7 @@ pub(super) async fn update_todo(
     tracing::info!("update todo path input {path:?}");
     tracing::info!("update todo body {body:?}");
 
-    let input = RawInput {
+    let input = UpdateRequest {
         id: path.id,
         title: body.title,
         description: body.description,
@@ -40,7 +40,7 @@ pub(super) async fn update_todo(
     };
     let controller = UpdateController::new(state.todo_repository);
 
-    let output = match controller.run(input).await.into_result() {
+    let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = config_error_response(err);
@@ -53,13 +53,13 @@ pub(super) async fn update_todo(
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Validation(e) => {
+        RunError::Parsing(e) => {
             let field = match e {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
-                ParseError::EmptyDone => "done"
+                ParseError::EmptyDone => "done",
             };
             let details = ValidationError::new(field, e.description());
             let error = ApiError::new("UTD-001", "Invalid input").with_details(details);

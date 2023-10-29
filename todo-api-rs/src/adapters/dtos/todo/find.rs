@@ -1,32 +1,13 @@
 use crate::adapters::dtos::Parse;
-use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::find::FindTodoInput;
-use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 
-#[derive(Clone, Debug)]
-pub struct Output(Result<TodoPresenter, RunError>);
-
-impl Output {
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
-
-    pub fn from_todo(todo: TodoEntity) -> Self {
-        Self(Ok(TodoPresenter::from(todo)))
-    }
-
-    pub fn into_result(self) -> Result<TodoPresenter, RunError> {
-        self.0
-    }
-}
-
 #[derive(Debug)]
-pub struct RawInput {
+pub struct FindRequest {
     pub id: Option<String>,
 }
 
-impl Parse<FindTodoInput, ParseError> for RawInput {
+impl Parse<FindTodoInput, ParseError> for FindRequest {
     fn parse(self) -> Result<FindTodoInput, ParseError> {
         let id = self
             .id
@@ -35,7 +16,7 @@ impl Parse<FindTodoInput, ParseError> for RawInput {
 
         Id::parse_str(&id)
             .map_err(|_| ParseError::InvalidId)
-            .map(FindTodoInput::new)
+            .map(FindTodoInput)
     }
 }
 
@@ -67,7 +48,7 @@ mod test {
 
     #[test]
     fn parse_success() {
-        let input_schema = super::RawInput {
+        let input_schema = super::FindRequest {
             id: Some(super::Id::new().to_string()),
         };
 
@@ -76,13 +57,13 @@ mod test {
 
     #[test]
     fn parse_fail() {
-        let none_id_schema = super::RawInput { id: None };
+        let none_id_schema = super::FindRequest { id: None };
         let none_id_input = none_id_schema.parse();
 
         assert!(none_id_input.is_err());
         assert_eq!(none_id_input.unwrap_err(), super::ParseError::EmptyId);
 
-        let invalid_id_schema = super::RawInput {
+        let invalid_id_schema = super::FindRequest {
             id: Some("invalid-id".to_string()),
         };
         let invalid_id_input = invalid_id_schema.parse();

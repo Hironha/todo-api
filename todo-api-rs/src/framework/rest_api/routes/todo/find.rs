@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::find::FindController;
-use crate::adapters::dtos::todo::find::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::todo::find::{FindRequest, ParseError, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -20,10 +20,10 @@ pub(super) async fn find_todo(
 ) -> impl IntoResponse {
     tracing::info!("find todo path input {path:?}");
 
-    let input = RawInput { id: path.id };
+    let input = FindRequest { id: path.id };
     let controller = FindController::new(state.todo_repository);
 
-    let output = match controller.run(input).await.into_result() {
+    let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
             let (status_code, message) = config_error_response(err);

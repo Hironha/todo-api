@@ -20,7 +20,7 @@ pub(super) async fn list_todo(
     if let Some(title) = payload.title {
         list_q
             .push(" WHERE title ILIKE %")
-            .push_bind(title)
+            .push_bind(title.into_string())
             .push("%");
     }
 

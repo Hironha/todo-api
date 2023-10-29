@@ -1,31 +1,40 @@
-use crate::adapters::dtos::todo::list::{Output, ParseError, RunError};
+use crate::adapters::dtos::todo::list::{ListResponse, ParseError, RunError};
 use crate::adapters::dtos::Parse;
+use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput};
 use crate::application::functions::todo::list::{list_todo, ListTodoContext};
 use crate::application::repositories::todo::list::List;
 
 #[derive(Clone, Debug)]
-pub struct ListController<S: List> {
-    store: S,
+pub struct ListController<Repo: List> {
+    repository: Repo,
 }
 
-impl<S: List> ListController<S> {
-    pub const fn new(store: S) -> Self {
-        Self { store }
+impl<Repo: List> ListController<Repo> {
+    pub const fn new(repository: Repo) -> Self {
+        Self { repository }
     }
 
-    pub async fn run(&self, input: impl Parse<ListTodoInput, ParseError>) -> Output {
-        let input = match input.parse() {
-            Ok(input) => input,
-            Err(err) => return Output::err(RunError::Parsing(err)),
-        };
+    pub async fn run<Req>(&self, req: Req) -> Result<ListResponse, RunError>
+    where
+        Req: Parse<ListTodoInput, ParseError>,
+    {
+        let input = req.parse().map_err(RunError::Parsing)?;
+        let context = ListTodoContext::new(&self.repository);
 
-        let context = ListTodoContext::new(&self.store);
-        match list_todo(context, input).await.into_result() {
-            Ok(list) => Output::from_list(list),
-            Err(err) => Output::err(match err {
-                ListTodoError::Internal => RunError::Internal,
-            }),
-        }
+        let todo_list = list_todo(context, input).await.map_err(|err| match err {
+            ListTodoError::Internal => RunError::Internal,
+        })?;
+
+        Ok(ListResponse {
+            page: todo_list.page.into(),
+            per_page: todo_list.per_page.into(),
+            count: todo_list.count,
+            items: todo_list
+                .items
+                .into_iter()
+                .map(TodoPresenter::from)
+                .collect(),
+        })
     }
 }

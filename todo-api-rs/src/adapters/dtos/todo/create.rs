@@ -1,40 +1,25 @@
 use crate::adapters::dtos::Parse;
-use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::create::CreateTodoInput;
-use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
+use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
 use crate::domain::types::Date;
 
 #[derive(Clone, Debug)]
-pub struct Output(Result<TodoPresenter, RunError>);
-impl Output {
-    pub fn from_todo(todo: TodoEntity) -> Self {
-        Self(Ok(TodoPresenter::from(todo)))
-    }
-
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
-
-    pub fn into_result(self) -> Result<TodoPresenter, RunError> {
-        self.0
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct RawInput {
+pub struct CreateRequest {
     pub title: Option<String>,
     pub description: Option<String>,
     pub todo_at: Option<String>,
 }
 
-impl Parse<CreateTodoInput, ParseError> for RawInput {
+impl Parse<CreateTodoInput, ParseError> for CreateRequest {
     fn parse(self) -> Result<CreateTodoInput, ParseError> {
         let title = self
             .title
             .filter(|t| !t.is_empty())
-            .ok_or(ParseError::EmptyTitle)?;
+            .ok_or(ParseError::EmptyTitle)
+            .and_then(|title| Title::new(title).map_err(ParseError::InvalidTitle))?;
 
-        let description = self.description.filter(|d| !d.is_empty());
+        let description = Description::new(self.description.filter(|d| !d.is_empty()))
+            .map_err(ParseError::InvalidDescription)?;
 
         let todo_at = self
             .todo_at
@@ -43,8 +28,8 @@ impl Parse<CreateTodoInput, ParseError> for RawInput {
             .map_err(|_| ParseError::TodoAt)?;
 
         Ok(CreateTodoInput {
-            title: Title::new(title).map_err(ParseError::InvalidTitle)?,
-            description: Description::new(description).map_err(ParseError::InvalidDescription)?,
+            title,
+            description,
             todo_at,
         })
     }

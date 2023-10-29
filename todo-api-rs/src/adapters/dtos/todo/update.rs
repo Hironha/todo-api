@@ -1,27 +1,10 @@
 use crate::adapters::dtos::Parse;
-use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::update::UpdateTodoInput;
-use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
+use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
 use crate::domain::types::{Date, Id};
 
 #[derive(Clone, Debug)]
-pub struct Output(Result<TodoPresenter, RunError>);
-impl Output {
-    pub fn from_todo(todo: TodoEntity) -> Self {
-        Self(Ok(TodoPresenter::from(todo)))
-    }
-
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
-
-    pub fn into_result(self) -> Result<TodoPresenter, RunError> {
-        self.0
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct RawInput {
+pub struct UpdateRequest {
     pub id: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
@@ -29,19 +12,24 @@ pub struct RawInput {
     pub done: Option<bool>,
 }
 
-impl Parse<UpdateTodoInput, ParseError> for RawInput {
+impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
     fn parse(self) -> Result<UpdateTodoInput, ParseError> {
         let id = self
             .id
             .filter(|id| !id.is_empty())
-            .ok_or(ParseError::EmptyId)?;
+            .ok_or(ParseError::EmptyId)
+            .map(|id| Id::parse_str(&id))?
+            .or(Err(ParseError::InvalidId))?;
 
         let title = self
             .title
             .filter(|t| !t.is_empty())
-            .ok_or(ParseError::EmptyTitle)?;
+            .ok_or(ParseError::EmptyTitle)
+            .map(Title::new)?
+            .map_err(ParseError::InvalidTitle)?;
 
-        let description = self.description.filter(|d| !d.is_empty());
+        let description = Description::new(self.description.filter(|d| !d.is_empty()))
+            .map_err(ParseError::InvalidDescription)?;
 
         let done = self.done.ok_or(ParseError::EmptyDone)?;
 
@@ -52,9 +40,9 @@ impl Parse<UpdateTodoInput, ParseError> for RawInput {
             .map_err(|_| ParseError::TodoAt)?;
 
         Ok(UpdateTodoInput {
-            id: Id::parse_str(&id).map_err(|_| ParseError::InvalidId)?,
-            title: Title::new(title).map_err(ParseError::InvalidTitle)?,
-            description: Description::new(description).map_err(ParseError::InvalidDescription)?,
+            id,
+            title,
+            description,
             todo_at,
             done,
         })
@@ -63,7 +51,7 @@ impl Parse<UpdateTodoInput, ParseError> for RawInput {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RunError {
-    Validation(ParseError),
+    Parsing(ParseError),
     NotFound,
     Internal,
 }
@@ -101,7 +89,7 @@ mod tests {
 
     #[test]
     fn parse_success() {
-        let input_schema = super::RawInput {
+        let input_schema = super::UpdateRequest {
             id: Some(super::Id::new().to_string()),
             title: Some("title".to_string()),
             description: Some("description".to_string()),
@@ -114,7 +102,7 @@ mod tests {
 
     #[test]
     fn parse_id_fail() {
-        let none_id_schema = super::RawInput {
+        let none_id_schema = super::UpdateRequest {
             id: None,
             title: Some("title".to_string()),
             description: Some("description".to_string()),
@@ -125,7 +113,7 @@ mod tests {
 
         assert!(none_id_input.is_err_and(|e| e == super::ParseError::EmptyId));
 
-        let invalid_id_schema = super::RawInput {
+        let invalid_id_schema = super::UpdateRequest {
             id: Some("invalid-id".to_string()),
             title: Some("title".to_string()),
             description: None,
@@ -139,7 +127,7 @@ mod tests {
 
     #[test]
     fn parse_title_fail() {
-        let none_title_schema = super::RawInput {
+        let none_title_schema = super::UpdateRequest {
             id: Some(super::Id::new().to_string()),
             title: None,
             description: None,
@@ -150,7 +138,7 @@ mod tests {
 
         assert!(none_title_input.is_err_and(|e| e == super::ParseError::EmptyTitle));
 
-        let empty_title_schema = super::RawInput {
+        let empty_title_schema = super::UpdateRequest {
             id: Some(super::Id::new().to_string()),
             title: Some("".to_string()),
             description: None,
@@ -164,7 +152,7 @@ mod tests {
 
     #[test]
     fn parse_todo_at_fail() {
-        let invalid_todo_at_schema = super::RawInput {
+        let invalid_todo_at_schema = super::UpdateRequest {
             id: Some(super::Id::new().to_string()),
             title: Some("title".to_string()),
             description: None,

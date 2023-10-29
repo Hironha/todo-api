@@ -1,32 +1,31 @@
-use crate::adapters::dtos::todo::find::{Output, ParseError, RunError};
+use crate::adapters::dtos::todo::find::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
+use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::find::{FindTodoError, FindTodoInput};
 use crate::application::functions::todo::find::{find_todo, FindTodoContext};
 use crate::application::repositories::todo::find::Find;
 
 #[derive(Clone, Debug)]
-pub struct FindController<S: Find> {
-    store: S,
+pub struct FindController<Repo: Find> {
+    repository: Repo,
 }
 
-impl<S: Find> FindController<S> {
-    pub const fn new(store: S) -> Self {
-        Self { store }
+impl<Repo: Find> FindController<Repo> {
+    pub const fn new(repository: Repo) -> Self {
+        Self { repository }
     }
 
-    pub async fn run(&self, input: impl Parse<FindTodoInput, ParseError>) -> Output {
-        let input = match input.parse() {
-            Ok(input) => input,
-            Err(err) => return Output::err(RunError::Validation(err)),
-        };
+    pub async fn run<Req>(&self, req: Req) -> Result<TodoPresenter, RunError>
+    where
+        Req: Parse<FindTodoInput, ParseError>,
+    {
+        let input = req.parse().map_err(RunError::Validation)?;
+        let ctx = FindTodoContext::new(&self.repository);
+        let todo = find_todo(ctx, input).await.map_err(|err| match err {
+            FindTodoError::Internal => RunError::Internal,
+            FindTodoError::NotFound => RunError::NotFound,
+        })?;
 
-        let ctx = FindTodoContext::new(&self.store);
-        match find_todo(ctx, input).await.into_result() {
-            Ok(todo) => Output::from_todo(todo),
-            Err(err) => Output::err(match err {
-                FindTodoError::Internal => RunError::Internal,
-                FindTodoError::NotFound => RunError::NotFound,
-            }),
-        }
+        Ok(TodoPresenter::from(todo))
     }
 }

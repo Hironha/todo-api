@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateController;
-use crate::adapters::dtos::todo::create::{ParseError, RawInput, RunError};
+use crate::adapters::dtos::todo::create::{CreateRequest, ParseError, RunError};
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -23,14 +23,14 @@ pub(super) async fn create_todo(
 ) -> impl IntoResponse {
     tracing::info!("create todo body: {body:?}");
 
-    let input = RawInput {
+    let input = CreateRequest {
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
     };
     let controller = CreateController::new(state.todo_repository);
 
-    let output = match controller.run(input).await.into_result() {
+    let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
             let (status, error) = config_error_response(err);

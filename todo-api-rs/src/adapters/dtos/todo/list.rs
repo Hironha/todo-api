@@ -3,32 +3,13 @@ use std::num::NonZeroU32;
 
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
-use crate::application::dtos::todo::list::{ListTodoInput, TodoList};
-
-#[derive(Clone, Debug)]
-pub struct Output(Result<OutputData, RunError>);
-
-impl Output {
-    pub const fn err(error: RunError) -> Self {
-        Self(Err(error))
-    }
-
-    pub fn from_list(list: TodoList) -> Self {
-        let data = OutputData {
-            count: list.count,
-            items: list.items.into_iter().map(TodoPresenter::from).collect(),
-        };
-
-        Self(Ok(data))
-    }
-
-    pub fn into_result(self) -> Result<OutputData, RunError> {
-        self.0
-    }
-}
+use crate::application::dtos::todo::list::ListTodoInput;
+use crate::domain::entities::todo::{Title, TitleError};
 
 #[derive(Clone, Debug, Serialize)]
-pub struct OutputData {
+pub struct ListResponse {
+    pub page: u32,
+    pub per_page: u32,
     pub count: u64,
     pub items: Vec<TodoPresenter>,
 }
@@ -40,24 +21,24 @@ pub enum RunError {
 }
 
 #[derive(Clone, Debug)]
-pub struct RawInput {
+pub struct ListRequest {
     pub page: Option<u32>,
     pub per_page: Option<u32>,
     pub title: Option<String>,
 }
 
-impl Parse<ListTodoInput, ParseError> for RawInput {
+impl Parse<ListTodoInput, ParseError> for ListRequest {
     fn parse(self) -> Result<ListTodoInput, ParseError> {
-        let page = NonZeroU32::new(self.page.unwrap_or(1u32)).ok_or(ParseError::InvalidPage)?;
+        let page = NonZeroU32::new(self.page.unwrap_or(1)).ok_or(ParseError::InvalidPage)?;
         let per_page =
-            NonZeroU32::new(self.per_page.unwrap_or(10u32)).ok_or(ParseError::InvalidPerPage)?;
+            NonZeroU32::new(self.per_page.unwrap_or(10)).ok_or(ParseError::InvalidPerPage)?;
 
-        // title cannot have more than 256 characters
         let title = self
             .title
             .filter(|t| !t.is_empty())
-            .map(|t| (t.len() <= 256).then_some(t).ok_or(ParseError::TitleLength))
-            .transpose()?;
+            .map(Title::new)
+            .transpose()
+            .map_err(ParseError::Title)?;
 
         Ok(ListTodoInput {
             page,
@@ -71,14 +52,14 @@ impl Parse<ListTodoInput, ParseError> for RawInput {
 pub enum ParseError {
     InvalidPage,
     InvalidPerPage,
-    TitleLength,
+    Title(TitleError),
 }
 
 impl ParseError {
     pub fn description(&self) -> String {
         match self {
-            Self::InvalidPage | Self::InvalidPerPage => "optional non zero positive integer".into(),
-            Self::TitleLength => "optional string with less than 256 characters".into(),
+            Self::InvalidPage | Self::InvalidPerPage => "optional natural number".into(),
+            Self::Title(err) => format!("optional {}", err.description()),
         }
     }
 }
