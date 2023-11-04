@@ -43,7 +43,7 @@ impl DateTime {
     }
 
     /// Transform into a string following RFC 3339 pattern
-    pub fn to_rfc3339(&self) -> String {
+    pub fn to_rfc3339(self) -> String {
         self.0.format(&Rfc3339).unwrap()
     }
 }

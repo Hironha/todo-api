@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::domain::types::Id;
+use crate::domain::types::{DateTime, Id};
 
 #[async_trait]
 pub trait BindTags {
@@ -10,7 +10,8 @@ pub trait BindTags {
 #[derive(Clone, Debug)]
 pub struct BindTagsPayload {
     pub todo_id: Id,
-    pub tags_id: Vec<Id>,
+    pub tags_id: Option<Vec<Id>>,
+    pub current_dt: DateTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

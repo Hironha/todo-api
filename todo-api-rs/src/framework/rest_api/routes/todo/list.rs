@@ -17,7 +17,7 @@ pub(super) struct QueryParams {
     title: Option<String>,
 }
 
-pub(super) async fn list_todos(
+pub(super) async fn list_todo(
     State(state): State<TodoState>,
     Query(query): Query<QueryParams>,
 ) -> impl IntoResponse {

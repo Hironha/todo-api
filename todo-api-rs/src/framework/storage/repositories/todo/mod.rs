@@ -9,6 +9,7 @@ mod update;
 use async_trait::async_trait;
 use sqlx::PgPool;
 
+use crate::application::repositories::todo::bind_tags::{BindTags, BindTagsError, BindTagsPayload};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
@@ -18,6 +19,7 @@ use crate::domain::entities::todo::{Description, Title, TodoEntity};
 use crate::domain::types::{Date, Id};
 use crate::framework::storage::models::todo::TodoModel;
 
+use bind_tags::bind_tags;
 use count::{count_todo, CountTodoFilters};
 use create::create_todo;
 use delete::delete_todo;
@@ -33,6 +35,15 @@ pub struct TodoRepository {
 impl TodoRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
+    }
+}
+
+#[async_trait]
+impl BindTags for TodoRepository {
+    async fn bind_tags(&self, payload: BindTagsPayload) -> Result<(), BindTagsError> {
+        let mut trx = self.pool.begin().await.or(Err(BindTagsError::Internal))?;
+        bind_tags(&mut trx, payload).await?;
+        trx.commit().await.or(Err(BindTagsError::Internal))
     }
 }
 
