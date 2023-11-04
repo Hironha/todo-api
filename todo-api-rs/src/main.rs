@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 
 use axum::Router;
-use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
@@ -21,7 +20,7 @@ use framework::rest_api::routes::todo;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().expect("failed loading .env");
+    dotenvy::dotenv().expect("failed loading .env");
 
     tracing_subscriber::fmt()
         .without_time()
@@ -49,13 +48,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .serve(app.into_make_service())
         .await
         .expect("failed initiating server");
-    
+
     Ok(())
 }
 
 async fn create_db_pool(connections: u32) -> Pool<Postgres> {
     let env = std::env::vars().collect::<HashMap<String, String>>();
-    let url = env.get("DB_URL").expect("missing DB_URL env");
+    let user = env.get("DB_USER").expect("missing DB_USER env");
+    let password = env.get("DB_PASSWORD").expect("missing DB_PASSWORD env");
+    let host = env.get("DB_HOST").expect("missing DB_HOST env");
+    let db_name = env.get("DB_NAME").expect("missing DB_NAME env");
+
+    let url = format!("postgres://{user}:{password}@{host}/{db_name}");
 
     PgPoolOptions::new()
         .max_connections(connections)
