@@ -20,7 +20,7 @@ use list::list_todo;
 use update::update_todo;
 
 #[derive(Clone, FromRef)]
-pub struct TodoState {
+struct TodoState {
     todo_repository: TodoRepository,
 }
 
