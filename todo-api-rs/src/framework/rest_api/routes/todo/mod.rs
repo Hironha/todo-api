@@ -19,11 +19,6 @@ use find::find_todo;
 use list::list_todo;
 use update::update_todo;
 
-#[derive(Clone, FromRef)]
-struct TodoState {
-    todo_repository: TodoRepository,
-}
-
 pub fn create_todo_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
         todo_repository: TodoRepository::new(pool),
@@ -37,4 +32,9 @@ pub fn create_todo_router(pool: Pool<Postgres>) -> Router {
         )
         .route("/todos/:id/tags", patch(bind_todo_tags))
         .with_state(state)
+}
+
+#[derive(Clone, FromRef)]
+struct TodoState {
+    todo_repository: TodoRepository,
 }
