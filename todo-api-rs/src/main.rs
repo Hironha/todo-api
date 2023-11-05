@@ -15,8 +15,7 @@ use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, Tr
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
 
-use framework::rest_api::routes::tag;
-use framework::rest_api::routes::todo;
+use framework::rest_api::routes::{tag, todo};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
