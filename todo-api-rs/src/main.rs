@@ -20,14 +20,16 @@ use framework::rest_api::routes::todo;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenvy::dotenv().expect("failed loading .env");
-
     tracing_subscriber::fmt()
         .without_time()
         .with_target(false)
         .with_env_filter(EnvFilter::from_default_env())
         .with_max_level(Level::INFO)
         .init();
+
+    if let Err(err) = dotenvy::dotenv() {
+        tracing::error!("failed loading .env {err}");
+    }
 
     let pool = create_db_pool(5).await;
     sqlx::migrate!("./migrations")
@@ -57,9 +59,12 @@ async fn create_db_pool(connections: u32) -> Pool<Postgres> {
     let user = env.get("DB_USER").expect("missing DB_USER env");
     let password = env.get("DB_PASSWORD").expect("missing DB_PASSWORD env");
     let host = env.get("DB_HOST").expect("missing DB_HOST env");
+    let port = env.get("DB_PORT").expect("missing DB_PORT env");
     let db_name = env.get("DB_NAME").expect("missing DB_NAME env");
 
-    let url = format!("postgres://{user}:{password}@{host}/{db_name}");
+    let url = format!("postgres://{user}:{password}@{host}:{port}/{db_name}");
+
+    tracing::info!("connecting to database at {url}");
 
     PgPoolOptions::new()
         .max_connections(connections)
