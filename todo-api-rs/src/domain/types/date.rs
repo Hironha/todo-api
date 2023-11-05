@@ -1,6 +1,6 @@
 use time::format_description::well_known::Rfc3339;
 use time::macros::format_description;
-use time::{error, OffsetDateTime};
+use time::OffsetDateTime;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Date(time::Date);
@@ -16,9 +16,11 @@ impl Date {
         self.into_date().format(ydm_description).unwrap()
     }
 
-    pub fn parse_str(input: &str) -> Result<Self, error::Parse> {
+    pub fn parse_str(input: &str) -> Result<Self, ()> {
         let ymd_description = format_description!("[year]-[month]-[day]");
-        time::Date::parse(input, ymd_description).map(Self::from)
+        time::Date::parse(input, ymd_description)
+            .map(Self::from)
+            .or(Err(()))
     }
 }
 

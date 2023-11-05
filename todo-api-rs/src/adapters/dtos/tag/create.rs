@@ -40,8 +40,8 @@ impl ParseError {
     pub fn description(&self) -> String {
         match self {
             Self::EmptyName => "required string".into(),
-            Self::InvalidName(err) => err.description(),
-            Self::InvalidDescription(err) => err.description(),
+            Self::InvalidName(err) => err.to_string(),
+            Self::InvalidDescription(err) => err.to_string(),
         }
     }
 }

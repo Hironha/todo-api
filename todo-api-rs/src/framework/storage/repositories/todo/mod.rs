@@ -113,13 +113,11 @@ impl Update for TodoRepository {
 }
 
 fn map_todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
-    let title = Title::new(model.title).map_err(|e| {
-        let msg = e.description();
-        tracing::error!("todo model title is incompatible with entity title: {msg}");
+    let title = Title::new(model.title).map_err(|err| {
+        tracing::error!("todo model title is incompatible with entity title: {err:?}");
     })?;
     let description = Description::new(model.description).map_err(|err| {
-        let msg = err.description();
-        tracing::error!("todo model description is incompatible with entity description: {msg}");
+        tracing::error!("todo model description is incompatible with entity description: {err:?}");
     })?;
 
     Ok(TodoEntity {

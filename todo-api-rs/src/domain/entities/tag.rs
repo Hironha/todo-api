@@ -57,11 +57,11 @@ pub enum NameError {
     Length,
 }
 
-impl NameError {
-    pub fn description(&self) -> String {
+impl std::fmt::Display for NameError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Empty => "cannot be empty".into(),
-            Self::Length => "cannot have more than 64 characters".into(),
+            Self::Empty => write!(f, "cannot be empty"),
+            Self::Length => write!(f, "cannot have more than 64 characters"),
         }
     }
 }
@@ -71,10 +71,10 @@ pub enum DescriptionError {
     Length,
 }
 
-impl DescriptionError {
-    pub fn description(&self) -> String {
+impl std::fmt::Display for DescriptionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Length => "cannot have more than 128 characters".into(),
+            Self::Length => write!(f, "cannot have more than 128 characters"),
         }
     }
 }

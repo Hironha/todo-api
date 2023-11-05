@@ -53,8 +53,8 @@ impl ParseError {
     pub fn description(&self) -> String {
         match self {
             Self::EmptyTitle => "required string".into(),
-            Self::InvalidTitle(e) => e.description(),
-            Self::InvalidDescription(e) => e.description(),
+            Self::InvalidTitle(err) => err.to_string(),
+            Self::InvalidDescription(err) => err.to_string(),
             Self::TodoAt => {
                 "optional string, but, if defined, should be an UTC date on YYYY-MM-DD format"
                     .into()

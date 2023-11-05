@@ -72,8 +72,8 @@ impl ParseError {
             Self::EmptyId => "required string".into(),
             Self::InvalidId => "invalid id format".into(),
             Self::EmptyTitle => "required string".into(),
-            Self::InvalidTitle(e) => e.description(),
-            Self::InvalidDescription(e) => e.description(),
+            Self::InvalidTitle(err) => err.to_string(),
+            Self::InvalidDescription(err) => err.to_string(),
             Self::TodoAt => {
                 "optional string, but if defined, should be a date on YYYY-MM-DD format".into()
             }

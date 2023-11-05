@@ -63,13 +63,13 @@ pub enum TitleError {
     Empty,
     Length,
 }
-impl TitleError {
-    pub fn description(&self) -> String {
-        let description = match self {
-            Self::Empty => "cannot be empty",
-            Self::Length => "cannot have more than 64 characters",
-        };
-        description.into()
+
+impl std::fmt::Display for TitleError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Empty => write!(f, "cannot be empty"),
+            Self::Length => write!(f, "cannot have more than 64 characters"),
+        }
     }
 }
 
@@ -77,10 +77,11 @@ impl TitleError {
 pub enum DescriptionError {
     Length,
 }
-impl DescriptionError {
-    pub fn description(&self) -> String {
+
+impl std::fmt::Display for DescriptionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Length => "cannot have more than 256 characters".into(),
+            Self::Length => write!(f, "cannot have more than 256 characters"),
         }
     }
 }

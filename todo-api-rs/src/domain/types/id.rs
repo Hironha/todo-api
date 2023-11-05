@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use uuid::{Error, Uuid};
+use uuid::Uuid;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Id(Uuid);
@@ -9,8 +9,8 @@ impl Id {
         Self(Uuid::new_v4())
     }
 
-    pub fn parse_str(input: &str) -> Result<Self, Error> {
-        Uuid::parse_str(input).map(Self::from)
+    pub fn parse_str(input: &str) -> Result<Self, ()> {
+        Uuid::parse_str(input).map(Self).or(Err(()))
     }
 
     pub fn into_uuid(self) -> Uuid {
@@ -28,14 +28,5 @@ impl From<Uuid> for Id {
     /// Creates a new `Id` instance from `uuid::Uuid`
     fn from(value: Uuid) -> Self {
         Self(value)
-    }
-}
-
-impl serde::Serialize for Id {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&self.to_string())
     }
 }

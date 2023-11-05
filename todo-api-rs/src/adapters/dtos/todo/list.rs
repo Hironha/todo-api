@@ -59,7 +59,7 @@ impl ParseError {
     pub fn description(&self) -> String {
         match self {
             Self::InvalidPage | Self::InvalidPerPage => "optional natural number".into(),
-            Self::Title(err) => format!("optional {}", err.description()),
+            Self::Title(err) => format!("optional {err}"),
         }
     }
 }

@@ -55,8 +55,8 @@ impl ParseError {
             Self::EmptyId => "required string".into(),
             Self::InvalidId => "invalid id format".into(),
             Self::EmptyName => "required string".into(),
-            Self::InvalidName(err) => err.description(),
-            Self::InvalidDescription(err) => err.description(),
+            Self::InvalidName(err) => err.to_string(),
+            Self::InvalidDescription(err) => err.to_string(),
         }
     }
 }

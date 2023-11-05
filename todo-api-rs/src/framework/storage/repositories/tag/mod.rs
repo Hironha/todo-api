@@ -84,12 +84,10 @@ impl Update for TagRepository {
 
 fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, ()> {
     let name = Name::new(model.name).map_err(|err| {
-        let msg = err.description();
-        tracing::error!("tag model name incompatible with tag entity name: {msg}");
+        tracing::error!("tag model name incompatible with tag entity name: {err:?}");
     })?;
     let description = Description::new(model.description).map_err(|err| {
-        let msg = err.description();
-        tracing::error!("tag model description incompatible with tag entity description: {msg}");
+        tracing::error!("tag model description incompatible with tag entity description: {err:?}");
     })?;
 
     Ok(TagEntity {
