@@ -1,25 +1,35 @@
 version: "3"
 services:
-  db:
-    image: postgres:16.0-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
-  api:
-    image: todo-api-image
-    environment:
-      DB_NAME: ${DB_NAME}
-      DB_HOST: "0.0.0.0:5432"
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+  server:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - 8000:8000
+    image: todo-api-rs
+    network_mode: host
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - RUST_LOG=debug
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16.0-alpine
+    restart: always
+    user: ${DB_USER}
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - 5432:${DB_PORT}
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
