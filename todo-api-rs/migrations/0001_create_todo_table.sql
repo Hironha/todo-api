@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS todo (
     title varchar(64) NOT NULL,
     description varchar(256),
     todo_at date,
-    done: boolean,
+    done boolean NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz NOT NULL,
     CONSTRAINT todo_pk PRIMARY KEY (id),
