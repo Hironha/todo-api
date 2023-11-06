@@ -9,6 +9,7 @@ use crate::domain::entities::todo::{Title, TitleError};
 #[derive(Clone, Debug, Serialize)]
 pub struct ListResponse {
     pub page: u32,
+    #[serde(rename(serialize = "perPage"))]
     pub per_page: u32,
     pub count: u64,
     pub items: Vec<TodoPresenter>,
