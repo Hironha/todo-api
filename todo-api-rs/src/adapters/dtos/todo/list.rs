@@ -59,7 +59,7 @@ pub enum ParseError {
 impl ParseError {
     pub fn description(&self) -> String {
         match self {
-            Self::InvalidPage | Self::InvalidPerPage => "optional natural number".into(),
+            Self::InvalidPage | Self::InvalidPerPage => "optional non zero natural number".into(),
             Self::Title(err) => format!("optional {err}"),
         }
     }
