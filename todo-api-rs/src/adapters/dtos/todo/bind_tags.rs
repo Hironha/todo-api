@@ -48,8 +48,8 @@ impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::EmptyTodo => write!(f, "required string"),
-            Self::InvalidTodo => write!(f, "invalid todo id format"),
-            Self::InvalidTag(id) => write!(f, "invalid tag id {id} format"),
+            Self::InvalidTodo => write!(f, "invalid id format"),
+            Self::InvalidTag(id) => write!(f, "invalid id {id} format"),
         }
     }
 }

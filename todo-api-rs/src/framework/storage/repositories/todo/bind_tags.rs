@@ -16,7 +16,7 @@ pub(super) async fn bind_tags(
         return Err(BindTagsError::TodoNotFound);
     }
 
-    let delete_relations_q = r#" DELETE FROM todo_tag WHERE todo_id = $1 "#;
+    let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
     sqlx::query(delete_relations_q)
         .bind(todo_id)
         .execute(trx.as_mut())
@@ -39,14 +39,10 @@ pub(super) async fn bind_tags(
         }
 
         let current_dt = payload.current_dt.into_date_time();
-        let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at, updated_at) ";
-        let mut bind_tags_q = QueryBuilder::<'_, Postgres>::new(base_bind_tags_q);
-        bind_tags_q
-            .push_values(tags_id, |mut q, tag_id| {
-                q.push_bind(todo_id)
-                    .push_bind(tag_id)
-                    .push_bind(current_dt)
-                    .push_bind(current_dt);
+        let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
+        QueryBuilder::<'_, Postgres>::new(base_bind_tags_q)
+            .push_values(ids, |mut q, tag_id| {
+                q.push_bind(todo_id).push_bind(tag_id).push_bind(current_dt);
             })
             .build()
             .execute(trx.as_mut())

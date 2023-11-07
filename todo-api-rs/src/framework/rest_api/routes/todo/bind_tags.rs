@@ -25,7 +25,7 @@ pub(super) async fn bind_todo_tags(
     Path(path): Path<BindTagsPathParams>,
     Json(body): Json<BindTagsBody>,
 ) -> impl IntoResponse {
-    tracing::info!("create todo body: {body:?}");
+    tracing::info!("bind todo tags: {body:?}");
 
     let input = BindTagsRequest {
         tags_id: body.tags_id,
