@@ -8,9 +8,8 @@ pub(super) async fn count_todo(
 
     if let Some(title) = filters.title {
         count_q
-            .push(" WHERE title ILIKE %")
-            .push_bind(title)
-            .push("%");
+            .push(" WHERE title ILIKE ")
+            .push_bind(format!("%{title}%"));
     }
 
     count_q

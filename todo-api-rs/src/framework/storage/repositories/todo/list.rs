@@ -17,11 +17,10 @@ pub(super) async fn list_todo(
         "#,
     );
 
-    if let Some(title) = payload.title {
+    if let Some(title) = payload.title.map(|t| t.into_string()) {
         list_q
-            .push(" WHERE title ILIKE %")
-            .push_bind(title.into_string())
-            .push("%");
+            .push(" WHERE title ILIKE ")
+            .push_bind(format!("%{title}%"));
     }
 
     list_q
