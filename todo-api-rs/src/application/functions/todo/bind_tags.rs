@@ -18,7 +18,7 @@ pub async fn bind_todo_tags<Repo: BindTags>(
         .map_err(|err| match err {
             BindTagsError::TagNotFound => BindTodoTagsError::TagNotFound,
             BindTagsError::TodoNotFound => BindTodoTagsError::TodoNotFound,
-            BindTagsError::Internal => BindTodoTagsError::Internal,
+            BindTagsError::Internal(err) => BindTodoTagsError::Repository(err),
         })
 }
 

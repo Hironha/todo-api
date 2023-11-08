@@ -41,9 +41,9 @@ impl TodoRepository {
 #[async_trait]
 impl BindTags for TodoRepository {
     async fn bind_tags(&self, payload: BindTagsPayload) -> Result<(), BindTagsError> {
-        let mut trx = self.pool.begin().await.or(Err(BindTagsError::Internal))?;
+        let mut trx = self.pool.begin().await.map_err(BindTagsError::from_err)?;
         bind_tags(&mut trx, payload).await?;
-        trx.commit().await.or(Err(BindTagsError::Internal))
+        trx.commit().await.map_err(BindTagsError::from_err)
     }
 }
 

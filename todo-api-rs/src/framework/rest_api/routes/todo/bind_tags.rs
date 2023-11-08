@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TodoState;
 use crate::adapters::controllers::todo::bind_tags::BindTagsController;
 use crate::adapters::dtos::todo::bind_tags::{BindTagsRequest, ParseError, RunError};
+use crate::application::dtos::todo::bind_tags::BindTodoTagsError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -52,17 +53,21 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             let error = ApiError::new("BTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::TodoNotFound => {
-            let error = ApiError::new("BTD-002", "Todo not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::TagNotFound => {
-            let error = ApiError::new("BTD-003", "Tag not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("BTD-004", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Binding(err) => match err {
+            BindTodoTagsError::TodoNotFound => {
+                let error = ApiError::new("BTD-002", "Todo not found");
+                (StatusCode::NOT_FOUND, error)
+            }
+            BindTodoTagsError::TagNotFound => {
+                let error = ApiError::new("BTD-003", "Todo not found");
+                (StatusCode::NOT_FOUND, error)
+            }
+            BindTodoTagsError::Repository(err) => {
+                tracing::error!("bind todo tags repository error {err}");
+
+                let error = ApiError::new("BTD-004", "Internal server error");
+                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            }
+        },
     }
 }

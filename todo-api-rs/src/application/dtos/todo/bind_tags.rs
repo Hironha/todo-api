@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -6,9 +8,9 @@ pub struct BindTodoTagsInput {
     pub tags_id: Option<Vec<Id>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum BindTodoTagsError {
     TodoNotFound,
     TagNotFound,
-    Internal,
+    Repository(Box<dyn Error>),
 }
