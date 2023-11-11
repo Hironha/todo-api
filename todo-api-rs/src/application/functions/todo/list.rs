@@ -16,7 +16,7 @@ pub async fn list_todo<Repo: List>(
         .list(payload)
         .await
         .map_err(|err| match err {
-            ListError::Internal => ListTodoError::Internal,
+            ListError::Internal(err) => ListTodoError::Repository(err),
         })?;
 
     Ok(TodoList {

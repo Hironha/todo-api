@@ -19,7 +19,6 @@ impl<Repo: Delete> DeleteController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = DeleteTodoContext::new(&self.repository);
-
         delete_todo(ctx, input).await.map_err(RunError::Deleting)
     }
 }

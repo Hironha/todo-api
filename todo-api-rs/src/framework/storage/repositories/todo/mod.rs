@@ -79,26 +79,23 @@ impl Find for TodoRepository {
 #[async_trait]
 impl List for TodoRepository {
     async fn list(&self, payload: ListPayload) -> Result<ListData, ListError> {
-        let mut conn = self.pool.acquire().await.or(Err(ListError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(ListError::from_err)?;
         let count_filters = CountTodoFilters {
             title: payload.title.as_ref().map(|t| t.as_str()),
         };
 
         let db_count = count_todo(conn.as_mut(), count_filters)
             .await
-            .map_err(|err| {
-                tracing::error!("count todo error: {err:?}");
-                ListError::Internal
-            })?;
+            .map_err(ListError::from_err)?;
 
-        let count = u64::try_from(db_count).or(Err(ListError::Internal))?;
+        let count = u64::try_from(db_count).map_err(ListError::from_err)?;
 
         let todo_models = list_todo(conn.as_mut(), payload).await?;
         let todo_entities = todo_models
             .into_iter()
             .map(map_todo_model_to_entity)
             .collect::<Result<Vec<TodoEntity>, MapTodoModelError>>()
-            .map_err(|_| ListError::Internal)?;
+            .map_err(ListError::from_err)?;
 
         Ok(ListData {
             count,

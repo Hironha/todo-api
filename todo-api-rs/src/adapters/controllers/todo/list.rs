@@ -1,7 +1,7 @@
 use crate::adapters::dtos::todo::list::{ListResponse, ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
-use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput};
+use crate::application::dtos::todo::list::ListTodoInput;
 use crate::application::functions::todo::list::{list_todo, ListTodoContext};
 use crate::application::repositories::todo::list::List;
 
@@ -21,12 +21,8 @@ impl<Repo: List> ListController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let context = ListTodoContext::new(&self.repository);
-
-        let todo_list = list_todo(context, input).await.map_err(|err| match err {
-            ListTodoError::Internal => RunError::Internal,
-        })?;
-
-        Ok(ListResponse {
+        let todo_list = list_todo(context, input).await.map_err(RunError::Listing)?;
+        let response = ListResponse {
             page: todo_list.page.into(),
             per_page: todo_list.per_page.into(),
             count: todo_list.count,
@@ -35,6 +31,8 @@ impl<Repo: List> ListController<Repo> {
                 .into_iter()
                 .map(TodoPresenter::from)
                 .collect(),
-        })
+        };
+
+        Ok(response)
     }
 }

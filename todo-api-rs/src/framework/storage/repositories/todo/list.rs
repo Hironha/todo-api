@@ -31,8 +31,5 @@ pub(super) async fn list_todo(
         .build_query_as::<TodoModel>()
         .fetch_all(conn)
         .await
-        .map_err(|err| {
-            tracing::error!("list todo failed {err:?}");
-            ListError::Internal
-        })
+        .map_err(ListError::from_err)
 }

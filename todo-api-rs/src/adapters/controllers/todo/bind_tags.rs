@@ -20,7 +20,6 @@ impl<Repo: BindTags> BindTagsController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = BindTodoTagsContext::new(&self.repository);
-
         bind_todo_tags(ctx, input).await.map_err(RunError::Binding)
     }
 }

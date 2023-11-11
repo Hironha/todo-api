@@ -1,25 +1,13 @@
-use serde::Serialize;
+use std::error::Error;
+use std::fmt;
 use std::num::NonZeroU32;
+
+use serde::Serialize;
 
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
-use crate::application::dtos::todo::list::ListTodoInput;
+use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput};
 use crate::domain::entities::todo::{Title, TitleError};
-
-#[derive(Clone, Debug, Serialize)]
-pub struct ListResponse {
-    pub page: u32,
-    #[serde(rename(serialize = "perPage"))]
-    pub per_page: u32,
-    pub count: u64,
-    pub items: Vec<TodoPresenter>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum RunError {
-    Parsing(ParseError),
-    Internal,
-}
 
 #[derive(Clone, Debug)]
 pub struct ListRequest {
@@ -49,6 +37,39 @@ impl Parse<ListTodoInput, ParseError> for ListRequest {
     }
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub struct ListResponse {
+    pub page: u32,
+    #[serde(rename(serialize = "perPage"))]
+    pub per_page: u32,
+    pub count: u64,
+    pub items: Vec<TodoPresenter>,
+}
+
+#[derive(Debug)]
+pub enum RunError {
+    Parsing(ParseError),
+    Listing(ListTodoError),
+}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parsing(_) => write!(f, "failed parsing list input"),
+            Self::Listing(_) => write!(f, "failed listing todo"),
+        }
+    }
+}
+
+impl Error for RunError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Listing(err) => Some(err),
+            Self::Parsing(err) => Some(err),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParseError {
     InvalidPage,
@@ -56,11 +77,22 @@ pub enum ParseError {
     Title(TitleError),
 }
 
-impl ParseError {
-    pub fn description(&self) -> String {
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::InvalidPage | Self::InvalidPerPage => "optional non zero natural number".into(),
-            Self::Title(err) => format!("optional {err}"),
+            Self::InvalidPage | Self::InvalidPerPage => {
+                write!(f, "optional non zero natural number")
+            }
+            Self::Title(err) => write!(f, "optional {err}"),
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::InvalidPage | Self::InvalidPerPage => None,
+            Self::Title(err) => Some(err),
         }
     }
 }

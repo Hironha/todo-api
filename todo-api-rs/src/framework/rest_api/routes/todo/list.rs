@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TodoState;
 use crate::adapters::controllers::todo::list::ListController;
 use crate::adapters::dtos::todo::list::{ListRequest, ParseError, RunError};
+use crate::application::dtos::todo::list::ListTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -47,13 +48,16 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
                 ParseError::InvalidPerPage => "perPage",
                 ParseError::Title(_) => "title",
             };
-            let details = ValidationError::new(field, err.description());
+            let details = ValidationError::new(field, err.to_string());
             let error = ApiError::new("LTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::Internal => {
-            let error = ApiError::new("LTD-001", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Listing(err) => match err {
+            ListTodoError::Repository(err) => {
+                tracing::error!("list todo repository error: {err}");
+                let error = ApiError::new("LTD-001", "Internal server error");
+                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            }
+        },
     }
 }
