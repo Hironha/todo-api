@@ -17,9 +17,6 @@ pub(super) async fn find_todo(conn: &mut PgConnection, id: Id) -> Result<TodoMod
         .await
         .map_err(|err| match err {
             SqlxError::RowNotFound => FindError::NotFound,
-            _ => {
-                tracing::error!("find todo repository error {err:?}");
-                FindError::Internal
-            }
+            _ => FindError::from_err(err),
         })
 }

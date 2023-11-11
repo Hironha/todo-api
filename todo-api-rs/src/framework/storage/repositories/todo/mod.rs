@@ -70,9 +70,9 @@ impl Delete for TodoRepository {
 #[async_trait]
 impl Find for TodoRepository {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
-        let mut conn = self.pool.acquire().await.or(Err(FindError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(FindError::from_err)?;
         let model = find_todo(conn.as_mut(), id).await?;
-        map_todo_model_to_entity(model).or(Err(FindError::Internal))
+        map_todo_model_to_entity(model).map_err(FindError::from_err)
     }
 }
 

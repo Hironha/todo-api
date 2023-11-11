@@ -56,7 +56,7 @@ impl Error for RunError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ParseError {
     EmptyTodo,
     InvalidTodo,

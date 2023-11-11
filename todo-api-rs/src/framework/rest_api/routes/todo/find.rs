@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TodoState;
 use crate::adapters::controllers::todo::find::FindController;
 use crate::adapters::dtos::todo::find::{FindRequest, ParseError, RunError};
+use crate::application::dtos::todo::find::FindTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -36,21 +37,24 @@ pub(super) async fn find_todo(
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Validation(e) => {
-            let field = match e {
+        RunError::Parsing(err) => {
+            let field = match err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
             };
-            let details = ValidationError::new(field, e.description());
-            let error = ApiError::new("FTD-001", "Invalid input").with_details(details);
+            let details = ValidationError::new(field, err.to_string());
+            let error = ApiError::new("FTD-001", "invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::NotFound => {
-            let error = ApiError::new("FTD-002", "Todo not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("FTD-003", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Finding(err) => match err {
+            FindTodoError::NotFound => {
+                let error = ApiError::new("FTD-002", err.to_string());
+                (StatusCode::NOT_FOUND, error)
+            }
+            FindTodoError::Repository(err) => {
+                tracing::error!("find todo repository error: {err}");
+                let error = ApiError::new("FTD-003", "internal server error");
+                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            }
+        },
     }
 }
