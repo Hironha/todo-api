@@ -27,7 +27,7 @@ impl fmt::Display for CreateTodoError {
 impl Error for CreateTodoError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::Repository(err) => err.source(),
+            Self::Repository(err) => Some(err.as_ref()),
         }
     }
 }

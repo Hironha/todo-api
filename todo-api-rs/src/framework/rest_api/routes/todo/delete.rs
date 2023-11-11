@@ -6,7 +6,8 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::delete::DeleteController;
-use crate::adapters::dtos::todo::delete::{ParseError, DeleteRequest, RunError};
+use crate::adapters::dtos::todo::delete::{DeleteRequest, ParseError, RunError};
+use crate::application::dtos::todo::delete::DeleteTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -33,21 +34,24 @@ pub(super) async fn delete_todo(
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(e) => {
-            let field = match e {
+        RunError::Parsing(err) => {
+            let field = match err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
             };
-            let details = ValidationError::new(field, e.description());
+            let details = ValidationError::new(field, err.to_string());
             let error = ApiError::new("DTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::TodoNotFound => {
-            let error = ApiError::new("DTD-002", "Todo not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("DTD-003", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Deleting(err) => match err {
+            DeleteTodoError::NotFound => {
+                let error = ApiError::new("DTD-002", err.to_string());
+                (StatusCode::NOT_FOUND, error)
+            }
+            DeleteTodoError::Repository(err) => {
+                tracing::error!("delete todo repository error: {err}");
+                let error = ApiError::new("DTD-003", "internal server error");
+                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            }
+        },
     }
 }

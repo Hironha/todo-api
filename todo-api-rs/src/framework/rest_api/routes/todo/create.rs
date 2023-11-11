@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateController;
 use crate::adapters::dtos::todo::create::{CreateRequest, ParseError, RunError};
+use crate::application::dtos::todo::create::CreateTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -53,11 +54,12 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             let error = ApiError::new("CTD-001", "invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::Repository(err) => {
-            tracing::error!("create todo repository error: {err}");
-
-            let error = ApiError::new("CTD-002", "internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Creating(err) => match err {
+            CreateTodoError::Repository(err) => {
+                tracing::error!("create todo repository error: {err}");
+                let error = ApiError::new("CTD-002", "internal server error");
+                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            }
+        },
     }
 }

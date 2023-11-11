@@ -62,7 +62,7 @@ impl Create for TodoRepository {
 #[async_trait]
 impl Delete for TodoRepository {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        let mut conn = self.pool.acquire().await.or(Err(DeleteError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(DeleteError::from_err)?;
         delete_todo(conn.as_mut(), id).await
     }
 }

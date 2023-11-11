@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::create::CreateTodoInput;
+use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
 use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
 use crate::domain::types::Date;
 
@@ -41,7 +41,25 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
 #[derive(Debug)]
 pub enum RunError {
     Parsing(ParseError),
-    Repository(Box<dyn Error>),
+    Creating(CreateTodoError),
+}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parsing(_) => write!(f, "failed parsing create input"),
+            Self::Creating(_) => write!(f, "failed creating todo"),
+        }
+    }
+}
+
+impl Error for RunError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Parsing(err) => Some(err),
+            Self::Creating(err) => Some(err),
+        }
+    }
 }
 
 #[derive(Debug)]

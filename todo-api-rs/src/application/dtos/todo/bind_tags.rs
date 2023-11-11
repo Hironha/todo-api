@@ -30,7 +30,7 @@ impl Error for BindTodoTagsError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::TodoNotFound | Self::TagNotFound => None,
-            Self::Repository(err) => err.source(),
+            Self::Repository(err) => Some(err.as_ref()),
         }
     }
 }
