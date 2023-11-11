@@ -50,22 +50,22 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
                 ParseError::InvalidTag(_) => "tagsId",
             };
             let details = ValidationError::new(field, err.to_string());
-            let error = ApiError::new("BTD-001", "Invalid input").with_details(details);
+            let error = ApiError::new("BTD-001", "invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
         RunError::Binding(err) => match err {
             BindTodoTagsError::TodoNotFound => {
-                let error = ApiError::new("BTD-002", "Todo not found");
+                let error = ApiError::new("BTD-002", err.to_string());
                 (StatusCode::NOT_FOUND, error)
             }
             BindTodoTagsError::TagNotFound => {
-                let error = ApiError::new("BTD-003", "Todo not found");
+                let error = ApiError::new("BTD-003", err.to_string());
                 (StatusCode::NOT_FOUND, error)
             }
             BindTodoTagsError::Repository(err) => {
-                tracing::error!("bind todo tags repository error {err}");
+                tracing::error!("bind todo tags repository error: {err}");
 
-                let error = ApiError::new("BTD-004", "Internal server error");
+                let error = ApiError::new("BTD-004", "internal server error");
                 (StatusCode::INTERNAL_SERVER_ERROR, error)
             }
         },

@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fmt;
+
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::create::CreateTodoInput;
 use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
@@ -35,13 +38,13 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum RunError {
     Parsing(ParseError),
-    Internal,
+    Repository(Box<dyn Error>),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum ParseError {
     EmptyTitle,
     InvalidTitle(TitleError),
@@ -49,16 +52,23 @@ pub enum ParseError {
     TodoAt,
 }
 
-impl ParseError {
-    pub fn description(&self) -> String {
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyTitle => "required string".into(),
-            Self::InvalidTitle(err) => err.to_string(),
-            Self::InvalidDescription(err) => err.to_string(),
-            Self::TodoAt => {
-                "optional string, but, if defined, should be an UTC date on YYYY-MM-DD format"
-                    .into()
-            }
+            Self::EmptyTitle => write!(f, "required string"),
+            Self::InvalidTitle(err) => err.fmt(f),
+            Self::InvalidDescription(err) => err.fmt(f),
+            Self::TodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::EmptyTitle | Self::TodoAt => None,
+            Self::InvalidTitle(err) => Some(err),
+            Self::InvalidDescription(err) => Some(err),
         }
     }
 }

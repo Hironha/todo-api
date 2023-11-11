@@ -6,6 +6,9 @@ mod find;
 mod list;
 mod update;
 
+use std::error::Error;
+use std::fmt;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -15,7 +18,7 @@ use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListData, ListError, ListPayload};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::todo::{Description, Title, TodoEntity};
+use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
 use crate::domain::types::{Date, Id};
 use crate::framework::storage::models::todo::TodoModel;
 
@@ -50,9 +53,9 @@ impl BindTags for TodoRepository {
 #[async_trait]
 impl Create for TodoRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
-        let mut conn = self.pool.acquire().await.or(Err(CreateError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(CreateError::from_err)?;
         let model = create_todo(conn.as_mut(), payload).await?;
-        map_todo_model_to_entity(model).or(Err(CreateError::Internal))
+        map_todo_model_to_entity(model).map_err(CreateError::from_err)
     }
 }
 
@@ -94,7 +97,7 @@ impl List for TodoRepository {
         let todo_entities = todo_models
             .into_iter()
             .map(map_todo_model_to_entity)
-            .collect::<Result<Vec<TodoEntity>, ()>>()
+            .collect::<Result<Vec<TodoEntity>, MapTodoModelError>>()
             .map_err(|_| ListError::Internal)?;
 
         Ok(ListData {
@@ -112,13 +115,10 @@ impl Update for TodoRepository {
     }
 }
 
-fn map_todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
-    let title = Title::new(model.title).map_err(|err| {
-        tracing::error!("todo model title is incompatible with entity title: {err:?}");
-    })?;
-    let description = Description::new(model.description).map_err(|err| {
-        tracing::error!("todo model description is incompatible with entity description: {err:?}");
-    })?;
+fn map_todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, MapTodoModelError> {
+    let title = Title::new(model.title).map_err(MapTodoModelError::Title)?;
+    let description =
+        Description::new(model.description).map_err(MapTodoModelError::Description)?;
 
     Ok(TodoEntity {
         id: model.id.into(),
@@ -129,4 +129,25 @@ fn map_todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
         created_at: model.created_at.into(),
         updated_at: model.updated_at.into(),
     })
+}
+
+#[derive(Debug)]
+enum MapTodoModelError {
+    Title(TitleError),
+    Description(DescriptionError),
+}
+
+impl fmt::Display for MapTodoModelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "todo model incompatible with entity")
+    }
+}
+
+impl Error for MapTodoModelError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Title(err) => Some(err),
+            Self::Description(err) => Some(err),
+        }
+    }
 }

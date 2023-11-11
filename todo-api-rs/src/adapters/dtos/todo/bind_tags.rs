@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fmt;
+
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::bind_tags::{BindTodoTagsError, BindTodoTagsInput};
 use crate::domain::types::Id;
@@ -35,19 +38,45 @@ pub enum RunError {
     Binding(BindTodoTagsError),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parsing(_) => write!(f, "failed parsing input"),
+            Self::Binding(_) => write!(f, "failed binding todo tags"),
+        }
+    }
+}
+
+impl Error for RunError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Parsing(err) => Some(err),
+            Self::Binding(err) => Some(err),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum ParseError {
     EmptyTodo,
     InvalidTodo,
     InvalidTag(String),
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyTodo => write!(f, "required string"),
             Self::InvalidTodo => write!(f, "invalid id format"),
             Self::InvalidTag(id) => write!(f, "invalid id {id} format"),
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::EmptyTodo | Self::InvalidTag(_) | Self::InvalidTodo => None,
         }
     }
 }

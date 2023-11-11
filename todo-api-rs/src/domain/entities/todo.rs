@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fmt;
+
 use crate::domain::types::{Date, DateTime, Id};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -64,12 +67,18 @@ pub enum TitleError {
     Length,
 }
 
-impl std::fmt::Display for TitleError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for TitleError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Empty => write!(f, "cannot be empty"),
             Self::Length => write!(f, "cannot have more than 64 characters"),
         }
+    }
+}
+
+impl Error for TitleError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
     }
 }
 
@@ -78,10 +87,16 @@ pub enum DescriptionError {
     Length,
 }
 
-impl std::fmt::Display for DescriptionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for DescriptionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Length => write!(f, "cannot have more than 256 characters"),
         }
+    }
+}
+
+impl Error for DescriptionError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
     }
 }

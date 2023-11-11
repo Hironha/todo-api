@@ -21,7 +21,7 @@ impl<Repo: Create> CreateController<Repo> {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = CreateTodoContext::new(&self.repository);
         let todo = create_todo(ctx, input).await.map_err(|err| match err {
-            CreateTodoError::Internal => RunError::Internal,
+            CreateTodoError::Repository(err) => RunError::Repository(err),
         })?;
 
         Ok(TodoPresenter::from(todo))

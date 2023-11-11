@@ -49,12 +49,14 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
             };
-            let details = ValidationError::new(field, e.description());
-            let error = ApiError::new("CTD-001", "Invalid input").with_details(details);
+            let details = ValidationError::new(field, e.to_string());
+            let error = ApiError::new("CTD-001", "invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::Internal => {
-            let error = ApiError::new("CTD-002", "Internal server error");
+        RunError::Repository(err) => {
+            tracing::error!("create todo repository error: {err}");
+
+            let error = ApiError::new("CTD-002", "internal server error");
             (StatusCode::INTERNAL_SERVER_ERROR, error)
         }
     }
