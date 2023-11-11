@@ -108,7 +108,7 @@ impl List for TodoRepository {
 impl Update for TodoRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
         let todo = update_todo(&self.pool, payload).await?;
-        map_todo_model_to_entity(todo).or(Err(UpdateError::Internal))
+        map_todo_model_to_entity(todo).map_err(UpdateError::from_err)
     }
 }
 

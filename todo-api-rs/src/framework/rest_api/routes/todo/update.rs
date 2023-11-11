@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
 use crate::adapters::dtos::todo::update::{ParseError, RunError, UpdateRequest};
+use crate::application::dtos::todo::update::UpdateTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -53,25 +54,28 @@ pub(super) async fn update_todo(
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(e) => {
-            let field = match e {
+        RunError::Parsing(err) => {
+            let field = match err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
                 ParseError::EmptyDone => "done",
             };
-            let details = ValidationError::new(field, e.description());
+            let details = ValidationError::new(field, err.to_string());
             let error = ApiError::new("UTD-001", "Invalid input").with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::NotFound => {
-            let error = ApiError::new("UTD-002", "Todo not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("UTD-003", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Updating(err) => match err {
+            UpdateTodoError::NotFound => {
+                let error = ApiError::new("UTD-002", err.to_string());
+                (StatusCode::NOT_FOUND, error)
+            }
+            UpdateTodoError::Repository(err) => {
+                tracing::error!("update todo repository error: {err}");
+                let error = ApiError::new("UTD-003", "internal server error");
+                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            }
+        },
     }
 }

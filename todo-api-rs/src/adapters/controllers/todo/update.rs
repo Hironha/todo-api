@@ -1,7 +1,7 @@
 use crate::adapters::dtos::todo::update::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
-use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
+use crate::application::dtos::todo::update::UpdateTodoInput;
 use crate::application::functions::todo::update::{update_todo, UpdateTodoContext};
 use crate::application::repositories::todo::update::Update;
 
@@ -20,10 +20,7 @@ impl<Repo: Update> UpdateController<Repo> {
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = UpdateTodoContext::new(&self.repository);
-        let todo = update_todo(ctx, input).await.map_err(|err| match err {
-            UpdateTodoError::NotFound => RunError::NotFound,
-            UpdateTodoError::Internal => RunError::Internal,
-        })?;
+        let todo = update_todo(ctx, input).await.map_err(RunError::Updating)?;
 
         Ok(TodoPresenter::from(todo))
     }
