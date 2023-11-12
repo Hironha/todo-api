@@ -25,15 +25,15 @@ pub(super) async fn delete_tag(
     let controller = DeleteController::new(state.tag_repository);
 
     if let Err(err) = controller.run(input).await {
-        let (status_code, message) = config_error_response(err);
+        let (status_code, message) = config_error_response(&err);
         (status_code, Json(message)).into_response()
     } else {
         (StatusCode::NO_CONTENT).into_response()
     }
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
-    match &error {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
+    match error {
         RunError::Parsing(parsing_err) => {
             let field = match parsing_err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
@@ -42,9 +42,9 @@ fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationErr
             let error = ApiError::new("DTG-001", error.to_string()).with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::Deleting(delete_err) => match delete_err {
+        RunError::Deleting(delete_err) => match &delete_err {
             DeleteTagError::NotFound => {
-                let error = ApiError::new("DTG-002", error.to_string());
+                let error = ApiError::new("DTG-002", delete_err.to_string());
                 (StatusCode::NOT_FOUND, error)
             }
             DeleteTagError::Repository(repository_err) => {

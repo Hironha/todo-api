@@ -17,9 +17,6 @@ pub(super) async fn find_tag(conn: &mut PgConnection, id: Id) -> Result<TagModel
         .await
         .map_err(|err| match err {
             SqlxError::RowNotFound => FindError::NotFound,
-            _ => {
-                tracing::error!("find tag error: {err:?}");
-                FindError::Internal
-            }
+            _ => FindError::from_err(err),
         })
 }

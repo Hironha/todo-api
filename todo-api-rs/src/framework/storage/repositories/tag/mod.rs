@@ -56,9 +56,9 @@ impl Delete for TagRepository {
 #[async_trait]
 impl Find for TagRepository {
     async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
-        let mut conn = self.pool.acquire().await.or(Err(FindError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(FindError::from_err)?;
         let model = find_tag(conn.as_mut(), id).await?;
-        map_tag_model_to_entity(model).or(Err(FindError::Internal))
+        map_tag_model_to_entity(model).map_err(FindError::from_err)
     }
 }
 

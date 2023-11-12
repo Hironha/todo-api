@@ -31,7 +31,7 @@ pub(super) async fn create_tag(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
-            let (status, error) = config_error_response(err);
+            let (status, error) = config_error_response(&err);
             return (status, Json(error)).into_response();
         }
     };
@@ -39,8 +39,8 @@ pub(super) async fn create_tag(
     (StatusCode::CREATED, Json(output)).into_response()
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {    
-    match &error {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {    
+    match error {
         RunError::Parsing(parsing_err) => {
             let field = match parsing_err {
                 ParseError::EmptyName | ParseError::InvalidName(_) => "name",
