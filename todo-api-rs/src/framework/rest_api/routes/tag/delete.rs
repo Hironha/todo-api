@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TagState;
 use crate::adapters::controllers::tag::delete::DeleteController;
 use crate::adapters::dtos::tag::delete::{DeleteRequest, ParseError, RunError};
+use crate::application::dtos::tag::delete::DeleteTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -32,22 +33,25 @@ pub(super) async fn delete_tag(
 }
 
 fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
-    match error {
-        RunError::Parsing(e) => {
-            let field = match e {
+    match &error {
+        RunError::Parsing(parsing_err) => {
+            let field = match parsing_err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
             };
-            let details = ValidationError::new(field, e.description());
-            let error = ApiError::new("DTG-001", "Invalid input").with_details(details);
+            let details = ValidationError::new(field, parsing_err.to_string());
+            let error = ApiError::new("DTG-001", error.to_string()).with_details(details);
             (StatusCode::BAD_REQUEST, error)
         }
-        RunError::NotFound => {
-            let error = ApiError::new("DTG-002", "Tag not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("DTG-003", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Deleting(delete_err) => match delete_err {
+            DeleteTagError::NotFound => {
+                let error = ApiError::new("DTG-002", error.to_string());
+                (StatusCode::NOT_FOUND, error)
+            }
+            DeleteTagError::Repository(repository_err) => {
+                tracing::error!("delete tag repository error: {repository_err}");
+                let error = ApiError::new("DTG-003", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            }
+        },
     }
 }
