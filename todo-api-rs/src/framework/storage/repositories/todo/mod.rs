@@ -136,7 +136,12 @@ enum MapTodoModelError {
 
 impl fmt::Display for MapTodoModelError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "todo model incompatible with entity")
+        match self {
+            Self::Title(err) => write!(f, "todo model title incompatible with entity: {err}"),
+            Self::Description(err) => {
+                write!(f, "todo model description incompatible with entity: {err}")
+            }
+        }
     }
 }
 
