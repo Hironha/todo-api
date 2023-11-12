@@ -4,6 +4,9 @@ mod find;
 mod list;
 mod update;
 
+use std::error::Error;
+use std::fmt;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -12,7 +15,7 @@ use crate::application::repositories::tag::delete::{Delete, DeleteError};
 use crate::application::repositories::tag::find::{Find, FindError};
 use crate::application::repositories::tag::list::{List, ListError};
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::tag::{Description, Name, TagEntity};
+use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
 
@@ -36,16 +39,16 @@ impl TagRepository {
 #[async_trait]
 impl Create for TagRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError> {
-        let mut conn = self.pool.acquire().await.or(Err(CreateError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(CreateError::from_err)?;
         let model = create_tag(conn.as_mut(), payload).await?;
-        map_tag_model_to_entity(model).or(Err(CreateError::Internal))
+        map_tag_model_to_entity(model).map_err(CreateError::from_err)
     }
 }
 
 #[async_trait]
 impl Delete for TagRepository {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        let mut conn = self.pool.acquire().await.or(Err(DeleteError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(DeleteError::from_err)?;
         delete_tag(conn.as_mut(), id).await
     }
 }
@@ -53,42 +56,38 @@ impl Delete for TagRepository {
 #[async_trait]
 impl Find for TagRepository {
     async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
-        let mut conn = self.pool.acquire().await.or(Err(FindError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(FindError::from_err)?;
         let model = find_tag(conn.as_mut(), id).await?;
-        map_tag_model_to_entity(model).or(Err(FindError::Internal))
+        map_tag_model_to_entity(model).map_err(FindError::from_err)
     }
 }
 
 #[async_trait]
 impl List for TagRepository {
     async fn list(&self) -> Result<Vec<TagEntity>, ListError> {
-        let mut conn = self.pool.acquire().await.or(Err(ListError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(ListError::from_err)?;
         let tag_models = list_tag(conn.as_mut()).await?;
 
         tag_models
             .into_iter()
             .map(map_tag_model_to_entity)
-            .collect::<Result<Vec<TagEntity>, ()>>()
-            .or(Err(ListError::Internal))
+            .collect::<Result<Vec<TagEntity>, MapTagModelError>>()
+            .map_err(ListError::from_err)
     }
 }
 
 #[async_trait]
 impl Update for TagRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TagEntity, UpdateError> {
-        let mut conn = self.pool.acquire().await.or(Err(UpdateError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(UpdateError::from_err)?;
         let tag_model = update_tag(conn.as_mut(), payload).await?;
-        map_tag_model_to_entity(tag_model).or(Err(UpdateError::Internal))
+        map_tag_model_to_entity(tag_model).map_err(UpdateError::from_err)
     }
 }
 
-fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, ()> {
-    let name = Name::new(model.name).map_err(|err| {
-        tracing::error!("tag model name incompatible with tag entity name: {err:?}");
-    })?;
-    let description = Description::new(model.description).map_err(|err| {
-        tracing::error!("tag model description incompatible with tag entity description: {err:?}");
-    })?;
+fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, MapTagModelError> {
+    let name = Name::new(model.name).map_err(MapTagModelError::Name)?;
+    let description = Description::new(model.description).map_err(MapTagModelError::Description)?;
 
     Ok(TagEntity {
         id: model.id.into(),
@@ -97,4 +96,30 @@ fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, ()> {
         created_at: model.created_at.into(),
         updated_at: model.updated_at.into(),
     })
+}
+
+#[derive(Debug)]
+enum MapTagModelError {
+    Name(NameError),
+    Description(DescriptionError),
+}
+
+impl fmt::Display for MapTagModelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Name(err) => write!(f, "tag model name incompatible with entity: {err}"),
+            Self::Description(err) => {
+                write!(f, "tag model description incompatible with entity: {err}")
+            }
+        }
+    }
+}
+
+impl Error for MapTagModelError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Name(err) => Some(err),
+            Self::Description(err) => Some(err),
+        }
+    }
 }

@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
 use crate::adapters::dtos::todo::update::{ParseError, RunError, UpdateRequest};
+use crate::application::dtos::todo::update::UpdateTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -43,7 +44,7 @@ pub(super) async fn update_todo(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
-            let (status_code, message) = config_error_response(err);
+            let (status_code, message) = config_error_response(&err);
             return (status_code, Json(message)).into_response();
         }
     };
@@ -51,27 +52,30 @@ pub(super) async fn update_todo(
     (StatusCode::OK, Json(output)).into_response()
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(e) => {
-            let field = match e {
+        RunError::Parsing(parse_err) => {
+            let field = match parse_err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
                 ParseError::EmptyDone => "done",
             };
-            let details = ValidationError::new(field, e.description());
-            let error = ApiError::new("UTD-001", "Invalid input").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
+            let details = ValidationError::new(field, parse_err.to_string());
+            let api_error = ApiError::new("UTD-001", error.to_string()).with_details(details);
+            (StatusCode::BAD_REQUEST, api_error)
         }
-        RunError::NotFound => {
-            let error = ApiError::new("UTD-002", "Todo not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("UTD-003", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Updating(update_err) => match update_err {
+            UpdateTodoError::NotFound => {
+                let api_error = ApiError::new("UTD-002", update_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
+            }
+            UpdateTodoError::Repository(repository_err) => {
+                tracing::error!("update todo repository error: {repository_err}");
+                let api_error = ApiError::new("UTD-003", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
+            }
+        },
     }
 }

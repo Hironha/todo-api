@@ -1,5 +1,8 @@
+use std::error::Error;
+use std::fmt;
+
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::tag::find::FindTagInput;
+use crate::application::dtos::tag::find::{FindTagError, FindTagInput};
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -16,11 +19,19 @@ impl Parse<FindTagInput, ParseError> for FindRequest {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum RunError {
     Parsing(ParseError),
-    NotFound,
-    Internal,
+    Finding(FindTagError),
+}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parsing(_) => write!(f, "failed parsing find tag input"),
+            Self::Finding(_) => write!(f, "failed finding tag"),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -29,11 +40,19 @@ pub enum ParseError {
     InvalidId,
 }
 
-impl ParseError {
-    pub fn description(&self) -> String {
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyId => "required string".into(),
-            Self::InvalidId => "invalid id format".into(),
+            Self::EmptyId => write!(f, "required string"),
+            Self::InvalidId => write!(f, "invalid id format"),
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::EmptyId | Self::InvalidId => None,
         }
     }
 }

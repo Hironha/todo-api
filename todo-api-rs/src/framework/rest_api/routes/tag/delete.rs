@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TagState;
 use crate::adapters::controllers::tag::delete::DeleteController;
 use crate::adapters::dtos::tag::delete::{DeleteRequest, ParseError, RunError};
+use crate::application::dtos::tag::delete::DeleteTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -24,30 +25,33 @@ pub(super) async fn delete_tag(
     let controller = DeleteController::new(state.tag_repository);
 
     if let Err(err) = controller.run(input).await {
-        let (status_code, message) = config_error_response(err);
+        let (status_code, message) = config_error_response(&err);
         (status_code, Json(message)).into_response()
     } else {
         (StatusCode::NO_CONTENT).into_response()
     }
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(e) => {
-            let field = match e {
+        RunError::Parsing(parse_err) => {
+            let field = match parse_err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
             };
-            let details = ValidationError::new(field, e.description());
-            let error = ApiError::new("DTG-001", "Invalid input").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
+            let details = ValidationError::new(field, parse_err.to_string());
+            let api_error = ApiError::new("DTG-001", error.to_string()).with_details(details);
+            (StatusCode::BAD_REQUEST, api_error)
         }
-        RunError::NotFound => {
-            let error = ApiError::new("DTG-002", "Tag not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("DTG-003", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Deleting(delete_err) => match &delete_err {
+            DeleteTagError::NotFound => {
+                let api_error = ApiError::new("DTG-002", delete_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
+            }
+            DeleteTagError::Repository(repository_err) => {
+                tracing::error!("delete tag repository error: {repository_err}");
+                let api_error = ApiError::new("DTG-003", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
+            }
+        },
     }
 }

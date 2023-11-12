@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TagState;
 use crate::adapters::controllers::tag::find::FindController;
 use crate::adapters::dtos::tag::find::{FindRequest, ParseError, RunError};
+use crate::application::dtos::tag::find::FindTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -26,7 +27,7 @@ pub(super) async fn find_tag(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
-            let (status, error) = config_error_response(err);
+            let (status, error) = config_error_response(&err);
             return (status, Json(error)).into_response();
         }
     };
@@ -34,23 +35,26 @@ pub(super) async fn find_tag(
     (StatusCode::OK, Json(output)).into_response()
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(e) => {
-            let field = match e {
+        RunError::Parsing(parse_err) => {
+            let field = match parse_err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
             };
-            let details = ValidationError::new(field, e.description());
-            let error = ApiError::new("FTG-001", "Invalid input").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
+            let details = ValidationError::new(field, parse_err.to_string());
+            let api_error = ApiError::new("FTG-001", error.to_string()).with_details(details);
+            (StatusCode::BAD_REQUEST, api_error)
         }
-        RunError::NotFound => {
-            let error = ApiError::new("FTG-002", "Tag not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("FTG-003", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Finding(find_err) => match &find_err {
+            FindTagError::NotFound => {
+                let api_error = ApiError::new("FTG-002", find_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
+            }
+            FindTagError::Repository(repository_err) => {
+                tracing::error!("find tag repository error: {repository_err}");
+                let api_error = ApiError::new("FTG-003", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
+            }
+        },
     }
 }

@@ -8,7 +8,7 @@ pub async fn find_todo<Repo: Find>(
 ) -> Result<TodoEntity, FindTodoError> {
     ctx.repository.find(id).await.map_err(|err| match err {
         FindError::NotFound => FindTodoError::NotFound,
-        FindError::Internal => FindTodoError::Internal,
+        FindError::Internal(err) => FindTodoError::Repository(err),
     })
 }
 

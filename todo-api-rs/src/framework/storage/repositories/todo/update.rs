@@ -25,9 +25,6 @@ pub(super) async fn update_todo(
         .await
         .map_err(|err| match err {
             SqlxError::RowNotFound => UpdateError::NotFound,
-            _ => {
-                tracing::error!("update todo repository error: {err:?}");
-                UpdateError::Internal
-            }
+            _ => UpdateError::from_err(err),
         })
 }

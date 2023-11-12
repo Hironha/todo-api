@@ -7,7 +7,7 @@ pub async fn delete_tag<Repo: Delete>(
 ) -> Result<(), DeleteTagError> {
     ctx.repository.delete(id).await.map_err(|err| match err {
         DeleteError::NotFound => DeleteTagError::NotFound,
-        DeleteError::Internal => DeleteTagError::Internal,
+        DeleteError::Internal(err) => DeleteTagError::Repository(err),
     })
 }
 

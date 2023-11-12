@@ -7,7 +7,7 @@ pub async fn delete_todo<Repo: Delete>(
 ) -> Result<(), DeleteTodoError> {
     ctx.repository.delete(id).await.map_err(|err| match err {
         DeleteError::NotFound => DeleteTodoError::NotFound,
-        DeleteError::Internal => DeleteTodoError::Internal,
+        DeleteError::Internal(err) => DeleteTodoError::Repository(err),
     })
 }
 

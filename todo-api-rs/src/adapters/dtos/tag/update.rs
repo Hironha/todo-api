@@ -1,5 +1,8 @@
+use std::error::Error;
+use std::fmt;
+
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::tag::update::UpdateTagInput;
+use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput};
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
 use crate::domain::types::Id;
 
@@ -33,11 +36,28 @@ impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum RunError {
     Parsing(ParseError),
-    NotFound,
-    Internal,
+    Updating(UpdateTagError),
+}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parsing(_) => write!(f, "failed parsing update tag input"),
+            Self::Updating(_) => write!(f, "failed updating tag"),
+        }
+    }
+}
+
+impl Error for RunError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Parsing(err) => Some(err),
+            Self::Updating(err) => Some(err),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -49,14 +69,24 @@ pub enum ParseError {
     InvalidDescription(DescriptionError),
 }
 
-impl ParseError {
-    pub fn description(&self) -> String {
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyId => "required string".into(),
-            Self::InvalidId => "invalid id format".into(),
-            Self::EmptyName => "required string".into(),
-            Self::InvalidName(err) => err.to_string(),
-            Self::InvalidDescription(err) => err.to_string(),
+            Self::EmptyId => write!(f, "required string"),
+            Self::InvalidId => write!(f, "invalid id format"),
+            Self::EmptyName => write!(f, "required string"),
+            Self::InvalidName(err) => err.fmt(f),
+            Self::InvalidDescription(err) => err.fmt(f),
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::EmptyId | Self::InvalidId | Self::EmptyName => None,
+            Self::InvalidName(err) => Some(err),
+            Self::InvalidDescription(err) => Some(err),
         }
     }
 }

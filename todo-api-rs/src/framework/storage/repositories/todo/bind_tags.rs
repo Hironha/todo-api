@@ -10,7 +10,7 @@ pub(super) async fn bind_tags(
     let todo_id = payload.todo_id.into_uuid();
     let todo_exists = check_todo_exists(trx, todo_id)
         .await
-        .or(Err(BindTagsError::Internal))?;
+        .map_err(BindTagsError::from_err)?;
 
     if !todo_exists {
         return Err(BindTagsError::TodoNotFound);
@@ -21,7 +21,7 @@ pub(super) async fn bind_tags(
         .bind(todo_id)
         .execute(trx.as_mut())
         .await
-        .or(Err(BindTagsError::Internal))?;
+        .map_err(BindTagsError::from_err)?;
 
     let tags_id = payload.tags_id.filter(|ids| !ids.is_empty()).map(|ids| {
         ids.into_iter()
@@ -32,7 +32,7 @@ pub(super) async fn bind_tags(
     if let Some(ids) = tags_id.as_deref() {
         let tags_exists = check_tags_exists(trx, ids)
             .await
-            .or(Err(BindTagsError::Internal))?;
+            .map_err(BindTagsError::from_err)?;
 
         if !tags_exists {
             return Err(BindTagsError::TagNotFound);
@@ -47,7 +47,7 @@ pub(super) async fn bind_tags(
             .build()
             .execute(trx.as_mut())
             .await
-            .or(Err(BindTagsError::Internal))?;
+            .map_err(BindTagsError::from_err)?;
     }
 
     Ok(())

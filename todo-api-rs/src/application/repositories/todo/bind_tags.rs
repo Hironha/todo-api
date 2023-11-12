@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use async_trait::async_trait;
 
 use crate::domain::types::{DateTime, Id};
@@ -14,9 +16,15 @@ pub struct BindTagsPayload {
     pub current_dt: DateTime,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum BindTagsError {
     TodoNotFound,
     TagNotFound,
-    Internal,
+    Internal(Box<dyn Error>),
+}
+
+impl BindTagsError {
+    pub fn from_err(err: impl Error + 'static) -> Self {
+        Self::Internal(err.into())
+    }
 }

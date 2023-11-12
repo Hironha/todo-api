@@ -6,6 +6,9 @@ mod find;
 mod list;
 mod update;
 
+use std::error::Error;
+use std::fmt;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -15,7 +18,7 @@ use crate::application::repositories::todo::delete::{Delete, DeleteError};
 use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListData, ListError, ListPayload};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::todo::{Description, Title, TodoEntity};
+use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError, TodoEntity};
 use crate::domain::types::{Date, Id};
 use crate::framework::storage::models::todo::TodoModel;
 
@@ -41,25 +44,25 @@ impl TodoRepository {
 #[async_trait]
 impl BindTags for TodoRepository {
     async fn bind_tags(&self, payload: BindTagsPayload) -> Result<(), BindTagsError> {
-        let mut trx = self.pool.begin().await.or(Err(BindTagsError::Internal))?;
+        let mut trx = self.pool.begin().await.map_err(BindTagsError::from_err)?;
         bind_tags(&mut trx, payload).await?;
-        trx.commit().await.or(Err(BindTagsError::Internal))
+        trx.commit().await.map_err(BindTagsError::from_err)
     }
 }
 
 #[async_trait]
 impl Create for TodoRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
-        let mut conn = self.pool.acquire().await.or(Err(CreateError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(CreateError::from_err)?;
         let model = create_todo(conn.as_mut(), payload).await?;
-        map_todo_model_to_entity(model).or(Err(CreateError::Internal))
+        map_todo_model_to_entity(model).map_err(CreateError::from_err)
     }
 }
 
 #[async_trait]
 impl Delete for TodoRepository {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        let mut conn = self.pool.acquire().await.or(Err(DeleteError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(DeleteError::from_err)?;
         delete_todo(conn.as_mut(), id).await
     }
 }
@@ -67,35 +70,32 @@ impl Delete for TodoRepository {
 #[async_trait]
 impl Find for TodoRepository {
     async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
-        let mut conn = self.pool.acquire().await.or(Err(FindError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(FindError::from_err)?;
         let model = find_todo(conn.as_mut(), id).await?;
-        map_todo_model_to_entity(model).or(Err(FindError::Internal))
+        map_todo_model_to_entity(model).map_err(FindError::from_err)
     }
 }
 
 #[async_trait]
 impl List for TodoRepository {
     async fn list(&self, payload: ListPayload) -> Result<ListData, ListError> {
-        let mut conn = self.pool.acquire().await.or(Err(ListError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(ListError::from_err)?;
         let count_filters = CountTodoFilters {
             title: payload.title.as_ref().map(|t| t.as_str()),
         };
 
         let db_count = count_todo(conn.as_mut(), count_filters)
             .await
-            .map_err(|err| {
-                tracing::error!("count todo error: {err:?}");
-                ListError::Internal
-            })?;
+            .map_err(ListError::from_err)?;
 
-        let count = u64::try_from(db_count).or(Err(ListError::Internal))?;
+        let count = u64::try_from(db_count).map_err(ListError::from_err)?;
 
         let todo_models = list_todo(conn.as_mut(), payload).await?;
         let todo_entities = todo_models
             .into_iter()
             .map(map_todo_model_to_entity)
-            .collect::<Result<Vec<TodoEntity>, ()>>()
-            .map_err(|_| ListError::Internal)?;
+            .collect::<Result<Vec<TodoEntity>, MapTodoModelError>>()
+            .map_err(ListError::from_err)?;
 
         Ok(ListData {
             count,
@@ -108,17 +108,14 @@ impl List for TodoRepository {
 impl Update for TodoRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError> {
         let todo = update_todo(&self.pool, payload).await?;
-        map_todo_model_to_entity(todo).or(Err(UpdateError::Internal))
+        map_todo_model_to_entity(todo).map_err(UpdateError::from_err)
     }
 }
 
-fn map_todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
-    let title = Title::new(model.title).map_err(|err| {
-        tracing::error!("todo model title is incompatible with entity title: {err:?}");
-    })?;
-    let description = Description::new(model.description).map_err(|err| {
-        tracing::error!("todo model description is incompatible with entity description: {err:?}");
-    })?;
+fn map_todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, MapTodoModelError> {
+    let title = Title::new(model.title).map_err(MapTodoModelError::Title)?;
+    let description =
+        Description::new(model.description).map_err(MapTodoModelError::Description)?;
 
     Ok(TodoEntity {
         id: model.id.into(),
@@ -129,4 +126,30 @@ fn map_todo_model_to_entity(model: TodoModel) -> Result<TodoEntity, ()> {
         created_at: model.created_at.into(),
         updated_at: model.updated_at.into(),
     })
+}
+
+#[derive(Debug)]
+enum MapTodoModelError {
+    Title(TitleError),
+    Description(DescriptionError),
+}
+
+impl fmt::Display for MapTodoModelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Title(err) => write!(f, "todo model title incompatible with entity: {err}"),
+            Self::Description(err) => {
+                write!(f, "todo model description incompatible with entity: {err}")
+            }
+        }
+    }
+}
+
+impl Error for MapTodoModelError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Title(err) => Some(err),
+            Self::Description(err) => Some(err),
+        }
+    }
 }

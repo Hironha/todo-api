@@ -1,5 +1,8 @@
+use std::error::Error;
+use std::fmt;
+
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::tag::delete::DeleteTagInput;
+use crate::application::dtos::tag::delete::{DeleteTagError, DeleteTagInput};
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -17,11 +20,28 @@ impl Parse<DeleteTagInput, ParseError> for DeleteRequest {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum RunError {
     Parsing(ParseError),
-    NotFound,
-    Internal,
+    Deleting(DeleteTagError),
+}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parsing(_) => write!(f, "failed parsing delete tag input"),
+            Self::Deleting(_) => write!(f, "failed deleting tag"),
+        }
+    }
+}
+
+impl Error for RunError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Parsing(err) => Some(err),
+            Self::Deleting(err) => Some(err),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -30,11 +50,19 @@ pub enum ParseError {
     InvalidId,
 }
 
-impl ParseError {
-    pub fn description(&self) -> String {
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyId => "required string".into(),
-            Self::InvalidId => "invalid id format".into(),
+            Self::EmptyId => write!(f, "required string"),
+            Self::InvalidId => write!(f, "invalid id format"),
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::EmptyId | Self::InvalidId => None,
         }
     }
 }

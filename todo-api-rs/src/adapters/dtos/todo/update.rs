@@ -1,5 +1,8 @@
+use std::error::Error;
+use std::fmt;
+
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::update::UpdateTodoInput;
+use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
 use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
 use crate::domain::types::{Date, Id};
 
@@ -48,11 +51,28 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum RunError {
     Parsing(ParseError),
-    NotFound,
-    Internal,
+    Updating(UpdateTodoError),
+}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parsing(_) => write!(f, "failed parsing update todo input"),
+            Self::Updating(_) => write!(f, "failed updating todo"),
+        }
+    }
+}
+
+impl Error for RunError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Parsing(err) => Some(err),
+            Self::Updating(err) => Some(err),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -66,18 +86,27 @@ pub enum ParseError {
     EmptyDone,
 }
 
-impl ParseError {
-    pub fn description(&self) -> String {
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyId => "required string".into(),
-            Self::InvalidId => "invalid id format".into(),
-            Self::EmptyTitle => "required string".into(),
-            Self::InvalidTitle(err) => err.to_string(),
-            Self::InvalidDescription(err) => err.to_string(),
-            Self::TodoAt => {
-                "optional string, but if defined, should be a date on YYYY-MM-DD format".into()
+            Self::EmptyId | Self::EmptyTitle => write!(f, "required string"),
+            Self::EmptyDone => write!(f, "required boolean"),
+            Self::InvalidId => write!(f, "invalid id format"),
+            Self::TodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
+            Self::InvalidTitle(err) => err.fmt(f),
+            Self::InvalidDescription(err) => err.fmt(f),
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::InvalidDescription(err) => Some(err),
+            Self::InvalidTitle(err) => Some(err),
+            Self::EmptyDone | Self::EmptyId | Self::EmptyTitle | Self::InvalidId | Self::TodoAt => {
+                None
             }
-            Self::EmptyDone => "required boolean".into(),
         }
     }
 }

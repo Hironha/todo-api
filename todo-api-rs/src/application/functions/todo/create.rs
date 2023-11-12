@@ -21,7 +21,7 @@ pub async fn create_todo<Repo: Create>(
         .create(payload)
         .await
         .map_err(|err| match err {
-            CreateError::Internal => CreateTodoError::Internal,
+            CreateError::Internal(err) => CreateTodoError::Repository(err),
         })
 }
 

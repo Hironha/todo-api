@@ -12,8 +12,5 @@ pub(super) async fn list_tag(conn: &mut PgConnection) -> Result<Vec<TagModel>, L
     sqlx::query_as::<_, TagModel>(q)
         .fetch_all(conn)
         .await
-        .map_err(|err| {
-            tracing::error!("list tag error: {err:?}");
-            ListError::Internal
-        })
+        .map_err(ListError::from_err)
 }

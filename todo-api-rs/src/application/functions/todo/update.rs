@@ -21,7 +21,7 @@ pub async fn update_todo<Repo: Update>(
         .await
         .map_err(|err| match err {
             UpdateError::NotFound => UpdateTodoError::NotFound,
-            UpdateError::Internal => UpdateTodoError::Internal,
+            UpdateError::Internal(err) => UpdateTodoError::Repository(err),
         })
 }
 

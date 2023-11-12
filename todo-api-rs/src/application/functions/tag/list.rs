@@ -6,7 +6,7 @@ pub async fn list_tag<Repo: List>(
     ctx: ListTagContext<'_, Repo>,
 ) -> Result<Vec<TagEntity>, ListTagError> {
     ctx.repository.list().await.map_err(|err| match err {
-        ListError::Internal => ListTagError::Internal,
+        ListError::Internal(err) => ListTagError::Repository(err),
     })
 }
 

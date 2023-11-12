@@ -7,6 +7,7 @@ use serde::Deserialize;
 use super::TodoState;
 use crate::adapters::controllers::todo::bind_tags::BindTagsController;
 use crate::adapters::dtos::todo::bind_tags::{BindTagsRequest, ParseError, RunError};
+use crate::application::dtos::todo::bind_tags::BindTodoTagsError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -34,35 +35,39 @@ pub(super) async fn bind_todo_tags(
     let controller = BindTagsController::new(state.todo_repository);
 
     if let Err(err) = controller.run(input).await {
-        let (status, error) = config_error_response(err);
+        let (status, error) = config_error_response(&err);
         return (status, Json(error)).into_response();
     }
 
     (StatusCode::OK).into_response()
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(err) => {
-            let field = match err {
+        RunError::Parsing(parse_err) => {
+            let field = match parse_err {
                 ParseError::EmptyTodo | ParseError::InvalidTodo => "todoId",
                 ParseError::InvalidTag(_) => "tagsId",
             };
-            let details = ValidationError::new(field, err.to_string());
-            let error = ApiError::new("BTD-001", "Invalid input").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
+            let details = ValidationError::new(field, parse_err.to_string());
+            let api_error = ApiError::new("BTD-001", error.to_string()).with_details(details);
+            (StatusCode::BAD_REQUEST, api_error)
         }
-        RunError::TodoNotFound => {
-            let error = ApiError::new("BTD-002", "Todo not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::TagNotFound => {
-            let error = ApiError::new("BTD-003", "Tag not found");
-            (StatusCode::NOT_FOUND, error)
-        }
-        RunError::Internal => {
-            let error = ApiError::new("BTD-004", "Internal server error");
-            (StatusCode::INTERNAL_SERVER_ERROR, error)
-        }
+        RunError::Binding(bind_err) => match bind_err {
+            BindTodoTagsError::TodoNotFound => {
+                let api_error = ApiError::new("BTD-002", bind_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
+            }
+            BindTodoTagsError::TagNotFound => {
+                let api_error = ApiError::new("BTD-003", bind_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
+            }
+            BindTodoTagsError::Repository(repository_err) => {
+                tracing::error!("bind todo tags repository error: {repository_err}");
+
+                let api_error = ApiError::new("BTD-004", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
+            }
+        },
     }
 }

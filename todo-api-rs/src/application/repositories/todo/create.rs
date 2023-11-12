@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use async_trait::async_trait;
 
 use crate::domain::entities::todo::{Description, Title, TodoEntity};
@@ -18,7 +20,13 @@ pub struct CreatePayload {
     pub updated_at: DateTime,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum CreateError {
-    Internal,
+    Internal(Box<dyn Error>),
+}
+
+impl CreateError {
+    pub fn from_err(err: impl Error + 'static) -> Self {
+        Self::Internal(err.into())
+    }
 }

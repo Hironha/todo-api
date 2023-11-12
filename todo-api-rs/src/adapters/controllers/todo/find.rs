@@ -1,7 +1,7 @@
 use crate::adapters::dtos::todo::find::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
-use crate::application::dtos::todo::find::{FindTodoError, FindTodoInput};
+use crate::application::dtos::todo::find::FindTodoInput;
 use crate::application::functions::todo::find::{find_todo, FindTodoContext};
 use crate::application::repositories::todo::find::Find;
 
@@ -19,12 +19,9 @@ impl<Repo: Find> FindController<Repo> {
     where
         Req: Parse<FindTodoInput, ParseError>,
     {
-        let input = req.parse().map_err(RunError::Validation)?;
+        let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = FindTodoContext::new(&self.repository);
-        let todo = find_todo(ctx, input).await.map_err(|err| match err {
-            FindTodoError::Internal => RunError::Internal,
-            FindTodoError::NotFound => RunError::NotFound,
-        })?;
+        let todo = find_todo(ctx, input).await.map_err(RunError::Finding)?;
 
         Ok(TodoPresenter::from(todo))
     }

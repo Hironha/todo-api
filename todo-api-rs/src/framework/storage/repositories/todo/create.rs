@@ -24,8 +24,5 @@ pub(super) async fn create_todo(
         .bind(payload.updated_at.into_date_time())
         .fetch_one(conn.as_mut())
         .await
-        .map_err(|err| {
-            tracing::error!("create todo failed creating {err:?}");
-            CreateError::Internal
-        })
+        .map_err(CreateError::from_err)
 }

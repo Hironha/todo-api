@@ -12,10 +12,7 @@ pub(super) async fn delete_tag(conn: &mut PgConnection, id: Id) -> Result<(), De
         .await
         .map_err(|err| match err {
             SqlxError::RowNotFound => DeleteError::NotFound,
-            _ => {
-                tracing::error!("delete tag err {err:?}");
-                DeleteError::Internal
-            }
+            _ => DeleteError::from_err(err),
         })?;
 
     Ok(())

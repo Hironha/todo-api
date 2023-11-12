@@ -1,7 +1,7 @@
 use crate::adapters::dtos::tag::find::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
-use crate::application::dtos::tag::find::{FindTagError, FindTagInput};
+use crate::application::dtos::tag::find::FindTagInput;
 use crate::application::functions::tag::find::{find_tag, FindTagContext};
 use crate::application::repositories::tag::find::Find;
 
@@ -25,9 +25,6 @@ impl<Repo: Find> FindController<Repo> {
         find_tag(ctx, input)
             .await
             .map(TagPresenter::from)
-            .map_err(|err| match err {
-                FindTagError::NotFound => RunError::NotFound,
-                FindTagError::Internal => RunError::Internal,
-            })
+            .map_err(RunError::Finding)
     }
 }

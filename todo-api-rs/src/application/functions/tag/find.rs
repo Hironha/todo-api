@@ -8,7 +8,7 @@ pub async fn find_tag<Repo: Find>(
 ) -> Result<TagEntity, FindTagError> {
     ctx.repository.find(id).await.map_err(|err| match err {
         FindError::NotFound => FindTagError::NotFound,
-        FindError::Internal => FindTagError::Internal,
+        FindError::Internal(err) => FindTagError::Repository(err),
     })
 }
 
