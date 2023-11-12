@@ -79,9 +79,9 @@ impl List for TagRepository {
 #[async_trait]
 impl Update for TagRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TagEntity, UpdateError> {
-        let mut conn = self.pool.acquire().await.or(Err(UpdateError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(UpdateError::from_err)?;
         let tag_model = update_tag(conn.as_mut(), payload).await?;
-        map_tag_model_to_entity(tag_model).or(Err(UpdateError::Internal))
+        map_tag_model_to_entity(tag_model).map_err(UpdateError::from_err)
     }
 }
 

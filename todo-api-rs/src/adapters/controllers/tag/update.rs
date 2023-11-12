@@ -1,7 +1,7 @@
 use crate::adapters::dtos::tag::update::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
-use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput};
+use crate::application::dtos::tag::update::UpdateTagInput;
 use crate::application::functions::tag::update::{update_tag, UpdateTagContext};
 use crate::application::repositories::tag::update::Update;
 
@@ -25,9 +25,6 @@ impl<Repo: Update> UpdateController<Repo> {
         update_tag(ctx, input)
             .await
             .map(TagPresenter::from)
-            .map_err(|err| match err {
-                UpdateTagError::NotFound => RunError::NotFound,
-                UpdateTagError::Internal => RunError::Internal,
-            })
+            .map_err(RunError::Updating)
     }
 }

@@ -19,7 +19,7 @@ pub async fn update_tag<Repo: Update>(
         .await
         .map_err(|err| match err {
             UpdateError::NotFound => UpdateTagError::NotFound,
-            UpdateError::Internal => UpdateTagError::Internal,
+            UpdateError::Internal(err) => UpdateTagError::Repository(err),
         })
 }
 
