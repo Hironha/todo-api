@@ -65,14 +65,14 @@ impl Find for TagRepository {
 #[async_trait]
 impl List for TagRepository {
     async fn list(&self) -> Result<Vec<TagEntity>, ListError> {
-        let mut conn = self.pool.acquire().await.or(Err(ListError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(ListError::from_err)?;
         let tag_models = list_tag(conn.as_mut()).await?;
 
         tag_models
             .into_iter()
             .map(map_tag_model_to_entity)
             .collect::<Result<Vec<TagEntity>, MapTagModelError>>()
-            .or(Err(ListError::Internal))
+            .map_err(ListError::from_err)
     }
 }
 

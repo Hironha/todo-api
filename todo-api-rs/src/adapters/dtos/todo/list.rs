@@ -56,7 +56,7 @@ impl fmt::Display for RunError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Parsing(_) => write!(f, "failed parsing list todo input"),
-            Self::Listing(_) => write!(f, "failed listing todo"),
+            Self::Listing(_) => write!(f, "failed listing todos"),
         }
     }
 }
