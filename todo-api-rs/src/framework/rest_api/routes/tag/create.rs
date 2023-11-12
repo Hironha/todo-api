@@ -41,12 +41,12 @@ pub(super) async fn create_tag(
 
 fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {    
     match error {
-        RunError::Parsing(parsing_err) => {
-            let field = match parsing_err {
+        RunError::Parsing(parse_err) => {
+            let field = match parse_err {
                 ParseError::EmptyName | ParseError::InvalidName(_) => "name",
                 ParseError::InvalidDescription(_) => "description",
             };
-            let details = ValidationError::new(field, parsing_err.to_string());
+            let details = ValidationError::new(field, parse_err.to_string());
             let api_error = ApiError::new("CTG-001", error.to_string()).with_details(details);
             (StatusCode::BAD_REQUEST, api_error)
         }

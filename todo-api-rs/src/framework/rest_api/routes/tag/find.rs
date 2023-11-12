@@ -42,18 +42,18 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 ParseError::EmptyId | ParseError::InvalidId => "id",
             };
             let details = ValidationError::new(field, parse_err.to_string());
-            let error = ApiError::new("FTG-001", error.to_string()).with_details(details);
-            (StatusCode::BAD_REQUEST, error)
+            let api_error = ApiError::new("FTG-001", error.to_string()).with_details(details);
+            (StatusCode::BAD_REQUEST, api_error)
         }
         RunError::Finding(find_err) => match &find_err {
             FindTagError::NotFound => {
-                let error = ApiError::new("FTG-002", find_err.to_string());
-                (StatusCode::NOT_FOUND, error)
+                let api_error = ApiError::new("FTG-002", find_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
             }
             FindTagError::Repository(repository_err) => {
                 tracing::error!("find tag repository error: {repository_err}");
-                let error = ApiError::new("FTG-003", error.to_string());
-                (StatusCode::INTERNAL_SERVER_ERROR, error)
+                let api_error = ApiError::new("FTG-003", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },
     }

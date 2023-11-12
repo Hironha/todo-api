@@ -24,11 +24,11 @@ pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoRespons
 
 fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Listing(err) => match err {
-            ListTagError::Repository(err) => {
-                tracing::error!("list tags repository error: {err}");
-                let error = ApiError::new("LTG-001", error.to_string());
-                (StatusCode::INTERNAL_SERVER_ERROR, error)
+        RunError::Listing(list_err) => match list_err {
+            ListTagError::Repository(repository_err) => {
+                tracing::error!("list tags repository error: {repository_err}");
+                let api_error = ApiError::new("LTG-001", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },
     }

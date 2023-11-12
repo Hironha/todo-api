@@ -34,7 +34,7 @@ pub(super) async fn create_todo(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
-            let (status, error) = config_error_response(err);
+            let (status, error) = config_error_response(&err);
             return (status, Json(error)).into_response();
         }
     };
@@ -42,23 +42,23 @@ pub(super) async fn create_todo(
     (StatusCode::CREATED, Json(output)).into_response()
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(e) => {
-            let field = match e {
+        RunError::Parsing(parse_err) => {
+            let field = match parse_err {
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
             };
-            let details = ValidationError::new(field, e.to_string());
-            let error = ApiError::new("CTD-001", "invalid input").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
+            let details = ValidationError::new(field, parse_err.to_string());
+            let api_error = ApiError::new("CTD-001", error.to_string()).with_details(details);
+            (StatusCode::BAD_REQUEST, api_error)
         }
-        RunError::Creating(err) => match err {
-            CreateTodoError::Repository(err) => {
-                tracing::error!("create todo repository error: {err}");
-                let error = ApiError::new("CTD-002", "internal server error");
-                (StatusCode::INTERNAL_SERVER_ERROR, error)
+        RunError::Creating(create_err) => match create_err {
+            CreateTodoError::Repository(repository_err) => {
+                tracing::error!("create todo repository error: {repository_err}");
+                let api_error = ApiError::new("CTD-002", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },
     }

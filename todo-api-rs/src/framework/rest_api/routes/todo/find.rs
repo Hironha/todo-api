@@ -27,7 +27,7 @@ pub(super) async fn find_todo(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
-            let (status_code, message) = config_error_response(err);
+            let (status_code, message) = config_error_response(&err);
             return (status_code, Json(message)).into_response();
         }
     };
@@ -35,25 +35,25 @@ pub(super) async fn find_todo(
     (StatusCode::OK, Json(output)).into_response()
 }
 
-fn config_error_response(error: RunError) -> (StatusCode, ApiError<ValidationError>) {
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
-        RunError::Parsing(err) => {
-            let field = match err {
+        RunError::Parsing(parse_err) => {
+            let field = match parse_err {
                 ParseError::EmptyId | ParseError::InvalidId => "id",
             };
-            let details = ValidationError::new(field, err.to_string());
-            let error = ApiError::new("FTD-001", "invalid input").with_details(details);
-            (StatusCode::BAD_REQUEST, error)
+            let details = ValidationError::new(field, parse_err.to_string());
+            let api_error = ApiError::new("FTD-001", error.to_string()).with_details(details);
+            (StatusCode::BAD_REQUEST, api_error)
         }
-        RunError::Finding(err) => match err {
+        RunError::Finding(find_err) => match find_err {
             FindTodoError::NotFound => {
-                let error = ApiError::new("FTD-002", err.to_string());
-                (StatusCode::NOT_FOUND, error)
+                let api_error = ApiError::new("FTD-002", find_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
             }
-            FindTodoError::Repository(err) => {
-                tracing::error!("find todo repository error: {err}");
-                let error = ApiError::new("FTD-003", "internal server error");
-                (StatusCode::INTERNAL_SERVER_ERROR, error)
+            FindTodoError::Repository(repository_err) => {
+                tracing::error!("find todo repository error: {repository_err}");
+                let api_error = ApiError::new("FTD-003", error.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },
     }
