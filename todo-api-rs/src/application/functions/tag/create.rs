@@ -20,7 +20,7 @@ pub async fn create_tag<Repo: Create>(
         .create(payload)
         .await
         .map_err(|err| match err {
-            CreateError::Internal => CreateTagError::Internal,
+            CreateError::Internal(err) => CreateTagError::Repository(err),
         })
 }
 

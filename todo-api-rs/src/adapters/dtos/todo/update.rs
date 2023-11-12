@@ -60,7 +60,7 @@ pub enum RunError {
 impl fmt::Display for RunError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Parsing(_) => write!(f, "failed parsing update input"),
+            Self::Parsing(_) => write!(f, "failed parsing update todo input"),
             Self::Updating(_) => write!(f, "failed updating todo"),
         }
     }

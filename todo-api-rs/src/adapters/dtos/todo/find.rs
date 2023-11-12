@@ -29,7 +29,7 @@ pub enum RunError {
 impl fmt::Display for RunError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Parsing(_) => write!(f, "failed parsing find input"),
+            Self::Parsing(_) => write!(f, "failed parsing find todo input"),
             Self::Finding(_) => write!(f, "failed finding todo"),
         }
     }

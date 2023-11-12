@@ -4,6 +4,9 @@ mod find;
 mod list;
 mod update;
 
+use std::error::Error;
+use std::fmt;
+
 use async_trait::async_trait;
 use sqlx::PgPool;
 
@@ -12,7 +15,7 @@ use crate::application::repositories::tag::delete::{Delete, DeleteError};
 use crate::application::repositories::tag::find::{Find, FindError};
 use crate::application::repositories::tag::list::{List, ListError};
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::tag::{Description, Name, TagEntity};
+use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
 
@@ -36,9 +39,9 @@ impl TagRepository {
 #[async_trait]
 impl Create for TagRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError> {
-        let mut conn = self.pool.acquire().await.or(Err(CreateError::Internal))?;
+        let mut conn = self.pool.acquire().await.map_err(CreateError::from_err)?;
         let model = create_tag(conn.as_mut(), payload).await?;
-        map_tag_model_to_entity(model).or(Err(CreateError::Internal))
+        map_tag_model_to_entity(model).map_err(CreateError::from_err)
     }
 }
 
@@ -68,7 +71,7 @@ impl List for TagRepository {
         tag_models
             .into_iter()
             .map(map_tag_model_to_entity)
-            .collect::<Result<Vec<TagEntity>, ()>>()
+            .collect::<Result<Vec<TagEntity>, MapTagModelError>>()
             .or(Err(ListError::Internal))
     }
 }
@@ -82,13 +85,10 @@ impl Update for TagRepository {
     }
 }
 
-fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, ()> {
-    let name = Name::new(model.name).map_err(|err| {
-        tracing::error!("tag model name incompatible with tag entity name: {err:?}");
-    })?;
-    let description = Description::new(model.description).map_err(|err| {
-        tracing::error!("tag model description incompatible with tag entity description: {err:?}");
-    })?;
+fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, MapTagModelError> {
+    let name = Name::new(model.name).map_err(MapTagModelError::InvalidName)?;
+    let description =
+        Description::new(model.description).map_err(MapTagModelError::InvalidDescription)?;
 
     Ok(TagEntity {
         id: model.id.into(),
@@ -97,4 +97,25 @@ fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, ()> {
         created_at: model.created_at.into(),
         updated_at: model.updated_at.into(),
     })
+}
+
+#[derive(Debug)]
+enum MapTagModelError {
+    InvalidName(NameError),
+    InvalidDescription(DescriptionError),
+}
+
+impl fmt::Display for MapTagModelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "tag model incompatible with entity")
+    }
+}
+
+impl Error for MapTagModelError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::InvalidName(err) => Some(err),
+            Self::InvalidDescription(err) => Some(err),
+        }
+    }
 }

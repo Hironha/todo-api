@@ -21,8 +21,5 @@ pub(super) async fn create_tag(
         .bind(payload.updated_at.into_date_time())
         .fetch_one(conn)
         .await
-        .map_err(|err| {
-            tracing::error!("create tag error: {err:?}");
-            CreateError::Internal
-        })
+        .map_err(CreateError::from_err)
 }

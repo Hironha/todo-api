@@ -1,7 +1,7 @@
 use crate::adapters::dtos::tag::create::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
-use crate::application::dtos::tag::create::{CreateTagError, CreateTagInput};
+use crate::application::dtos::tag::create::CreateTagInput;
 use crate::application::functions::tag::create::{create_tag, CreateTagContext};
 use crate::application::repositories::tag::create::Create;
 
@@ -24,8 +24,6 @@ impl<Repo: Create> CreateController<Repo> {
         create_tag(ctx, input)
             .await
             .map(TagPresenter::from)
-            .map_err(|err| match err {
-                CreateTagError::Internal => RunError::Internal,
-            })
+            .map_err(RunError::Creating)
     }
 }
