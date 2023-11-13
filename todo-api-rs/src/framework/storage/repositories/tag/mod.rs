@@ -1,29 +1,18 @@
-mod create;
-mod delete;
-mod find;
-mod list;
-mod update;
-
-use std::error::Error;
-use std::fmt;
+pub(super) mod mapper;
 
 use async_trait::async_trait;
-use sqlx::PgPool;
+use sqlx::{Error as SqlxError, PgPool};
 
 use crate::application::repositories::tag::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::tag::delete::{Delete, DeleteError};
 use crate::application::repositories::tag::find::{Find, FindError};
 use crate::application::repositories::tag::list::{List, ListError};
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
+use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
 
-use create::create_tag;
-use delete::delete_tag;
-use find::find_tag;
-use list::list_tag;
-use update::update_tag;
+use mapper::{map_tag_model_to_entity, MapTagModelError};
 
 #[derive(Clone)]
 pub struct TagRepository {
@@ -39,36 +28,79 @@ impl TagRepository {
 #[async_trait]
 impl Create for TagRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError> {
-        let mut conn = self.pool.acquire().await.map_err(CreateError::from_err)?;
-        let model = create_tag(conn.as_mut(), payload).await?;
-        map_tag_model_to_entity(model).map_err(CreateError::from_err)
+        let create_q = r#"
+            INSERT INTO tag (id, name, description, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, name, description, created_at, updated_at
+        "#;
+
+        let tag_model = sqlx::query_as::<_, TagModel>(create_q)
+            .bind(payload.id.into_uuid())
+            .bind(payload.name.into_string())
+            .bind(payload.description.into_opt_string())
+            .bind(payload.created_at.into_date_time())
+            .bind(payload.updated_at.into_date_time())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(CreateError::from_err)?;
+
+        map_tag_model_to_entity(tag_model).map_err(CreateError::from_err)
     }
 }
 
 #[async_trait]
 impl Delete for TagRepository {
     async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        let mut conn = self.pool.acquire().await.map_err(DeleteError::from_err)?;
-        delete_tag(conn.as_mut(), id).await
+        let delete_q = "DELETE FROM tag WHERE id = $1";
+        sqlx::query(delete_q)
+            .bind(id.into_uuid())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|err| match err {
+                SqlxError::RowNotFound => DeleteError::NotFound,
+                _ => DeleteError::from_err(err),
+            })?;
+
+        Ok(())
     }
 }
 
 #[async_trait]
 impl Find for TagRepository {
     async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
-        let mut conn = self.pool.acquire().await.map_err(FindError::from_err)?;
-        let model = find_tag(conn.as_mut(), id).await?;
-        map_tag_model_to_entity(model).map_err(FindError::from_err)
+        let find_q = r#"
+            SELECT id, name, description, created_at, updated_at
+            FROM tag
+            WHERE id = $1
+        "#;
+
+        let tag_model = sqlx::query_as::<_, TagModel>(find_q)
+            .bind(id.into_uuid())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|err| match err {
+                SqlxError::RowNotFound => FindError::NotFound,
+                _ => FindError::from_err(err),
+            })?;
+
+        map_tag_model_to_entity(tag_model).map_err(FindError::from_err)
     }
 }
 
 #[async_trait]
 impl List for TagRepository {
     async fn list(&self) -> Result<Vec<TagEntity>, ListError> {
-        let mut conn = self.pool.acquire().await.map_err(ListError::from_err)?;
-        let tag_models = list_tag(conn.as_mut()).await?;
+        let list_q = r#"
+            SELECT id, name, description, created_at, updated_at
+            FROM tag
+        "#;
 
-        tag_models
+        let tags_model = sqlx::query_as::<_, TagModel>(list_q)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(ListError::from_err)?;
+
+        tags_model
             .into_iter()
             .map(map_tag_model_to_entity)
             .collect::<Result<Vec<TagEntity>, MapTagModelError>>()
@@ -79,47 +111,25 @@ impl List for TagRepository {
 #[async_trait]
 impl Update for TagRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TagEntity, UpdateError> {
-        let mut conn = self.pool.acquire().await.map_err(UpdateError::from_err)?;
-        let tag_model = update_tag(conn.as_mut(), payload).await?;
+        let update_q = r#"
+            UPDATE tag
+            SET name = $1, description = $2, updated_at = $3
+            WHERE id = $4
+            RETURNING id, name, description, created_at, updated_at
+        "#;
+
+        let tag_model = sqlx::query_as::<_, TagModel>(update_q)
+            .bind(payload.name.into_string())
+            .bind(payload.description.into_opt_string())
+            .bind(payload.updated_at.into_date_time())
+            .bind(payload.id.into_uuid())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|err| match err {
+                SqlxError::RowNotFound => UpdateError::NotFound,
+                _ => UpdateError::from_err(err),
+            })?;
+
         map_tag_model_to_entity(tag_model).map_err(UpdateError::from_err)
-    }
-}
-
-fn map_tag_model_to_entity(model: TagModel) -> Result<TagEntity, MapTagModelError> {
-    let name = Name::new(model.name).map_err(MapTagModelError::Name)?;
-    let description = Description::new(model.description).map_err(MapTagModelError::Description)?;
-
-    Ok(TagEntity {
-        id: model.id.into(),
-        name,
-        description,
-        created_at: model.created_at.into(),
-        updated_at: model.updated_at.into(),
-    })
-}
-
-#[derive(Debug)]
-enum MapTagModelError {
-    Name(NameError),
-    Description(DescriptionError),
-}
-
-impl fmt::Display for MapTagModelError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Name(err) => write!(f, "tag model name incompatible with entity: {err}"),
-            Self::Description(err) => {
-                write!(f, "tag model description incompatible with entity: {err}")
-            }
-        }
-    }
-}
-
-impl Error for MapTagModelError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Name(err) => Some(err),
-            Self::Description(err) => Some(err),
-        }
     }
 }
