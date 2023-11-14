@@ -1,5 +1,3 @@
-pub(super) mod mapper;
-
 use async_trait::async_trait;
 use sqlx::{Error as SqlxError, PgPool};
 
@@ -11,8 +9,6 @@ use crate::application::repositories::tag::update::{Update, UpdateError, UpdateP
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
-
-use mapper::{map_tag_model_to_entity, MapTagModelError};
 
 #[derive(Clone)]
 pub struct TagRepository {
@@ -44,7 +40,7 @@ impl Create for TagRepository {
             .await
             .map_err(CreateError::from_err)?;
 
-        map_tag_model_to_entity(tag_model).map_err(CreateError::from_err)
+        Ok(tag_model.into_entity())
     }
 }
 
@@ -83,7 +79,7 @@ impl Find for TagRepository {
                 _ => FindError::from_err(err),
             })?;
 
-        map_tag_model_to_entity(tag_model).map_err(FindError::from_err)
+        Ok(tag_model.into_entity())
     }
 }
 
@@ -95,16 +91,17 @@ impl List for TagRepository {
             FROM tag
         "#;
 
-        let tags_model = sqlx::query_as::<_, TagModel>(list_q)
+        let tag_models = sqlx::query_as::<_, TagModel>(list_q)
             .fetch_all(&self.pool)
             .await
             .map_err(ListError::from_err)?;
 
-        tags_model
+        let tag_entities = tag_models
             .into_iter()
-            .map(map_tag_model_to_entity)
-            .collect::<Result<Vec<TagEntity>, MapTagModelError>>()
-            .map_err(ListError::from_err)
+            .map(|model| model.into_entity())
+            .collect::<Vec<TagEntity>>();
+
+        Ok(tag_entities)
     }
 }
 
@@ -130,6 +127,6 @@ impl Update for TagRepository {
                 _ => UpdateError::from_err(err),
             })?;
 
-        map_tag_model_to_entity(tag_model).map_err(UpdateError::from_err)
+        Ok(tag_model.into_entity())
     }
 }

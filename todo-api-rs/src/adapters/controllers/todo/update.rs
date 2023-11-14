@@ -1,6 +1,5 @@
 use crate::adapters::dtos::todo::update::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
-use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::update::UpdateTodoInput;
 use crate::application::functions::todo::update::{update_todo, UpdateTodoContext};
 use crate::application::repositories::todo::update::Update;
@@ -14,14 +13,13 @@ impl<Repo: Update> UpdateController<Repo> {
         Self { repository }
     }
 
-    pub async fn run<Req>(self, req: Req) -> Result<TodoPresenter, RunError>
+    pub async fn run<Req>(self, req: Req) -> Result<(), RunError>
     where
         Req: Parse<UpdateTodoInput, ParseError>,
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = UpdateTodoContext::new(&self.repository);
-        let todo = update_todo(ctx, input).await.map_err(RunError::Updating)?;
 
-        Ok(TodoPresenter::from(todo))
+        update_todo(ctx, input).await.map_err(RunError::Updating)
     }
 }

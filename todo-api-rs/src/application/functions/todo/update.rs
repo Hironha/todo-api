@@ -1,12 +1,11 @@
 use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
-use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::DateTime;
 
 pub async fn update_todo<Repo: Update>(
     ctx: UpdateTodoContext<'_, Repo>,
     input: UpdateTodoInput,
-) -> Result<TodoEntity, UpdateTodoError> {
+) -> Result<(), UpdateTodoError> {
     let payload = UpdatePayload {
         id: input.id,
         title: input.title,
