@@ -3,12 +3,12 @@ use std::fmt;
 
 use async_trait::async_trait;
 
-use crate::domain::entities::todo::{Description, Title, TodoEntity};
+use crate::domain::entities::todo::{Description, Title};
 use crate::domain::types::{Date, DateTime, Id};
 
 #[async_trait]
 pub trait Update {
-    async fn update(&self, payload: UpdatePayload) -> Result<TodoEntity, UpdateError>;
+    async fn update(&self, payload: UpdatePayload) -> Result<(), UpdateError>;
 }
 
 #[derive(Clone, Debug)]

@@ -3,18 +3,21 @@ use std::fmt;
 
 use crate::domain::types::{Date, DateTime, Id};
 
-#[derive(Clone, Debug, PartialEq)]
+use super::tag::TagEntity;
+
+#[derive(Clone, Debug)]
 pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
     pub description: Description,
     pub done: bool,
     pub todo_at: Option<Date>,
+    pub tags: Vec<TagEntity>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Title(String);
 
 impl Title {
@@ -29,6 +32,10 @@ impl Title {
         Ok(Self(title))
     }
 
+    pub fn new_unchecked(title: impl Into<String>) -> Self {
+        Self(title.into())
+    }
+
     pub fn into_string(self) -> String {
         self.0
     }
@@ -38,7 +45,9 @@ impl Title {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+// TODO: remove `Option` from `Description`, it's better to have
+// `Option<Description>` in `TodoEntity`
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Description(Option<String>);
 
 impl Description {
@@ -54,6 +63,10 @@ impl Description {
         }
 
         Ok(Self(Some(description)))
+    }
+
+    pub fn new_unchecked(description: Option<impl Into<String>>) -> Self {
+        Self(description.map(|d| d.into()))
     }
 
     pub fn into_opt_string(self) -> Option<String> {

@@ -39,17 +39,15 @@ pub(super) async fn update_todo(
         todo_at: body.todo_at,
         done: body.done,
     };
+
     let controller = UpdateController::new(state.todo_repository);
 
-    let output = match controller.run(input).await {
-        Ok(output) => output,
-        Err(err) => {
-            let (status_code, message) = config_error_response(&err);
-            return (status_code, Json(message)).into_response();
-        }
-    };
-
-    (StatusCode::OK, Json(output)).into_response()
+    if let Err(err) = controller.run(input).await {
+        let (status_code, message) = config_error_response(&err);
+        (status_code, Json(message)).into_response()
+    } else {
+        (StatusCode::OK).into_response()
+    }
 }
 
 fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
