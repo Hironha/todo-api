@@ -7,7 +7,7 @@ use crate::domain::types::{DateTime, Id};
 pub struct TagEntity {
     pub id: Id,
     pub name: Name,
-    pub description: Description,
+    pub description: Option<Description>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
@@ -35,27 +35,25 @@ impl Name {
 // TODO: remove `Option` from description, it's better to have
 // `Option<Description>` in `TagEntity`
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Description(Option<String>);
+pub struct Description(String);
 
 impl Description {
-    pub fn new(description: Option<impl Into<String>>) -> Result<Self, DescriptionError> {
-        let description: Option<String> = description.map(|v| v.into()).filter(|v| !v.is_empty());
-        let Some(description) = description else {
-            return Ok(Self(None));
-        };
+    pub fn new(description: impl Into<String>) -> Result<Self, DescriptionError> {
+        let description: String = description.into();
 
         if description.len() > 128 {
             return Err(DescriptionError::Length);
         }
 
-        Ok(Self(Some(description)))
+        Ok(Self(description))
     }
 
-    pub fn into_opt_string(self) -> Option<String> {
+    pub fn into_string(self) -> String {
         self.0
     }
 }
 
+// TODO: validate minimum length to `Name`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NameError {
     Empty,
@@ -79,6 +77,7 @@ impl Error for NameError {
     }
 }
 
+// TODO: validate minimum length to `Description`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptionError {
     Length,

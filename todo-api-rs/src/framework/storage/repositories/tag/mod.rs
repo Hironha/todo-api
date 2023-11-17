@@ -33,7 +33,7 @@ impl Create for TagRepository {
         let tag_model = sqlx::query_as::<_, TagModel>(create_q)
             .bind(payload.id.into_uuid())
             .bind(payload.name.into_string())
-            .bind(payload.description.into_opt_string())
+            .bind(payload.description.map(|d| d.into_string()))
             .bind(payload.created_at.into_date_time())
             .bind(payload.updated_at.into_date_time())
             .fetch_one(&self.pool)
@@ -117,7 +117,7 @@ impl Update for TagRepository {
 
         let tag_model = sqlx::query_as::<_, TagModel>(update_q)
             .bind(payload.name.into_string())
-            .bind(payload.description.into_opt_string())
+            .bind(payload.description.map(|d| d.into_string()))
             .bind(payload.updated_at.into_date_time())
             .bind(payload.id.into_uuid())
             .fetch_one(&self.pool)

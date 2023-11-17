@@ -8,7 +8,7 @@ use crate::domain::types::Id;
 pub struct UpdateTagInput {
     pub id: Id,
     pub name: Name,
-    pub description: Description,
+    pub description: Option<Description>,
 }
 
 #[derive(Debug)]

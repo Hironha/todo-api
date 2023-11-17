@@ -25,8 +25,11 @@ impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
             .ok_or(ParseError::EmptyName)
             .and_then(|name| Name::new(name).map_err(ParseError::InvalidName))?;
 
-        let description =
-            Description::new(self.description).map_err(ParseError::InvalidDescription)?;
+        let description = self
+            .description
+            .map(Description::new)
+            .transpose()
+            .map_err(ParseError::InvalidDescription)?;
 
         Ok(UpdateTagInput {
             id,

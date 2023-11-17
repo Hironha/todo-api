@@ -17,7 +17,10 @@ impl TagModel {
     /// Panics if not compatible with `TagEntity`
     pub fn into_entity(self) -> TagEntity {
         let name = Name::new(self.name).expect("tag model title incompatible with entity");
-        let description = Description::new(self.description)
+        let description = self
+            .description
+            .map(Description::new)
+            .transpose()
             .expect("tag model description incompatible with entity");
 
         TagEntity {

@@ -15,7 +15,7 @@ pub trait Create {
 pub struct CreatePayload {
     pub id: Id,
     pub name: Name,
-    pub description: Description,
+    pub description: Option<Description>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }

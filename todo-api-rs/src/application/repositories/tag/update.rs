@@ -15,7 +15,7 @@ pub trait Update {
 pub struct UpdatePayload {
     pub id: Id,
     pub name: Name,
-    pub description: Description,
+    pub description: Option<Description>,
     pub updated_at: DateTime,
 }
 

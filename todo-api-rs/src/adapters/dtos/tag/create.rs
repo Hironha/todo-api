@@ -15,11 +15,13 @@ impl Parse<CreateTagInput, ParseError> for CreateRequest {
     fn parse(self) -> Result<CreateTagInput, ParseError> {
         let name = self
             .name
-            .filter(|t| !t.is_empty())
             .ok_or(ParseError::EmptyName)
             .and_then(|name| Name::new(name).map_err(ParseError::InvalidName))?;
 
-        let description = Description::new(self.description.filter(|d| !d.is_empty()))
+        let description = self
+            .description
+            .map(Description::new)
+            .transpose()
             .map_err(ParseError::InvalidDescription)?;
 
         Ok(CreateTagInput { name, description })

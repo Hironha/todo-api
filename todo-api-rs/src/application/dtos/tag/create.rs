@@ -6,7 +6,7 @@ use crate::domain::entities::tag::{Description, Name};
 #[derive(Clone, Debug)]
 pub struct CreateTagInput {
     pub name: Name,
-    pub description: Description,
+    pub description: Option<Description>,
 }
 
 #[derive(Debug)]
