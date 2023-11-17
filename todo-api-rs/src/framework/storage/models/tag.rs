@@ -14,11 +14,16 @@ pub struct TagModel {
 }
 
 impl TagModel {
+    /// Panics if not compatible with `TagEntity`
     pub fn into_entity(self) -> TagEntity {
+        let name = Name::new(self.name).expect("tag model title incompatible with entity");
+        let description = Description::new(self.description)
+            .expect("tag model description incompatible with entity");
+
         TagEntity {
             id: self.id.into(),
-            name: Name::new_unchecked(self.name),
-            description: Description::new_unchecked(self.description),
+            name,
+            description,
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),
         }

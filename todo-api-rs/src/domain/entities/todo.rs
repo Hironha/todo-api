@@ -32,10 +32,6 @@ impl Title {
         Ok(Self(title))
     }
 
-    pub fn new_unchecked(title: impl Into<String>) -> Self {
-        Self(title.into())
-    }
-
     pub fn into_string(self) -> String {
         self.0
     }
@@ -63,10 +59,6 @@ impl Description {
         }
 
         Ok(Self(Some(description)))
-    }
-
-    pub fn new_unchecked(description: Option<impl Into<String>>) -> Self {
-        Self(description.map(|d| d.into()))
     }
 
     pub fn into_opt_string(self) -> Option<String> {
