@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use sqlx::types::uuid::Uuid;
-use sqlx::{Error as SqlxError, PgPool, Postgres, QueryBuilder, Row};
+use sqlx::{Error as SqlxError, FromRow, PgPool, Postgres, QueryBuilder, Row};
 
 use crate::application::repositories::todo::bind_tags::{BindTags, BindTagsError, BindTagsPayload};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
@@ -157,8 +157,8 @@ impl Find for TodoRepository {
 
         let todo_tags = todo_tag_models
             .into_iter()
-            .map(|model| model.into_entity())
-            .collect::<Vec<TagEntity>>();
+            .map(|model| model.try_into_entity().map_err(FindError::from_err))
+            .collect::<Result<Vec<TagEntity>, FindError>>()?;
 
         Ok(todo_model.into_entity(todo_tags))
     }
@@ -220,16 +220,12 @@ impl List for TodoRepository {
         let tag_relation_entries = tag_relations
             .into_iter()
             .map(|row| {
-                let tag_model = TagModel {
-                    id: row.get("id"),
-                    name: row.get("name"),
-                    description: row.get("description"),
-                    created_at: row.get("created_at"),
-                    updated_at: row.get("updated_at"),
-                };
-                (row.get("todo_id"), tag_model.into_entity())
+                let tag_model = TagModel::from_row(&row).map_err(ListError::from_err)?;
+                let tag_entity = tag_model.try_into_entity().map_err(ListError::from_err)?;
+                let todo_id = row.try_get("todo_id").map_err(ListError::from_err)?;
+                Ok((todo_id, tag_entity))
             })
-            .collect::<Vec<(Uuid, TagEntity)>>();
+            .collect::<Result<Vec<(Uuid, TagEntity)>, ListError>>()?;
 
         let mut todo_entities = todo_models
             .into_iter()

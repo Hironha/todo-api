@@ -40,7 +40,7 @@ impl Create for TagRepository {
             .await
             .map_err(CreateError::from_err)?;
 
-        Ok(tag_model.into_entity())
+        tag_model.try_into_entity().map_err(CreateError::from_err)
     }
 }
 
@@ -79,7 +79,7 @@ impl Find for TagRepository {
                 _ => FindError::from_err(err),
             })?;
 
-        Ok(tag_model.into_entity())
+        tag_model.try_into_entity().map_err(FindError::from_err)
     }
 }
 
@@ -96,12 +96,10 @@ impl List for TagRepository {
             .await
             .map_err(ListError::from_err)?;
 
-        let tag_entities = tag_models
+        tag_models
             .into_iter()
-            .map(|model| model.into_entity())
-            .collect::<Vec<TagEntity>>();
-
-        Ok(tag_entities)
+            .map(|model| model.try_into_entity().map_err(ListError::from_err))
+            .collect::<Result<Vec<TagEntity>, ListError>>()
     }
 }
 
@@ -127,6 +125,6 @@ impl Update for TagRepository {
                 _ => UpdateError::from_err(err),
             })?;
 
-        Ok(tag_model.into_entity())
+        tag_model.try_into_entity().map_err(UpdateError::from_err)
     }
 }
