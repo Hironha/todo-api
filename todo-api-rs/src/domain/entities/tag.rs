@@ -12,7 +12,7 @@ pub struct TagEntity {
     pub updated_at: DateTime,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Name(String);
 
 impl Name {
@@ -34,7 +34,7 @@ impl Name {
 
 // TODO: remove `Option` from description, it's better to have
 // `Option<Description>` in `TagEntity`
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Description(Option<String>);
 
 impl Description {
