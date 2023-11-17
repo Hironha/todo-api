@@ -44,7 +44,7 @@ pub enum TagModelEntityError {
 impl fmt::Display for TagModelEntityError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Name(err) => write!(f, "tag model title incompatible with entity: {err}"),
+            Self::Name(err) => write!(f, "tag model name incompatible with entity: {err}"),
             Self::Description(err) => {
                 write!(f, "tag model description incompatible with entity: {err}")
             }
