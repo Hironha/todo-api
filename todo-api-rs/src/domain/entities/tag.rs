@@ -32,8 +32,6 @@ impl Name {
     }
 }
 
-// TODO: remove `Option` from description, it's better to have
-// `Option<Description>` in `TagEntity`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Description(String);
 
