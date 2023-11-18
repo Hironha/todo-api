@@ -54,9 +54,6 @@ impl BindTags for TodoRepository {
                 .collect::<Vec<Uuid>>()
         });
 
-        // TODO: improve way to check if tags_id exists, maybe the insertion into
-        // `todo_tag` table already returns an error that tells that `tag_id` doesn't
-        // exists, because it has a foreign key constraint with `tag` table
         if let Some(tags_id) = tag_ids.as_deref() {
             let count_tags_q = "SELECT COUNT(*) FROM tag WHERE id = ANY($1)";
             let count = sqlx::query_scalar::<_, i64>(count_tags_q)
