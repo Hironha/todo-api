@@ -8,7 +8,7 @@ use crate::domain::types::{Date, Id};
 pub struct UpdateTodoInput {
     pub id: Id,
     pub title: Title,
-    pub description: Description,
+    pub description: Option<Description>,
     pub done: bool,
     pub todo_at: Option<Date>,
 }

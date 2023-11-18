@@ -98,7 +98,7 @@ impl Create for TodoRepository {
         let todo_model = sqlx::query_as::<_, TodoModel>(insert_q)
             .bind(Id::new().into_uuid())
             .bind(payload.title.into_string())
-            .bind(payload.description.into_opt_string())
+            .bind(payload.description.map(|d| d.into_string()))
             .bind(payload.todo_at.map(|at| at.into_date()))
             .bind(payload.done)
             .bind(payload.created_at.into_date_time())
@@ -264,7 +264,7 @@ impl Update for TodoRepository {
 
         sqlx::query(update_q)
             .bind(payload.title.into_string())
-            .bind(payload.description.into_opt_string())
+            .bind(payload.description.map(|d| d.into_string()))
             .bind(payload.todo_at.map(|at| at.into_date()))
             .bind(payload.done)
             .bind(payload.updated_at.into_date_time())

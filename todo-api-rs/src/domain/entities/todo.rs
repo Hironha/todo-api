@@ -9,7 +9,7 @@ use super::tag::TagEntity;
 pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
-    pub description: Description,
+    pub description: Option<Description>,
     pub done: bool,
     pub todo_at: Option<Date>,
     pub tags: Vec<TagEntity>,
@@ -41,31 +41,26 @@ impl Title {
     }
 }
 
-// TODO: remove `Option` from `Description`, it's better to have
-// `Option<Description>` in `TodoEntity`
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Description(Option<String>);
+pub struct Description(String);
 
 impl Description {
-    pub fn new(description: Option<impl Into<String>>) -> Result<Self, DescriptionError> {
-        let maybe_description: Option<String> =
-            description.map(|d| d.into()).filter(|d| !d.is_empty());
-        let Some(description) = maybe_description else {
-            return Ok(Self(None));
-        };
+    pub fn new(description: impl Into<String>) -> Result<Self, DescriptionError> {
+        let description: String = description.into();
 
         if description.len() > 256 {
             return Err(DescriptionError::Length);
         }
 
-        Ok(Self(Some(description)))
+        Ok(Self(description))
     }
 
-    pub fn into_opt_string(self) -> Option<String> {
+    pub fn into_string(self) -> String {
         self.0
     }
 }
 
+// TODO: validate minimum length to `Title`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TitleError {
     Empty,
@@ -87,6 +82,7 @@ impl Error for TitleError {
     }
 }
 
+// TODO: validate minimum length to `Description`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptionError {
     Length,

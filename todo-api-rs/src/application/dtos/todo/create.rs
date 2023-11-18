@@ -7,7 +7,7 @@ use crate::domain::types::Date;
 #[derive(Clone, Debug)]
 pub struct CreateTodoInput {
     pub title: Title,
-    pub description: Description,
+    pub description: Option<Description>,
     pub todo_at: Option<Date>,
 }
 

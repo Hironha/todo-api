@@ -23,8 +23,11 @@ pub struct TodoModel {
 impl TodoModel {
     pub fn try_into_entity(self, tags: Vec<TagEntity>) -> Result<TodoEntity, TodoModelEntityError> {
         let title = Title::new(self.title).map_err(TodoModelEntityError::Title)?;
-        let description =
-            Description::new(self.description).map_err(TodoModelEntityError::Description)?;
+        let description = self
+            .description
+            .map(Description::new)
+            .transpose()
+            .map_err(TodoModelEntityError::Description)?;
 
         Ok(TodoEntity {
             id: self.id.into(),

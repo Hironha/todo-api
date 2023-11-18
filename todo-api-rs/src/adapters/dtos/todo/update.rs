@@ -26,11 +26,13 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
 
         let title = self
             .title
-            .filter(|t| !t.is_empty())
             .ok_or(ParseError::EmptyTitle)
             .and_then(|t| Title::new(t).map_err(ParseError::InvalidTitle))?;
 
-        let description = Description::new(self.description.filter(|d| !d.is_empty()))
+        let description = self
+            .description
+            .map(Description::new)
+            .transpose()
             .map_err(ParseError::InvalidDescription)?;
 
         let done = self.done.ok_or(ParseError::EmptyDone)?;

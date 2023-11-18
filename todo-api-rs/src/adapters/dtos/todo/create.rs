@@ -17,11 +17,13 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
     fn parse(self) -> Result<CreateTodoInput, ParseError> {
         let title = self
             .title
-            .filter(|t| !t.is_empty())
             .ok_or(ParseError::EmptyTitle)
             .and_then(|title| Title::new(title).map_err(ParseError::InvalidTitle))?;
 
-        let description = Description::new(self.description.filter(|d| !d.is_empty()))
+        let description = self
+            .description
+            .map(Description::new)
+            .transpose()
             .map_err(ParseError::InvalidDescription)?;
 
         let todo_at = self

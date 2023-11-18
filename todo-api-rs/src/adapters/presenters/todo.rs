@@ -24,7 +24,7 @@ impl From<TodoEntity> for TodoPresenter {
         Self {
             id: todo.id.to_string(),
             title: todo.title.into_string(),
-            description: todo.description.into_opt_string(),
+            description: todo.description.map(|d| d.into_string()),
             todo_at: todo.todo_at.map(|at| at.to_ymd()),
             created_at: todo.created_at.to_rfc3339(),
             updated_at: todo.updated_at.to_rfc3339(),

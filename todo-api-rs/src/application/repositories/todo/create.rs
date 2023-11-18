@@ -13,7 +13,7 @@ pub trait Create {
 #[derive(Clone, Debug)]
 pub struct CreatePayload {
     pub title: Title,
-    pub description: Description,
+    pub description: Option<Description>,
     pub todo_at: Option<Date>,
     pub done: bool,
     pub created_at: DateTime,
