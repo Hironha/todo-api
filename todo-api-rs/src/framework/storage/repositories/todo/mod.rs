@@ -107,7 +107,9 @@ impl Create for TodoRepository {
             .await
             .map_err(CreateError::from_err)?;
 
-        Ok(todo_model.into_entity(Vec::new()))
+        todo_model
+            .try_into_entity(Vec::new())
+            .map_err(CreateError::from_err)
     }
 }
 
@@ -160,7 +162,9 @@ impl Find for TodoRepository {
             .map(|model| model.try_into_entity().map_err(FindError::from_err))
             .collect::<Result<Vec<TagEntity>, FindError>>()?;
 
-        Ok(todo_model.into_entity(todo_tags))
+        todo_model
+            .try_into_entity(todo_tags)
+            .map_err(FindError::from_err)
     }
 }
 
@@ -220,17 +224,18 @@ impl List for TodoRepository {
         let tag_relation_entries = tag_relations
             .into_iter()
             .map(|row| {
-                let tag_model = TagModel::from_row(&row).map_err(ListError::from_err)?;
-                let tag_entity = tag_model.try_into_entity().map_err(ListError::from_err)?;
                 let todo_id = row.try_get("todo_id").map_err(ListError::from_err)?;
+                let tag_entity = TagModel::from_row(&row)
+                    .map_err(ListError::from_err)
+                    .and_then(|model| model.try_into_entity().map_err(ListError::from_err))?;
                 Ok((todo_id, tag_entity))
             })
             .collect::<Result<Vec<(Uuid, TagEntity)>, ListError>>()?;
 
         let mut todo_entities = todo_models
             .into_iter()
-            .map(|model| model.into_entity(Vec::new()))
-            .collect::<Vec<TodoEntity>>();
+            .map(|m| m.try_into_entity(Vec::new()).map_err(ListError::from_err))
+            .collect::<Result<Vec<TodoEntity>, ListError>>()?;
 
         for (todo_id, tag) in tag_relation_entries.into_iter() {
             for todo in todo_entities.iter_mut() {
