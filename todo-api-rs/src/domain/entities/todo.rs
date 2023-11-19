@@ -10,8 +10,7 @@ pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
     pub description: Option<Description>,
-    // TODO: replace `done` by a status that allows: todo, in-progress and done 
-    pub done: bool,
+    pub status: TodoEntityStatus,
     pub todo_at: Option<Date>,
     pub tags: Vec<TagEntity>,
     pub created_at: DateTime,
@@ -58,6 +57,23 @@ impl Description {
 
     pub fn into_string(self) -> String {
         self.0
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TodoEntityStatus {
+    Todo,
+    InProgress,
+    Done,
+}
+
+impl fmt::Display for TodoEntityStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Todo => write!(f, "todo"),
+            Self::InProgress => write!(f, "in_progress"),
+            Self::Done => write!(f, "done"),
+        }
     }
 }
 
