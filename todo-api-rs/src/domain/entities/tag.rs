@@ -51,7 +51,6 @@ impl Description {
     }
 }
 
-// TODO: validate minimum length to `Name`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NameError {
     Empty,
@@ -75,7 +74,6 @@ impl Error for NameError {
     }
 }
 
-// TODO: validate minimum length to `Description`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptionError {
     Length,

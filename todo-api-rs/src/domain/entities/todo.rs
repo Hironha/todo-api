@@ -61,7 +61,6 @@ impl Description {
     }
 }
 
-// TODO: validate minimum length to `Title`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TitleError {
     Empty,
@@ -83,7 +82,6 @@ impl Error for TitleError {
     }
 }
 
-// TODO: validate minimum length to `Description`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptionError {
     Length,
