@@ -10,7 +10,7 @@ pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
     pub description: Option<Description>,
-    // TODO: replace `done` by a status that allow: todo, in-progress and done 
+    // TODO: replace `done` by a status that allows: todo, in-progress and done 
     pub done: bool,
     pub todo_at: Option<Date>,
     pub tags: Vec<TagEntity>,
