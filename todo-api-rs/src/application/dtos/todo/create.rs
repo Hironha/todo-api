@@ -1,16 +1,15 @@
 use std::error::Error;
 use std::fmt;
 
-use crate::domain::entities::todo::{Description, Title};
+use crate::domain::entities::todo::{Description, Title, TodoEntityStatus};
 use crate::domain::types::Date;
 
-// TODO: accept a optional `TodoEntityStatus` so it's possible to create
-// a `todo` item with any status 
 #[derive(Clone, Debug)]
 pub struct CreateTodoInput {
     pub title: Title,
     pub description: Option<Description>,
     pub todo_at: Option<Date>,
+    pub status: TodoEntityStatus,
 }
 
 #[derive(Debug)]

@@ -3,7 +3,9 @@ use std::fmt;
 
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
-use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
+use crate::domain::entities::todo::{
+    Description, DescriptionError, Title, TitleError, TodoEntityStatus, TodoEntityStatusError,
+};
 use crate::domain::types::Date;
 
 #[derive(Clone, Debug)]
@@ -11,6 +13,7 @@ pub struct CreateRequest {
     pub title: Option<String>,
     pub description: Option<String>,
     pub todo_at: Option<String>,
+    pub status: Option<String>,
 }
 
 impl Parse<CreateTodoInput, ParseError> for CreateRequest {
@@ -30,12 +33,20 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
             .todo_at
             .map(|at| Date::parse_str(&at))
             .transpose()
-            .map_err(|_| ParseError::TodoAt)?;
+            .map_err(|_| ParseError::InvalidTodoAt)?;
+
+        let status = self
+            .status
+            .ok_or(ParseError::EmptyStatus)
+            .and_then(|status| {
+                TodoEntityStatus::try_from(status.as_str()).map_err(ParseError::InvalidStatus)
+            })?;
 
         Ok(CreateTodoInput {
             title,
             description,
             todo_at,
+            status,
         })
     }
 }
@@ -69,7 +80,9 @@ pub enum ParseError {
     EmptyTitle,
     InvalidTitle(TitleError),
     InvalidDescription(DescriptionError),
-    TodoAt,
+    InvalidTodoAt,
+    EmptyStatus,
+    InvalidStatus(TodoEntityStatusError),
 }
 
 impl fmt::Display for ParseError {
@@ -78,7 +91,9 @@ impl fmt::Display for ParseError {
             Self::EmptyTitle => write!(f, "required string"),
             Self::InvalidTitle(err) => err.fmt(f),
             Self::InvalidDescription(err) => err.fmt(f),
-            Self::TodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
+            Self::InvalidTodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
+            Self::EmptyStatus => write!(f, "required string"),
+            Self::InvalidStatus(err) => err.fmt(f),
         }
     }
 }
@@ -86,9 +101,10 @@ impl fmt::Display for ParseError {
 impl Error for ParseError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::EmptyTitle | Self::TodoAt => None,
             Self::InvalidTitle(err) => Some(err),
             Self::InvalidDescription(err) => Some(err),
+            Self::InvalidStatus(err) => Some(err),
+            Self::EmptyTitle | Self::InvalidTodoAt | Self::EmptyStatus => None,
         }
     }
 }

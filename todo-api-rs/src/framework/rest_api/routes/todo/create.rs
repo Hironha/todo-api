@@ -16,6 +16,7 @@ pub(super) struct CreateBody {
     description: Option<String>,
     #[serde(rename(deserialize = "todoAt"))]
     todo_at: Option<String>,
+    status: Option<String>,
 }
 
 pub(super) async fn create_todo(
@@ -28,7 +29,9 @@ pub(super) async fn create_todo(
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
+        status: body.status,
     };
+
     let controller = CreateController::new(state.todo_repository);
 
     let output = match controller.run(input).await {
@@ -48,7 +51,8 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
             let field = match parse_err {
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
-                ParseError::TodoAt => "todoAt",
+                ParseError::InvalidTodoAt => "todoAt",
+                ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status"
             };
             let details = ValidationError::new(field, parse_err.to_string());
             let api_error = ApiError::new("CTD-001", error.to_string()).with_details(details);
