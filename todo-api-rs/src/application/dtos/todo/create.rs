@@ -4,6 +4,8 @@ use std::fmt;
 use crate::domain::entities::todo::{Description, Title};
 use crate::domain::types::Date;
 
+// TODO: accept a optional `TodoEntityStatus` so it's possible to create
+// a `todo` item with any status 
 #[derive(Clone, Debug)]
 pub struct CreateTodoInput {
     pub title: Title,

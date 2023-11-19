@@ -11,7 +11,7 @@ pub async fn update_todo<Repo: Update>(
         title: input.title,
         description: input.description,
         todo_at: input.todo_at,
-        done: input.done,
+        status: input.status,
         updated_at: DateTime::new(),
     };
 

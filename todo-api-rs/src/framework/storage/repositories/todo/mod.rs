@@ -12,7 +12,7 @@ use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
-use crate::framework::storage::models::todo::TodoModel;
+use crate::framework::storage::models::todo::{TodoModel, TodoModelStatus};
 
 #[derive(Clone)]
 pub struct TodoRepository {
@@ -87,7 +87,7 @@ impl BindTags for TodoRepository {
 impl Create for TodoRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
         let insert_q = r#"
-            INSERT INTO todo (id, title, description, todo_at, done, created_at, updated_at)
+            INSERT INTO todo (id, title, description, todo_at, status, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING todo.*
         "#;
@@ -97,7 +97,7 @@ impl Create for TodoRepository {
             .bind(payload.title.into_string())
             .bind(payload.description.map(|d| d.into_string()))
             .bind(payload.todo_at.map(|at| at.into_date()))
-            .bind(payload.done)
+            .bind(TodoModelStatus::from(payload.status))
             .bind(payload.created_at.into_date_time())
             .bind(payload.updated_at.into_date_time())
             .fetch_one(&self.pool)
@@ -255,7 +255,7 @@ impl Update for TodoRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<(), UpdateError> {
         let update_q = r#"
             UPDATE todo
-            SET title = $1, description = $2, todo_at = $3, done = $4, updated_at = $5
+            SET title = $1, description = $2, todo_at = $3, status = $4, updated_at = $5
             WHERE id = $6
         "#;
 
@@ -263,7 +263,7 @@ impl Update for TodoRepository {
             .bind(payload.title.into_string())
             .bind(payload.description.map(|d| d.into_string()))
             .bind(payload.todo_at.map(|at| at.into_date()))
-            .bind(payload.done)
+            .bind(TodoModelStatus::from(payload.status))
             .bind(payload.updated_at.into_date_time())
             .bind(payload.id.into_uuid())
             .fetch_one(&self.pool)

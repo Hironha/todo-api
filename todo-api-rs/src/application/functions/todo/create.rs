@@ -1,6 +1,6 @@
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
-use crate::domain::entities::todo::TodoEntity;
+use crate::domain::entities::todo::{TodoEntity, TodoEntityStatus};
 use crate::domain::types::DateTime;
 
 pub async fn create_todo<Repo: Create>(
@@ -12,7 +12,7 @@ pub async fn create_todo<Repo: Create>(
         title: input.title,
         description: input.description,
         todo_at: input.todo_at,
-        done: false,
+        status: TodoEntityStatus::Todo,
         created_at: current_dt,
         updated_at: current_dt,
     };

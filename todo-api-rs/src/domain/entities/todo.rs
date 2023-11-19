@@ -67,6 +67,19 @@ pub enum TodoEntityStatus {
     Done,
 }
 
+impl<'a> TryFrom<&'a str> for TodoEntityStatus {
+    type Error = StatusFromStrError;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        match value {
+            "todo" => Ok(Self::Todo),
+            "in_progress" => Ok(Self::InProgress),
+            "done" => Ok(Self::Done),
+            _ => Err(StatusFromStrError::Invalid),
+        }
+    }
+}
+
 impl fmt::Display for TodoEntityStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -114,5 +127,29 @@ impl fmt::Display for DescriptionError {
 impl Error for DescriptionError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         None
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum StatusFromStrError {
+    Invalid,
+}
+
+impl fmt::Display for StatusFromStrError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Invalid => write!(
+                f,
+                "must be one of the following values: todo, in_progress or done"
+            ),
+        }
+    }
+}
+
+impl Error for StatusFromStrError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Invalid => None,
+        }
     }
 }

@@ -21,7 +21,7 @@ pub(super) struct UpdateBody {
     description: Option<String>,
     #[serde(rename(deserialize = "todoAt"))]
     todo_at: Option<String>,
-    done: Option<bool>,
+    status: Option<String>,
 }
 
 pub(super) async fn update_todo(
@@ -37,7 +37,7 @@ pub(super) async fn update_todo(
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
-        done: body.done,
+        status: body.status,
     };
 
     let controller = UpdateController::new(state.todo_repository);
@@ -58,7 +58,7 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::TodoAt => "todoAt",
-                ParseError::EmptyDone => "done",
+                ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
             };
             let details = ValidationError::new(field, parse_err.to_string());
             let api_error = ApiError::new("UTD-001", error.to_string()).with_details(details);

@@ -3,7 +3,7 @@ use std::fmt;
 
 use async_trait::async_trait;
 
-use crate::domain::entities::todo::{Description, Title};
+use crate::domain::entities::todo::{Description, Title, TodoEntityStatus};
 use crate::domain::types::{Date, DateTime, Id};
 
 #[async_trait]
@@ -16,7 +16,7 @@ pub struct UpdatePayload {
     pub id: Id,
     pub title: Title,
     pub description: Option<Description>,
-    pub done: bool,
+    pub status: TodoEntityStatus,
     pub todo_at: Option<Date>,
     pub updated_at: DateTime,
 }

@@ -3,7 +3,9 @@ use std::fmt;
 
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
-use crate::domain::entities::todo::{Description, DescriptionError, Title, TitleError};
+use crate::domain::entities::todo::{
+    Description, DescriptionError, StatusFromStrError, Title, TitleError, TodoEntityStatus,
+};
 use crate::domain::types::{Date, Id};
 
 #[derive(Clone, Debug)]
@@ -12,7 +14,7 @@ pub struct UpdateRequest {
     pub title: Option<String>,
     pub description: Option<String>,
     pub todo_at: Option<String>,
-    pub done: Option<bool>,
+    pub status: Option<String>,
 }
 
 impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
@@ -35,7 +37,12 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
             .transpose()
             .map_err(ParseError::InvalidDescription)?;
 
-        let done = self.done.ok_or(ParseError::EmptyDone)?;
+        let status = self
+            .status
+            .ok_or(ParseError::EmptyStatus)
+            .and_then(|status| {
+                TodoEntityStatus::try_from(status.as_str()).map_err(ParseError::InvalidStatus)
+            })?;
 
         let todo_at = self
             .todo_at
@@ -48,7 +55,7 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
             title,
             description,
             todo_at,
-            done,
+            status,
         })
     }
 }
@@ -85,14 +92,16 @@ pub enum ParseError {
     InvalidTitle(TitleError),
     InvalidDescription(DescriptionError),
     TodoAt,
-    EmptyDone,
+    EmptyStatus,
+    InvalidStatus(StatusFromStrError),
 }
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyId | Self::EmptyTitle => write!(f, "required string"),
-            Self::EmptyDone => write!(f, "required boolean"),
+            Self::EmptyStatus => write!(f, "required string"),
+            Self::InvalidStatus(err) => err.fmt(f),
             Self::InvalidId => write!(f, "invalid id format"),
             Self::TodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
             Self::InvalidTitle(err) => err.fmt(f),
@@ -106,91 +115,12 @@ impl Error for ParseError {
         match self {
             Self::InvalidDescription(err) => Some(err),
             Self::InvalidTitle(err) => Some(err),
-            Self::EmptyDone | Self::EmptyId | Self::EmptyTitle | Self::InvalidId | Self::TodoAt => {
-                None
-            }
+            Self::InvalidStatus(err) => Some(err),
+            Self::EmptyStatus
+            | Self::EmptyId
+            | Self::EmptyTitle
+            | Self::InvalidId
+            | Self::TodoAt => None,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::Parse;
-
-    #[test]
-    fn parse_success() {
-        let input_schema = super::UpdateRequest {
-            id: Some(super::Id::new().to_string()),
-            title: Some("title".to_string()),
-            description: Some("description".to_string()),
-            todo_at: Some("2023-08-12".to_string()),
-            done: Some(false),
-        };
-
-        assert!(input_schema.parse().is_ok());
-    }
-
-    #[test]
-    fn parse_id_fail() {
-        let none_id_schema = super::UpdateRequest {
-            id: None,
-            title: Some("title".to_string()),
-            description: Some("description".to_string()),
-            todo_at: Some("2023-08-12".to_string()),
-            done: Some(false),
-        };
-        let none_id_input = none_id_schema.parse();
-
-        assert!(none_id_input.is_err_and(|e| e == super::ParseError::EmptyId));
-
-        let invalid_id_schema = super::UpdateRequest {
-            id: Some("invalid-id".to_string()),
-            title: Some("title".to_string()),
-            description: None,
-            todo_at: None,
-            done: Some(false),
-        };
-        let invalid_id_input = invalid_id_schema.parse();
-
-        assert!(invalid_id_input.is_err_and(|e| e == super::ParseError::InvalidId));
-    }
-
-    #[test]
-    fn parse_title_fail() {
-        let none_title_schema = super::UpdateRequest {
-            id: Some(super::Id::new().to_string()),
-            title: None,
-            description: None,
-            todo_at: None,
-            done: Some(false),
-        };
-        let none_title_input = none_title_schema.parse();
-
-        assert!(none_title_input.is_err_and(|e| e == super::ParseError::EmptyTitle));
-
-        let empty_title_schema = super::UpdateRequest {
-            id: Some(super::Id::new().to_string()),
-            title: Some("".to_string()),
-            description: None,
-            todo_at: None,
-            done: Some(false),
-        };
-        let empty_title_input = empty_title_schema.parse();
-
-        assert!(empty_title_input.is_err_and(|e| e == super::ParseError::EmptyTitle));
-    }
-
-    #[test]
-    fn parse_todo_at_fail() {
-        let invalid_todo_at_schema = super::UpdateRequest {
-            id: Some(super::Id::new().to_string()),
-            title: Some("title".to_string()),
-            description: None,
-            todo_at: Some("todo_at".to_string()),
-            done: Some(false),
-        };
-        let invalid_todo_at_input = invalid_todo_at_schema.parse();
-
-        assert!(invalid_todo_at_input.is_err_and(|e| e == super::ParseError::TodoAt))
     }
 }

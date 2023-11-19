@@ -52,6 +52,16 @@ pub enum TodoModelStatus {
     Done,
 }
 
+impl From<TodoEntityStatus> for TodoModelStatus {
+    fn from(value: TodoEntityStatus) -> Self {
+        match value {
+            TodoEntityStatus::Todo => TodoModelStatus::Todo,
+            TodoEntityStatus::InProgress => TodoModelStatus::InProgress,
+            TodoEntityStatus::Done => TodoModelStatus::Done,
+        }
+    }
+}
+
 impl TodoModelStatus {
     fn into_entity(self) -> TodoEntityStatus {
         match self {
