@@ -1,9 +1,11 @@
+CREATE TYPE IF NOT EXISTS todo_status as ENUM ('todo', 'in_progress', 'done');
+
 CREATE TABLE IF NOT EXISTS todo (
     id uuid UNIQUE NOT NULL,
     title varchar(64) NOT NULL,
     description varchar(256),
     todo_at date,
-    done boolean NOT NULL,
+    status todo_status,
     created_at timestamptz NOT NULL,
     updated_at timestamptz NOT NULL,
     CONSTRAINT todo_pk PRIMARY KEY (id),
