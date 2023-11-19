@@ -4,7 +4,7 @@ use std::fmt;
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
 use crate::domain::entities::todo::{
-    Description, DescriptionError, TodoEntityStatusError, Title, TitleError, TodoEntityStatus,
+    Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
 };
 use crate::domain::types::{Date, Id};
 
@@ -41,7 +41,7 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
             .status
             .ok_or(ParseError::EmptyStatus)
             .and_then(|status| {
-                TodoEntityStatus::try_from(status.as_str()).map_err(ParseError::InvalidStatus)
+                TodoStatus::try_from(status.as_str()).map_err(ParseError::InvalidStatus)
             })?;
 
         let todo_at = self
@@ -93,7 +93,7 @@ pub enum ParseError {
     InvalidDescription(DescriptionError),
     TodoAt,
     EmptyStatus,
-    InvalidStatus(TodoEntityStatusError),
+    InvalidStatus(ParseTodoStatusError),
 }
 
 impl fmt::Display for ParseError {

@@ -7,7 +7,7 @@ use sqlx::{FromRow, Type};
 
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::{
-    Description, DescriptionError, Title, TitleError, TodoEntity, TodoEntityStatus,
+    Description, DescriptionError, Title, TitleError, TodoEntity, TodoStatus as TodoEntityStatus,
 };
 use crate::domain::types::Date;
 
@@ -17,7 +17,7 @@ pub struct TodoModel {
     pub title: String,
     pub description: Option<String>,
     pub todo_at: Option<TimeDate>,
-    pub status: TodoModelStatus,
+    pub status: TodoStatus,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
 }
@@ -46,23 +46,23 @@ impl TodoModel {
 
 #[derive(Clone, Debug, PartialEq, Eq, Type)]
 #[sqlx(type_name = "todo_status", rename_all = "snake_case")]
-pub enum TodoModelStatus {
+pub enum TodoStatus {
     Todo,
     InProgress,
     Done,
 }
 
-impl From<TodoEntityStatus> for TodoModelStatus {
+impl From<TodoEntityStatus> for TodoStatus {
     fn from(value: TodoEntityStatus) -> Self {
         match value {
-            TodoEntityStatus::Todo => TodoModelStatus::Todo,
-            TodoEntityStatus::InProgress => TodoModelStatus::InProgress,
-            TodoEntityStatus::Done => TodoModelStatus::Done,
+            TodoEntityStatus::Todo => TodoStatus::Todo,
+            TodoEntityStatus::InProgress => TodoStatus::InProgress,
+            TodoEntityStatus::Done => TodoStatus::Done,
         }
     }
 }
 
-impl TodoModelStatus {
+impl TodoStatus {
     fn into_entity(self) -> TodoEntityStatus {
         match self {
             Self::Todo => TodoEntityStatus::Todo,

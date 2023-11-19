@@ -4,7 +4,7 @@ use std::fmt;
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
 use crate::domain::entities::todo::{
-    Description, DescriptionError, Title, TitleError, TodoEntityStatus, TodoEntityStatusError,
+    Description, DescriptionError, Title, TitleError, TodoStatus, ParseTodoStatusError,
 };
 use crate::domain::types::Date;
 
@@ -39,7 +39,7 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
             .status
             .ok_or(ParseError::EmptyStatus)
             .and_then(|status| {
-                TodoEntityStatus::try_from(status.as_str()).map_err(ParseError::InvalidStatus)
+                TodoStatus::try_from(status.as_str()).map_err(ParseError::InvalidStatus)
             })?;
 
         Ok(CreateTodoInput {
@@ -82,7 +82,7 @@ pub enum ParseError {
     InvalidDescription(DescriptionError),
     InvalidTodoAt,
     EmptyStatus,
-    InvalidStatus(TodoEntityStatusError),
+    InvalidStatus(ParseTodoStatusError),
 }
 
 impl fmt::Display for ParseError {

@@ -10,7 +10,7 @@ pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
     pub description: Option<Description>,
-    pub status: TodoEntityStatus,
+    pub status: TodoStatus,
     pub todo_at: Option<Date>,
     pub tags: Vec<TagEntity>,
     pub created_at: DateTime,
@@ -61,26 +61,26 @@ impl Description {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum TodoEntityStatus {
+pub enum TodoStatus {
     Todo,
     InProgress,
     Done,
 }
 
-impl<'a> TryFrom<&'a str> for TodoEntityStatus {
-    type Error = TodoEntityStatusError;
+impl<'a> TryFrom<&'a str> for TodoStatus {
+    type Error = ParseTodoStatusError;
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         match value {
             "todo" => Ok(Self::Todo),
             "in_progress" => Ok(Self::InProgress),
             "done" => Ok(Self::Done),
-            _ => Err(TodoEntityStatusError::Invalid),
+            _ => Err(ParseTodoStatusError),
         }
     }
 }
 
-impl fmt::Display for TodoEntityStatus {
+impl fmt::Display for TodoStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Todo => write!(f, "todo"),
@@ -131,25 +131,19 @@ impl Error for DescriptionError {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum TodoEntityStatusError {
-    Invalid,
-}
+pub struct ParseTodoStatusError;
 
-impl fmt::Display for TodoEntityStatusError {
+impl fmt::Display for ParseTodoStatusError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Invalid => write!(
-                f,
-                "must be one of the following values: todo, in_progress or done"
-            ),
-        }
+        write!(
+            f,
+            "must be one of the following values: todo, in_progress or done"
+        )
     }
 }
 
-impl Error for TodoEntityStatusError {
+impl Error for ParseTodoStatusError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Invalid => None,
-        }
+        None
     }
 }

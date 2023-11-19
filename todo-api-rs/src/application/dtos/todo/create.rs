@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt;
 
-use crate::domain::entities::todo::{Description, Title, TodoEntityStatus};
+use crate::domain::entities::todo::{Description, Title, TodoStatus};
 use crate::domain::types::Date;
 
 #[derive(Clone, Debug)]
@@ -9,7 +9,7 @@ pub struct CreateTodoInput {
     pub title: Title,
     pub description: Option<Description>,
     pub todo_at: Option<Date>,
-    pub status: TodoEntityStatus,
+    pub status: TodoStatus,
 }
 
 #[derive(Debug)]

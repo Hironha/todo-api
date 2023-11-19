@@ -12,7 +12,7 @@ use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
-use crate::framework::storage::models::todo::{TodoModel, TodoModelStatus};
+use crate::framework::storage::models::todo::{TodoModel, TodoStatus as TodoModelStatus};
 
 #[derive(Clone)]
 pub struct TodoRepository {
