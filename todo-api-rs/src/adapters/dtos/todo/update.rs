@@ -99,13 +99,12 @@ pub enum ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyId | Self::EmptyTitle => write!(f, "required string"),
-            Self::EmptyStatus => write!(f, "required string"),
             Self::InvalidStatus(err) => err.fmt(f),
             Self::InvalidId => write!(f, "invalid id format"),
-            Self::TodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
             Self::InvalidTitle(err) => err.fmt(f),
             Self::InvalidDescription(err) => err.fmt(f),
+            Self::TodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
+            Self::EmptyId | Self::EmptyTitle | Self::EmptyStatus => write!(f, "required string"),
         }
     }
 }
