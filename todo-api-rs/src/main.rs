@@ -4,6 +4,7 @@ mod domain;
 mod framework;
 
 use std::collections::HashMap;
+use std::error::Error;
 use std::net::SocketAddr;
 
 use axum::Router;
@@ -18,7 +19,7 @@ use tracing_subscriber::EnvFilter;
 use framework::rest_api::routes::{tag, todo};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt()
         .without_time()
         .with_target(false)
