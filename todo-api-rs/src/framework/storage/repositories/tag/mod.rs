@@ -1,8 +1,10 @@
 use async_trait::async_trait;
+use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool};
 
 use crate::application::repositories::tag::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::tag::delete::{Delete, DeleteError};
+use crate::application::repositories::tag::exists_all::{ExistsAll, ExistsAllError};
 use crate::application::repositories::tag::find::{Find, FindError};
 use crate::application::repositories::tag::list::{List, ListError};
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
@@ -18,6 +20,35 @@ pub struct TagRepository {
 impl TagRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
+    }
+}
+
+#[async_trait]
+impl ExistsAll for TagRepository {
+    async fn exists_all(&self, tags_id: &[Id]) -> Result<(), ExistsAllError> {
+        let tags_uuid = tags_id
+            .iter()
+            .map(|id| id.into_uuid())
+            .collect::<Vec<Uuid>>();
+
+        let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";
+        let selected_tags_uuid = sqlx::query_scalar::<_, Uuid>(select_any_q)
+            .bind(&tags_uuid)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(ExistsAllError::from_err)?;
+
+        let not_found_ids = tags_uuid
+            .into_iter()
+            .filter(|uuid| !selected_tags_uuid.contains(uuid))
+            .map(Id::from)
+            .collect::<Vec<Id>>();
+
+        if not_found_ids.is_empty() {
+            Ok(())
+        } else {
+            Err(ExistsAllError::NotFound(not_found_ids))
+        }
     }
 }
 
