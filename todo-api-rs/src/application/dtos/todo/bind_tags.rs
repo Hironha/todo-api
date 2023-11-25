@@ -12,14 +12,16 @@ pub struct BindTodoTagsInput {
 #[derive(Debug)]
 pub enum BindTodoTagsError {
     TodoNotFound,
-    TagNotFound,
+    TagNotFound(Vec<Id>),
     Repository(Box<dyn Error>),
 }
 
 impl fmt::Display for BindTodoTagsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::TagNotFound => write!(f, "tag could not be found"),
+            Self::TagNotFound(tags_id) => {
+                write!(f, "following tags could not be found: {tags_id:?}")
+            }
             Self::TodoNotFound => write!(f, "todo could not be found"),
             Self::Repository(err) => err.fmt(f),
         }
@@ -29,7 +31,7 @@ impl fmt::Display for BindTodoTagsError {
 impl Error for BindTodoTagsError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::TodoNotFound | Self::TagNotFound => None,
+            Self::TodoNotFound | Self::TagNotFound(_) => None,
             Self::Repository(err) => Some(err.as_ref()),
         }
     }

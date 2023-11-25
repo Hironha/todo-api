@@ -28,7 +28,7 @@ where
         .exists_all(&input.tags_id)
         .await
         .map_err(|err| match err {
-            ExistsAllError::NotFound(_) => BindTodoTagsError::TagNotFound,
+            ExistsAllError::NotFound(tags_id) => BindTodoTagsError::TagNotFound(tags_id),
             ExistsAllError::Internal(err) => BindTodoTagsError::Repository(err),
         })?;
 

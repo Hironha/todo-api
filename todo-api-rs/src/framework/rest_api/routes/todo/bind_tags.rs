@@ -58,7 +58,7 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::new("BTD-002", bind_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            BindTodoTagsError::TagNotFound => {
+            BindTodoTagsError::TagNotFound(_) => {
                 let api_error = ApiError::new("BTD-003", bind_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
