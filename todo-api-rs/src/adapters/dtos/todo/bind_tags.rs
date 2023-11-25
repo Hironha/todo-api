@@ -21,12 +21,10 @@ impl Parse<BindTodoTagsInput, ParseError> for BindTagsRequest {
 
         let tags_id = self
             .tags_id
-            .map(|ids| {
-                ids.into_iter()
-                    .map(|id| Id::parse_str(&id).or(Err(ParseError::InvalidTag(id))))
-                    .collect::<Result<Vec<Id>, ParseError>>()
-            })
-            .transpose()?;
+            .unwrap_or_default()
+            .into_iter()
+            .map(|id| Id::parse_str(&id).or(Err(ParseError::InvalidTag(id))))
+            .collect::<Result<Vec<Id>, ParseError>>()?;
 
         Ok(BindTodoTagsInput { todo_id, tags_id })
     }

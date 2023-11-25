@@ -5,6 +5,7 @@ use sqlx::{Error as SqlxError, FromRow, PgPool, Postgres, QueryBuilder, Row};
 use crate::application::repositories::todo::bind_tags::{BindTags, BindTagsError, BindTagsPayload};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 use crate::application::repositories::todo::delete::{Delete, DeleteError};
+use crate::application::repositories::todo::exists::{Exists, ExistsError};
 use crate::application::repositories::todo::find::{Find, FindError};
 use crate::application::repositories::todo::list::{List, ListData, ListError, ListPayload};
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
@@ -26,20 +27,22 @@ impl TodoRepository {
 }
 
 #[async_trait]
+impl Exists for TodoRepository {
+    async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError> {
+        let todo_exists_q = "SELECT EXISTS(SELECT 1 FROM todo WHERE id = $1)";
+        sqlx::query_scalar::<_, bool>(todo_exists_q)
+            .bind(todo_id.into_uuid())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(ExistsError::from_err)
+    }
+}
+
+#[async_trait]
 impl BindTags for TodoRepository {
     async fn bind_tags(&self, payload: BindTagsPayload) -> Result<(), BindTagsError> {
         let mut trx = self.pool.begin().await.map_err(BindTagsError::from_err)?;
         let todo_id = payload.todo_id.into_uuid();
-        let todo_exists_q = "SELECT EXISTS(SELECT 1 FROM todo WHERE id = $1)";
-        let todo_exists = sqlx::query_scalar::<_, bool>(todo_exists_q)
-            .bind(todo_id)
-            .fetch_one(trx.as_mut())
-            .await
-            .map_err(BindTagsError::from_err)?;
-
-        if !todo_exists {
-            return Err(BindTagsError::TodoNotFound);
-        }
 
         let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
         sqlx::query(delete_relations_q)
@@ -48,29 +51,17 @@ impl BindTags for TodoRepository {
             .await
             .map_err(BindTagsError::from_err)?;
 
-        let tag_ids = payload.tags_id.filter(|ids| !ids.is_empty()).map(|ids| {
-            ids.into_iter()
-                .map(|id| id.into_uuid())
-                .collect::<Vec<Uuid>>()
-        });
+        let tags_uuid = payload
+            .tags_id
+            .into_iter()
+            .map(|id| id.into_uuid())
+            .collect::<Vec<Uuid>>();
 
-        if let Some(tags_id) = tag_ids.as_deref() {
-            let count_tags_q = "SELECT COUNT(*) FROM tag WHERE id = ANY($1)";
-            let count = sqlx::query_scalar::<_, i64>(count_tags_q)
-                .bind(tags_id)
-                .fetch_one(trx.as_mut())
-                .await
-                .map_err(BindTagsError::from_err)?;
-
-            let tags_exists = i64::try_from(tags_id.len()).unwrap_or(0) == count;
-            if !tags_exists {
-                return Err(BindTagsError::TagNotFound);
-            }
-
+        if !tags_uuid.is_empty() {
             let current_dt = payload.current_dt.into_date_time();
             let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
             QueryBuilder::<'_, Postgres>::new(base_bind_tags_q)
-                .push_values(tags_id, |mut q, tag_id| {
+                .push_values(tags_uuid, |mut q, tag_id| {
                     q.push_bind(todo_id).push_bind(tag_id).push_bind(current_dt);
                 })
                 .build()

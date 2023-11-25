@@ -32,7 +32,7 @@ pub(super) async fn bind_todo_tags(
         tags_id: body.tags_id,
         todo_id: path.id,
     };
-    let controller = BindTagsController::new(state.todo_repository);
+    let controller = BindTagsController::new(state.todo_repository, state.tag_repository);
 
     if let Err(err) = controller.run(input).await {
         let (status, error) = config_error_response(&err);
