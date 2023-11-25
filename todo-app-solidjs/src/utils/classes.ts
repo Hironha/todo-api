@@ -7,7 +7,7 @@ export class ClassBuilder {
 
   add(name: string): this {
     if (name) {
-      this.classes = this.classes ? ` ${name}` : name;
+      this.classes += this.classes ? ` ${name}` : name;
     }
     return this;
   }
