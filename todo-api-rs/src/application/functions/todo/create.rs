@@ -1,20 +1,16 @@
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
 use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
 use crate::domain::entities::todo::TodoEntity;
-use crate::domain::types::DateTime;
 
 pub async fn create_todo<Repo: Create>(
     ctx: CreateTodoContext<'_, Repo>,
     input: CreateTodoInput,
 ) -> Result<TodoEntity, CreateTodoError> {
-    let current_dt = DateTime::new();
     let payload = CreatePayload {
         title: input.title,
         description: input.description,
         todo_at: input.todo_at,
         status: input.status,
-        created_at: current_dt,
-        updated_at: current_dt,
     };
 
     ctx.repository

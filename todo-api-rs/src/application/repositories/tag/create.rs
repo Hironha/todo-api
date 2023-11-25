@@ -4,7 +4,7 @@ use std::fmt;
 use async_trait::async_trait;
 
 use crate::domain::entities::tag::{Description, Name, TagEntity};
-use crate::domain::types::{DateTime, Id};
+use crate::domain::types::Id;
 
 #[async_trait]
 pub trait Create {
@@ -16,8 +16,6 @@ pub struct CreatePayload {
     pub id: Id,
     pub name: Name,
     pub description: Option<Description>,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
 }
 
 #[derive(Debug)]

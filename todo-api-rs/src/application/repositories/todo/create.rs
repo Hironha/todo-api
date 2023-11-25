@@ -3,7 +3,7 @@ use std::error::Error;
 use async_trait::async_trait;
 
 use crate::domain::entities::todo::{Description, Title, TodoEntity, TodoStatus};
-use crate::domain::types::{Date, DateTime};
+use crate::domain::types::Date;
 
 #[async_trait]
 pub trait Create {
@@ -16,8 +16,6 @@ pub struct CreatePayload {
     pub description: Option<Description>,
     pub todo_at: Option<Date>,
     pub status: TodoStatus,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
 }
 
 #[derive(Debug)]
