@@ -42,11 +42,11 @@ impl Exists for TodoRepository {
 impl BindTags for TodoRepository {
     async fn bind_tags(&self, payload: BindTagsPayload) -> Result<(), BindTagsError> {
         let mut trx = self.pool.begin().await.map_err(BindTagsError::from_err)?;
-        let todo_id = payload.todo_id.into_uuid();
+        let todo_uuid = payload.todo_id.into_uuid();
 
         let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
         sqlx::query(delete_relations_q)
-            .bind(todo_id)
+            .bind(todo_uuid)
             .execute(trx.as_mut())
             .await
             .map_err(BindTagsError::from_err)?;
@@ -62,7 +62,7 @@ impl BindTags for TodoRepository {
             let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
             QueryBuilder::<'_, Postgres>::new(base_bind_tags_q)
                 .push_values(tags_uuid, |mut q, tag_id| {
-                    q.push_bind(todo_id).push_bind(tag_id).push_bind(current_dt);
+                    q.push_bind(todo_uuid).push_bind(tag_id).push_bind(current_dt);
                 })
                 .build()
                 .execute(trx.as_mut())
