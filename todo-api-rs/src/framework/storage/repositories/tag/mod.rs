@@ -64,7 +64,7 @@ impl Create for TagRepository {
         "#;
 
         let tag_model = sqlx::query_as::<_, TagModel>(create_q)
-            .bind(payload.id.into_uuid())
+            .bind(Id::new().into_uuid())
             .bind(payload.name.into_string())
             .bind(payload.description.map(|d| d.into_string()))
             .bind(current_dt)
