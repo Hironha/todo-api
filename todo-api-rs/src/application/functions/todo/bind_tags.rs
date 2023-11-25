@@ -2,7 +2,6 @@ use crate::application::dtos::todo::bind_tags::{BindTodoTagsError, BindTodoTagsI
 use crate::application::repositories::tag::exists_all::{ExistsAll, ExistsAllError};
 use crate::application::repositories::todo::bind_tags::{BindTags, BindTagsError, BindTagsPayload};
 use crate::application::repositories::todo::exists::{Exists, ExistsError};
-use crate::domain::types::DateTime;
 
 pub async fn bind_todo_tags<TodoRepo, TagRepo>(
     ctx: BindTodoTagsContext<'_, TodoRepo, TagRepo>,
@@ -35,7 +34,6 @@ where
     let bind_tags_payload = BindTagsPayload {
         tags_id: input.tags_id,
         todo_id: input.todo_id,
-        current_dt: DateTime::new(),
     };
 
     ctx.todo_repository

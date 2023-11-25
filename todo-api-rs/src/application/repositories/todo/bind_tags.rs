@@ -2,7 +2,7 @@ use std::error::Error;
 
 use async_trait::async_trait;
 
-use crate::domain::types::{DateTime, Id};
+use crate::domain::types::Id;
 
 #[async_trait]
 pub trait BindTags {
@@ -13,7 +13,6 @@ pub trait BindTags {
 pub struct BindTagsPayload {
     pub todo_id: Id,
     pub tags_id: Vec<Id>,
-    pub current_dt: DateTime,
 }
 
 #[derive(Debug)]

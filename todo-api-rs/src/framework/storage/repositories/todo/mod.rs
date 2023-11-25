@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use sqlx::types::time::OffsetDateTime;
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, FromRow, PgPool, Postgres, QueryBuilder, Row};
 
@@ -12,7 +11,7 @@ use crate::application::repositories::todo::list::{List, ListData, ListError, Li
 use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::TodoEntity;
-use crate::domain::types::Id;
+use crate::domain::types::{DateTime, Id};
 use crate::framework::storage::models::tag::TagModel;
 use crate::framework::storage::models::todo::{TodoModel, TodoStatus as TodoModelStatus};
 
@@ -59,7 +58,7 @@ impl BindTags for TodoRepository {
             .collect::<Vec<Uuid>>();
 
         if !tags_uuid.is_empty() {
-            let current_dt = payload.current_dt.into_date_time();
+            let current_dt = DateTime::new().into_offset_dt();
             let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
             QueryBuilder::<'_, Postgres>::new(base_bind_tags_q)
                 .push_values(tags_uuid, |mut q, tag_id| {
@@ -80,7 +79,7 @@ impl BindTags for TodoRepository {
 #[async_trait]
 impl Create for TodoRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
-        let current_dt = OffsetDateTime::now_utc();
+        let current_dt = DateTime::new().into_offset_dt();
         let insert_q = r#"
             INSERT INTO todo (id, title, description, todo_at, status, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -248,7 +247,7 @@ impl List for TodoRepository {
 #[async_trait]
 impl Update for TodoRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<(), UpdateError> {
-        let current_dt = OffsetDateTime::now_utc();
+        let current_dt = DateTime::new().into_offset_dt();
         let update_q = r#"
             UPDATE todo
             SET title = $1, description = $2, todo_at = $3, status = $4, updated_at = $5

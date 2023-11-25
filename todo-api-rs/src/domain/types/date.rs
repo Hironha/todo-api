@@ -40,7 +40,7 @@ impl DateTime {
         Self(OffsetDateTime::now_utc())
     }
 
-    pub fn into_date_time(self) -> OffsetDateTime {
+    pub fn into_offset_dt(self) -> OffsetDateTime {
         self.0
     }
 

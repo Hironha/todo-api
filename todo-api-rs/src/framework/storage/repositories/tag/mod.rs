@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use sqlx::types::time::OffsetDateTime;
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool};
 
@@ -10,7 +9,7 @@ use crate::application::repositories::tag::find::{Find, FindError};
 use crate::application::repositories::tag::list::{List, ListError};
 use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
 use crate::domain::entities::tag::TagEntity;
-use crate::domain::types::Id;
+use crate::domain::types::{Id, DateTime};
 use crate::framework::storage::models::tag::TagModel;
 
 #[derive(Clone)]
@@ -56,7 +55,7 @@ impl ExistsAll for TagRepository {
 #[async_trait]
 impl Create for TagRepository {
     async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError> {
-        let current_dt = OffsetDateTime::now_utc();
+        let current_dt = DateTime::new().into_offset_dt();
         let create_q = r#"
             INSERT INTO tag (id, name, description, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5)
@@ -139,7 +138,7 @@ impl List for TagRepository {
 #[async_trait]
 impl Update for TagRepository {
     async fn update(&self, payload: UpdatePayload) -> Result<TagEntity, UpdateError> {
-        let current_dt = OffsetDateTime::now_utc();
+        let current_dt = DateTime::new().into_offset_dt();
         let update_q = r#"
             UPDATE tag
             SET name = $1, description = $2, updated_at = $3
