@@ -16,12 +16,15 @@ export type TypographyProps = {
 };
 
 export function Typography(props: TypographyProps): JSX.Element {
-  const styles = classes(getWeightStyle(props.weight ?? "normal"))
-    .add(getSizeStyle(props.size ?? "md"))
-    .add(props.class ?? "")
-    .build();
+  const styles = classes(getWeightStyle(props.weight ?? "normal")).add(
+    getSizeStyle(props.size ?? "md")
+  );
 
-  return <p class={styles}>{props.children}</p>;
+  if (props.class) {
+    styles.add(props.class);
+  }
+
+  return <p class={styles.build()}>{props.children}</p>;
 }
 
 function getWeightStyle(weight: TypographyWeight) {
