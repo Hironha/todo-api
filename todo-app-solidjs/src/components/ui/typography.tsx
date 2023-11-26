@@ -7,13 +7,11 @@ export type TypographySize = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 export type TypographyWeight = "normal" | "light" | "bold";
 export type TitleLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
-export type TypographyProps = {
-  class?: string;
+export type TypographyProps = JSX.HTMLAttributes<HTMLParagraphElement> & {
   /** @default "normal" */
   weight?: TypographyWeight;
   /** @default "md" */
   size?: TypographySize;
-  children?: JSX.Element;
 };
 
 export function Typography(props: TypographyProps): JSX.Element {
@@ -26,13 +24,11 @@ export function Typography(props: TypographyProps): JSX.Element {
   return <p class={styles}>{props.children}</p>;
 }
 
-export type TextProps = {
-  class?: string;
+export type TextProps = JSX.HTMLAttributes<HTMLSpanElement> & {
   /** @default "normal" */
   weight?: TypographyWeight;
   /** @default "md" */
   size?: TypographySize;
-  children?: JSX.Element;
 };
 
 Typography.Text = (props: TextProps): JSX.Element => {
@@ -44,15 +40,13 @@ Typography.Text = (props: TextProps): JSX.Element => {
   return <span class={styles}>{props.children}</span>;
 };
 
-export type TitleProps = {
-  class?: string;
+export type TitleProps = JSX.HTMLAttributes<HTMLHeadingElement> & {
   /** @default 1 */
   level?: TitleLevel;
   /** @default "bold" */
   weight?: TypographyWeight;
   /** @default "xl" */
   size?: TypographySize;
-  children?: JSX.Element;
 };
 
 Typography.Title = (props: TitleProps): JSX.Element => {
