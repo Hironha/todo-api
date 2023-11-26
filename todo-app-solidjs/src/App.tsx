@@ -1,41 +1,81 @@
-import { createSignal } from "solid-js";
+import { Show } from "solid-js";
+import { type JSX } from "solid-js/jsx-runtime";
 
 import { Typography } from "./components/ui/typography";
+import { Content } from "./components/ui/content";
 import { useThemeConfig } from "./utils/theme.";
 
-function App() {
-  const [count, setCount] = createSignal(0);
+export default function App() {
   const themeConfig = useThemeConfig();
 
-  const increment = (): void => {
-    setCount((count) => count + 1);
-  };
-
   const setLightTheme = (): void => themeConfig.set("light");
-
   const setDarkTheme = (): void => themeConfig.set("dark");
 
   return (
-    <div class="flex flex-col gap-2 items-start">
-      <Typography.Title level={1}>Vite + Solid</Typography.Title>
+    <Content class="flex flex-col gap-2 justify-center">
+      <Typography.Title level={1}>Todos</Typography.Title>
 
-      <button class="btn btn-primary btn-sm" onClick={increment}>
-        count is {count()}
-      </button>
+      <div class="flex space-between gap-4 mb-4">
+        <button class="btn btn-primary btn-sm">Novo</button>
 
-      <button class="btn btn-primary btn-sm" onClick={setLightTheme}>
-        set light theme
-      </button>
+        <div class="flex gap-4 ml-auto">
+          <button class="btn btn-primary btn-sm" onClick={setLightTheme}>
+            Tema claro
+          </button>
+          <button class="btn btn-primary btn-sm" onClick={setDarkTheme}>
+            Tema escuro
+          </button>
+        </div>
+      </div>
 
-      <button class="btn btn-primary btn-sm" onClick={setDarkTheme}>
-        set dark theme
-      </button>
+      <div class="grid grid-cols-3 gap-4">
+        <TodoCard
+          title="Teste"
+          status="todo"
+          description="Apenas um teste, pode excluir depois, ou você acredito que isso irá funcionar?"
+        />
 
-      <Typography>
-        Edit <code>src/App.tsx</code> and save to test HMR
-      </Typography>
-    </div>
+        <TodoCard
+          title="Teste"
+          status="in-progress"
+          description="Apenas um teste, pode excluir depois, ou você acredito que isso irá funcionar?"
+        />
+
+        <TodoCard
+          title="Teste"
+          status="in-progress"
+          description="Apenas um teste, pode excluir depois, ou você acredito que isso irá funcionar?"
+        />
+
+        <TodoCard
+          title="Teste"
+          status="in-progress"
+          description="Apenas um teste, pode excluir depois, ou você acredito que isso irá funcionar?"
+        />
+      </div>
+    </Content>
   );
 }
 
-export default App;
+type TodoCardProps = {
+  status: string;
+  title: string;
+  description?: string;
+};
+
+function TodoCard(props: TodoCardProps): JSX.Element {
+  return (
+    <div class="card w-96 shadow-xl">
+      <div class="card-body">
+        <div class="flex gap-2 justify-between">
+          <Typography.Title level={2}>{props.title}</Typography.Title>
+          <div class="badge badge-outline">{props.status}</div>
+        </div>
+
+        <Show when={props.description}>
+          {(description) => <Typography>{description()}</Typography>}
+        </Show>
+      </div>
+    </div>
+  );
+}
