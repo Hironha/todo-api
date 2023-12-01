@@ -1,7 +1,7 @@
 import { type JSX } from "solid-js/jsx-runtime";
 
-import { classes } from "../../utils/classes";
-import { unreachable } from "../../utils/unreachable";
+import { classes } from "../../core/utils/classes";
+import { unreachable } from "../../core/utils/unreachable";
 
 export type TypographySize = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 export type TypographyWeight = "normal" | "light" | "bold";

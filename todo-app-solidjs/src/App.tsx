@@ -3,7 +3,7 @@ import { type JSX } from "solid-js/jsx-runtime";
 
 import { Typography } from "./components/ui/typography";
 import { Content } from "./components/ui/content";
-import { useThemeConfig } from "./utils/theme.";
+import { useThemeConfig } from "./core/hooks/theme";
 
 export default function App() {
   const themeConfig = useThemeConfig();

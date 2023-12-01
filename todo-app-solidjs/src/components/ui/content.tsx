@@ -1,6 +1,6 @@
 import { type JSX } from "solid-js/jsx-runtime";
 
-import { classes } from "../../utils/classes";
+import { classes } from "../../core/utils/classes";
 
 export type ContentProps = JSX.HTMLAttributes<HTMLDivElement>;
 
