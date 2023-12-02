@@ -1,10 +1,13 @@
 use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput, TodoList};
-use crate::application::repositories::todo::list::{List, ListError, ListPayload};
+use crate::application::repositories::todo::{ListError, ListPayload, TodoRepository};
 
-pub async fn list_todo<Repo: List>(
-    ctx: ListTodoContext<'_, Repo>,
+pub async fn list_todo<T>(
+    ctx: ListTodoContext<'_, T>,
     input: ListTodoInput,
-) -> Result<TodoList, ListTodoError> {
+) -> Result<TodoList, ListTodoError>
+where
+    T: TodoRepository,
+{
     let payload = ListPayload {
         page: input.page,
         per_page: input.per_page,
@@ -12,7 +15,7 @@ pub async fn list_todo<Repo: List>(
     };
 
     let list_data = ctx
-        .repository
+        .todo_repository
         .list(payload)
         .await
         .map_err(|err| match err {
@@ -28,12 +31,9 @@ pub async fn list_todo<Repo: List>(
 }
 
 #[derive(Clone, Debug)]
-pub struct ListTodoContext<'a, Repo: List> {
-    repository: &'a Repo,
-}
-
-impl<'a, Repo: List> ListTodoContext<'a, Repo> {
-    pub const fn new(repository: &'a Repo) -> Self {
-        Self { repository }
-    }
+pub struct ListTodoContext<'a, T>
+where
+    T: TodoRepository,
+{
+    pub todo_repository: &'a T,
 }

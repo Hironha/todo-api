@@ -1,15 +1,14 @@
 use crate::application::dtos::todo::bind_tags::{BindTodoTagsError, BindTodoTagsInput};
 use crate::application::repositories::tag::exists_all::{ExistsAll, ExistsAllError};
-use crate::application::repositories::todo::bind_tags::{BindTags, BindTagsError, BindTagsPayload};
-use crate::application::repositories::todo::exists::{Exists, ExistsError};
+use crate::application::repositories::todo::{BindTagsError, ExistsError, TodoRepository};
 
-pub async fn bind_todo_tags<TodoRepo, TagRepo>(
-    ctx: BindTodoTagsContext<'_, TodoRepo, TagRepo>,
+pub async fn bind_todo_tags<T, S>(
+    ctx: BindTodoTagsContext<'_, T, S>,
     input: BindTodoTagsInput,
 ) -> Result<(), BindTodoTagsError>
 where
-    TodoRepo: BindTags + Exists,
-    TagRepo: ExistsAll,
+    T: TodoRepository,
+    S: ExistsAll,
 {
     let todo_exists = ctx
         .todo_repository
@@ -31,13 +30,8 @@ where
             ExistsAllError::Internal(err) => BindTodoTagsError::Repository(err),
         })?;
 
-    let bind_tags_payload = BindTagsPayload {
-        tags_id: input.tags_id,
-        todo_id: input.todo_id,
-    };
-
     ctx.todo_repository
-        .bind_tags(bind_tags_payload)
+        .bind_tags(input.todo_id, input.tags_id)
         .await
         .map_err(|err| match err {
             BindTagsError::Internal(err) => BindTodoTagsError::Repository(err),
@@ -45,24 +39,11 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct BindTodoTagsContext<'a, TodoRepo, TagRepo>
+pub struct BindTodoTagsContext<'a, T, S>
 where
-    TodoRepo: BindTags + Exists,
-    TagRepo: ExistsAll,
+    T: TodoRepository,
+    S: ExistsAll,
 {
-    todo_repository: &'a TodoRepo,
-    tag_repository: &'a TagRepo,
-}
-
-impl<'a, TodoRepo, TagRepo> BindTodoTagsContext<'a, TodoRepo, TagRepo>
-where
-    TodoRepo: BindTags + Exists,
-    TagRepo: ExistsAll,
-{
-    pub const fn new(todo_repository: &'a TodoRepo, tag_repository: &'a TagRepo) -> Self {
-        Self {
-            todo_repository,
-            tag_repository,
-        }
-    }
+    pub todo_repository: &'a T,
+    pub tag_repository: &'a S,
 }

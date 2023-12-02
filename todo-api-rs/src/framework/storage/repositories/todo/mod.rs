@@ -2,13 +2,11 @@ use async_trait::async_trait;
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, FromRow, PgPool, Postgres, QueryBuilder, Row};
 
-use crate::application::repositories::todo::bind_tags::{BindTags, BindTagsError, BindTagsPayload};
-use crate::application::repositories::todo::create::{Create, CreateError, CreatePayload};
-use crate::application::repositories::todo::delete::{Delete, DeleteError};
-use crate::application::repositories::todo::exists::{Exists, ExistsError};
-use crate::application::repositories::todo::find::{Find, FindError};
-use crate::application::repositories::todo::list::{List, ListData, ListError, ListPayload};
-use crate::application::repositories::todo::update::{Update, UpdateError, UpdatePayload};
+use crate::application::repositories::todo::{
+    BindTagsError, CreateError, DeleteError, ExistsError, FindError, ListError, ListPayload,
+    PaginatedList, TodoRepository, UpdateError,
+};
+
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::{DateTime, Id};
@@ -16,33 +14,21 @@ use crate::framework::storage::models::tag::TagModel;
 use crate::framework::storage::models::todo::{TodoModel, TodoStatus as TodoModelStatus};
 
 #[derive(Clone)]
-pub struct TodoRepository {
+pub struct PgTodoRepository {
     pool: PgPool,
 }
 
-impl TodoRepository {
+impl PgTodoRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait]
-impl Exists for TodoRepository {
-    async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError> {
-        let todo_exists_q = "SELECT EXISTS(SELECT 1 FROM todo WHERE id = $1)";
-        sqlx::query_scalar::<_, bool>(todo_exists_q)
-            .bind(todo_id.into_uuid())
-            .fetch_one(&self.pool)
-            .await
-            .map_err(ExistsError::from_err)
-    }
-}
-
-#[async_trait]
-impl BindTags for TodoRepository {
-    async fn bind_tags(&self, payload: BindTagsPayload) -> Result<(), BindTagsError> {
+impl TodoRepository for PgTodoRepository {
+    async fn bind_tags(&self, todo_id: Id, tag_ids: Vec<Id>) -> Result<(), BindTagsError> {
         let mut trx = self.pool.begin().await.map_err(BindTagsError::from_err)?;
-        let todo_uuid = payload.todo_id.into_uuid();
+        let todo_uuid = todo_id.into_uuid();
 
         let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
         sqlx::query(delete_relations_q)
@@ -51,17 +37,16 @@ impl BindTags for TodoRepository {
             .await
             .map_err(BindTagsError::from_err)?;
 
-        let tags_uuid = payload
-            .tags_id
+        let tag_uuids = tag_ids
             .into_iter()
             .map(|id| id.into_uuid())
             .collect::<Vec<Uuid>>();
 
-        if !tags_uuid.is_empty() {
+        if !tag_uuids.is_empty() {
             let current_dt = DateTime::new().into_offset_dt();
             let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
             QueryBuilder::<'_, Postgres>::new(base_bind_tags_q)
-                .push_values(tags_uuid, |mut q, tag_id| {
+                .push_values(tag_uuids, |mut q, tag_id| {
                     q.push_bind(todo_uuid)
                         .push_bind(tag_id)
                         .push_bind(current_dt);
@@ -74,11 +59,8 @@ impl BindTags for TodoRepository {
 
         trx.commit().await.map_err(BindTagsError::from_err)
     }
-}
 
-#[async_trait]
-impl Create for TodoRepository {
-    async fn create(&self, payload: CreatePayload) -> Result<TodoEntity, CreateError> {
+    async fn create(&self, todo: TodoEntity) -> Result<TodoEntity, CreateError> {
         let current_dt = DateTime::new().into_offset_dt();
         let insert_q = r#"
             INSERT INTO todo (id, title, description, todo_at, status, created_at, updated_at)
@@ -88,10 +70,10 @@ impl Create for TodoRepository {
 
         let todo_model = sqlx::query_as::<_, TodoModel>(insert_q)
             .bind(Id::new().into_uuid())
-            .bind(payload.title.into_string())
-            .bind(payload.description.map(|d| d.into_string()))
-            .bind(payload.todo_at.map(|at| at.into_date()))
-            .bind(TodoModelStatus::from(payload.status))
+            .bind(todo.title.into_string())
+            .bind(todo.description.map(|d| d.into_string()))
+            .bind(todo.todo_at.map(|at| at.into_date()))
+            .bind(TodoModelStatus::from(todo.status))
             .bind(current_dt)
             .bind(current_dt)
             .fetch_one(&self.pool)
@@ -102,14 +84,11 @@ impl Create for TodoRepository {
             .try_into_entity(Vec::new())
             .map_err(CreateError::from_err)
     }
-}
 
-#[async_trait]
-impl Delete for TodoRepository {
-    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
+    async fn delete(&self, todo_id: Id) -> Result<(), DeleteError> {
         let delete_q = "DELETE FROM todo WHERE id = $1 RETURNING id";
         sqlx::query_scalar::<_, Uuid>(delete_q)
-            .bind(id.into_uuid())
+            .bind(todo_id.into_uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -119,15 +98,21 @@ impl Delete for TodoRepository {
 
         Ok(())
     }
-}
 
-#[async_trait]
-impl Find for TodoRepository {
-    async fn find(&self, id: Id) -> Result<TodoEntity, FindError> {
-        let todo_id = id.into_uuid();
+    async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError> {
+        let todo_exists_q = "SELECT EXISTS(SELECT 1 FROM todo WHERE id = $1)";
+        sqlx::query_scalar::<_, bool>(todo_exists_q)
+            .bind(todo_id.into_uuid())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(ExistsError::from_err)
+    }
+
+    async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError> {
+        let todo_uuid = todo_id.into_uuid();
         let find_todo_q = "SELECT todo.* FROM todo WHERE id = $1";
         let todo_model = sqlx::query_as::<_, TodoModel>(find_todo_q)
-            .bind(todo_id)
+            .bind(todo_uuid)
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -143,7 +128,7 @@ impl Find for TodoRepository {
         "#;
 
         let todo_tag_models = sqlx::query_as::<_, TagModel>(get_related_tags_q)
-            .bind(todo_id)
+            .bind(todo_uuid)
             .fetch_all(&self.pool)
             .await
             .map_err(FindError::from_err)?;
@@ -157,12 +142,8 @@ impl Find for TodoRepository {
             .try_into_entity(todo_tags)
             .map_err(FindError::from_err)
     }
-}
 
-#[async_trait]
-impl List for TodoRepository {
-    // TODO: try to implement a database function to list with filters
-    async fn list(&self, payload: ListPayload) -> Result<ListData, ListError> {
+    async fn list(&self, payload: ListPayload) -> Result<PaginatedList, ListError> {
         let base_count_q = "SELECT COUNT(*) FROM todo";
         let base_list_q = "SELECT todo.* FROM todo";
         let mut count_q = QueryBuilder::<'_, Postgres>::new(base_count_q);
@@ -237,16 +218,13 @@ impl List for TodoRepository {
             }
         }
 
-        Ok(ListData {
+        Ok(PaginatedList {
             count: count as u64,
             items: todo_entities,
         })
     }
-}
 
-#[async_trait]
-impl Update for TodoRepository {
-    async fn update(&self, payload: UpdatePayload) -> Result<(), UpdateError> {
+    async fn update(&self, todo: TodoEntity) -> Result<(), UpdateError> {
         let current_dt = DateTime::new().into_offset_dt();
         let update_q = r#"
             UPDATE todo
@@ -255,12 +233,12 @@ impl Update for TodoRepository {
         "#;
 
         sqlx::query(update_q)
-            .bind(payload.title.into_string())
-            .bind(payload.description.map(|d| d.into_string()))
-            .bind(payload.todo_at.map(|at| at.into_date()))
-            .bind(TodoModelStatus::from(payload.status))
+            .bind(todo.title.into_string())
+            .bind(todo.description.map(|d| d.into_string()))
+            .bind(todo.todo_at.map(|at| at.into_date()))
+            .bind(TodoModelStatus::from(todo.status))
             .bind(current_dt)
-            .bind(payload.id.into_uuid())
+            .bind(todo.id.into_uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {

@@ -3,37 +3,40 @@ use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::bind_tags::BindTodoTagsInput;
 use crate::application::functions::todo::bind_tags::{bind_todo_tags, BindTodoTagsContext};
 use crate::application::repositories::tag::exists_all::ExistsAll;
-use crate::application::repositories::todo::bind_tags::BindTags;
-use crate::application::repositories::todo::exists::Exists;
+use crate::application::repositories::todo::TodoRepository;
 
 #[derive(Clone, Debug)]
-pub struct BindTagsController<TodoRepo, TagRepo>
+pub struct BindTagsController<T, S>
 where
-    TodoRepo: BindTags + Exists,
-    TagRepo: ExistsAll,
+    T: TodoRepository,
+    S: ExistsAll,
 {
-    todo_repository: TodoRepo,
-    tag_repository: TagRepo,
+    todo_repository: T,
+    tag_repository: S,
 }
 
-impl<TodoRepo, TagRepo> BindTagsController<TodoRepo, TagRepo>
+impl<T, S> BindTagsController<T, S>
 where
-    TodoRepo: BindTags + Exists,
-    TagRepo: ExistsAll,
+    T: TodoRepository,
+    S: ExistsAll,
 {
-    pub const fn new(todo_repository: TodoRepo, tag_repository: TagRepo) -> Self {
+    pub const fn new(todo_repository: T, tag_repository: S) -> Self {
         Self {
             todo_repository,
             tag_repository,
         }
     }
 
-    pub async fn run<Req>(&self, req: Req) -> Result<(), RunError>
+    pub async fn run<R>(&self, req: R) -> Result<(), RunError>
     where
-        Req: Parse<BindTodoTagsInput, ParseError>,
+        R: Parse<BindTodoTagsInput, ParseError>,
     {
         let input = req.parse().map_err(RunError::Parsing)?;
-        let ctx = BindTodoTagsContext::new(&self.todo_repository, &self.tag_repository);
+        let ctx = BindTodoTagsContext {
+            tag_repository: &self.tag_repository,
+            todo_repository: &self.todo_repository,
+        };
+
         bind_todo_tags(ctx, input).await.map_err(RunError::Binding)
     }
 }
