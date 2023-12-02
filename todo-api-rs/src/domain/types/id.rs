@@ -25,7 +25,6 @@ impl Display for Id {
 }
 
 impl From<Uuid> for Id {
-    /// Creates a new `Id` instance from `uuid::Uuid`
     fn from(value: Uuid) -> Self {
         Self(value)
     }
