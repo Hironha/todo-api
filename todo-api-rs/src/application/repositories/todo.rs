@@ -92,7 +92,7 @@ pub enum DeleteError {
 }
 
 impl DeleteError {
-    pub fn from_err(err: impl Error + 'static) -> Self {
+    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
         Self::Internal(err.into())
     }
 }
@@ -100,7 +100,7 @@ impl DeleteError {
 impl fmt::Display for DeleteError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::NotFound => write!(f, "failed deleting todo because could not find it"),
+            Self::NotFound => write!(f, "todo not found"),
             Self::Internal(err) => err.fmt(f),
         }
     }
