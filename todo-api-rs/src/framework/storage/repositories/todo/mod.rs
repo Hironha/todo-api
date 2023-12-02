@@ -24,6 +24,44 @@ impl PgTodoRepository {
     }
 }
 
+impl PgTodoRepository {
+    async fn find_related_tags(&self, todo_uuid: Uuid) -> Result<Vec<TagModel>, SqlxError> {
+        let find_related_tags_q = r#"
+            SELECT tag.*
+            FROM tag
+            INNER JOIN todo_tag ON todo_tag.tag_id = tag.id
+            WHERE todo_tag.todo_id = $1
+        "#;
+
+        sqlx::query_as::<_, TagModel>(find_related_tags_q)
+            .bind(todo_uuid)
+            .fetch_all(&self.pool)
+            .await
+    }
+
+    async fn find_many_related_tags(
+        &self,
+        todo_uuids: &[Uuid],
+    ) -> Result<Vec<(Uuid, TagModel)>, SqlxError> {
+        let find_many_related_tags_q = r#"
+            SELECT todo_id, tag.*
+            FROM todo_tag
+            INNER JOIN tag ON tag.id = todo_tag.tag_id
+            WHERE todo_tag.todo_id = ANY($1) 
+        "#;
+
+        let related_tags = sqlx::query(find_many_related_tags_q)
+            .bind(todo_uuids)
+            .fetch_all(&self.pool)
+            .await?;
+
+        related_tags
+            .into_iter()
+            .map(|row| Ok((row.try_get("todo_id")?, TagModel::from_row(&row)?)))
+            .collect::<Result<Vec<(Uuid, TagModel)>, SqlxError>>()
+    }
+}
+
 #[async_trait]
 impl TodoRepository for PgTodoRepository {
     async fn bind_tags(&self, todo_id: Id, tag_ids: Vec<Id>) -> Result<(), BindTagsError> {
@@ -120,26 +158,16 @@ impl TodoRepository for PgTodoRepository {
                 _ => FindError::from_err(err),
             })?;
 
-        let get_related_tags_q = r#"
-            SELECT tag.*
-            FROM tag
-            INNER JOIN todo_tag ON todo_tag.tag_id = tag.id
-            WHERE todo_tag.todo_id = $1
-        "#;
-
-        let todo_tag_models = sqlx::query_as::<_, TagModel>(get_related_tags_q)
-            .bind(todo_uuid)
-            .fetch_all(&self.pool)
+        let related_tag_entities = self
+            .find_related_tags(todo_uuid)
             .await
-            .map_err(FindError::from_err)?;
-
-        let todo_tags = todo_tag_models
+            .map_err(FindError::from_err)?
             .into_iter()
             .map(|model| model.try_into_entity().map_err(FindError::from_err))
             .collect::<Result<Vec<TagEntity>, FindError>>()?;
 
         todo_model
-            .try_into_entity(todo_tags)
+            .try_into_entity(related_tag_entities)
             .map_err(FindError::from_err)
     }
 
@@ -175,32 +203,19 @@ impl TodoRepository for PgTodoRepository {
             .await
             .map_err(ListError::from_err)?;
 
-        let todo_ids = todo_models
+        let todo_uuids = todo_models
             .iter()
             .map(|todo| todo.id)
             .collect::<Vec<Uuid>>();
 
-        let find_tags_q = r#"
-            SELECT todo_id, tag.*
-            FROM todo_tag
-            INNER JOIN tag ON tag.id = todo_tag.tag_id
-            WHERE todo_tag.todo_id = ANY($1) 
-        "#;
-
-        let tag_relations = sqlx::query(find_tags_q)
-            .bind(&todo_ids)
-            .fetch_all(&self.pool)
+        let related_tag_entities = self
+            .find_many_related_tags(&todo_uuids)
             .await
-            .map_err(ListError::from_err)?;
-
-        let tag_relation_entries = tag_relations
+            .map_err(ListError::from_err)?
             .into_iter()
-            .map(|row| {
-                let todo_id = row.try_get("todo_id").map_err(ListError::from_err)?;
-                let tag_entity = TagModel::from_row(&row)
-                    .map_err(ListError::from_err)
-                    .and_then(|model| model.try_into_entity().map_err(ListError::from_err))?;
-                Ok((todo_id, tag_entity))
+            .map(|(todo_uuid, tag_model)| {
+                let tag_entity = tag_model.try_into_entity().map_err(ListError::from_err)?;
+                Ok((todo_uuid, tag_entity))
             })
             .collect::<Result<Vec<(Uuid, TagEntity)>, ListError>>()?;
 
@@ -209,9 +224,9 @@ impl TodoRepository for PgTodoRepository {
             .map(|m| m.try_into_entity(Vec::new()).map_err(ListError::from_err))
             .collect::<Result<Vec<TodoEntity>, ListError>>()?;
 
-        for (todo_id, tag) in tag_relation_entries.into_iter() {
+        for (todo_uuid, tag) in related_tag_entities.into_iter() {
             for todo in todo_entities.iter_mut() {
-                if todo.id.into_uuid() == todo_id {
+                if todo.id.into_uuid() == todo_uuid {
                     todo.tags.push(tag);
                     break;
                 }
