@@ -35,6 +35,14 @@ export class Result<T, E> {
     return this.variant instanceof Err;
   }
 
+  ok(): Ok<T> | undefined {
+    return this.variant instanceof Ok ? this.variant : undefined;
+  }
+
+  err(): Err<E> | undefined {
+    return this.variant instanceof Err ? this.variant : undefined;
+  }
+
   map<U>(predicate: (value: T) => U): Result<U, E> {
     if (this.isOk()) {
       return Result.ok(predicate(this.value));
