@@ -6,19 +6,16 @@ use crate::application::functions::todo::find::{find_todo, FindTodoContext};
 use crate::application::repositories::todo::TodoRepository;
 
 #[derive(Clone, Debug)]
-pub struct FindController<T>
-where
-    T: TodoRepository,
-{
-    repository: T,
+pub struct FindController<T> {
+    todo_repository: T,
 }
 
 impl<T> FindController<T>
 where
     T: TodoRepository,
 {
-    pub const fn new(repository: T) -> Self {
-        Self { repository }
+    pub const fn new(todo_repository: T) -> Self {
+        Self { todo_repository }
     }
 
     pub async fn run<R>(&self, req: R) -> Result<TodoPresenter, RunError>
@@ -27,7 +24,7 @@ where
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = FindTodoContext {
-            todo_repository: &self.repository,
+            todo_repository: &self.todo_repository,
         };
 
         find_todo(ctx, input)

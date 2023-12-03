@@ -2,15 +2,11 @@ use crate::adapters::dtos::todo::bind_tags::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::bind_tags::BindTodoTagsInput;
 use crate::application::functions::todo::bind_tags::{bind_todo_tags, BindTodoTagsContext};
-use crate::application::repositories::tag::exists_all::ExistsAll;
+use crate::application::repositories::tag::TagRepository;
 use crate::application::repositories::todo::TodoRepository;
 
 #[derive(Clone, Debug)]
-pub struct BindTagsController<T, S>
-where
-    T: TodoRepository,
-    S: ExistsAll,
-{
+pub struct BindTagsController<T, S> {
     todo_repository: T,
     tag_repository: S,
 }
@@ -18,7 +14,7 @@ where
 impl<T, S> BindTagsController<T, S>
 where
     T: TodoRepository,
-    S: ExistsAll,
+    S: TagRepository,
 {
     pub const fn new(todo_repository: T, tag_repository: S) -> Self {
         Self {

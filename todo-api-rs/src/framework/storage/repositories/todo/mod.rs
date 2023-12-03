@@ -208,10 +208,12 @@ impl TodoRepository for PgTodoRepository {
             .map(|todo| todo.id)
             .collect::<Vec<Uuid>>();
 
-        let related_tag_entities = self
+        let related_tag_models = self
             .find_many_related_tags(&todo_uuids)
             .await
-            .map_err(ListError::from_err)?
+            .map_err(ListError::from_err)?;
+
+        let related_tag_entities = related_tag_models
             .into_iter()
             .map(|(todo_uuid, tag_model)| {
                 let tag_entity = tag_model.try_into_entity().map_err(ListError::from_err)?;
@@ -240,7 +242,6 @@ impl TodoRepository for PgTodoRepository {
     }
 
     async fn update(&self, todo: TodoEntity) -> Result<(), UpdateError> {
-        let current_dt = DateTime::new().into_offset_dt();
         let update_q = r#"
             UPDATE todo
             SET title = $1, description = $2, todo_at = $3, status = $4, updated_at = $5
@@ -252,7 +253,7 @@ impl TodoRepository for PgTodoRepository {
             .bind(todo.description.map(|d| d.into_string()))
             .bind(todo.todo_at.map(|at| at.into_date()))
             .bind(TodoModelStatus::from(todo.status))
-            .bind(current_dt)
+            .bind(todo.updated_at.into_offset_dt())
             .bind(todo.id.into_uuid())
             .fetch_one(&self.pool)
             .await

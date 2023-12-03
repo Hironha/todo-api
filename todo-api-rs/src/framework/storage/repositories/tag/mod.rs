@@ -2,59 +2,27 @@ use async_trait::async_trait;
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool};
 
-use crate::application::repositories::tag::create::{Create, CreateError, CreatePayload};
-use crate::application::repositories::tag::delete::{Delete, DeleteError};
-use crate::application::repositories::tag::exists_all::{ExistsAll, ExistsAllError};
-use crate::application::repositories::tag::find::{Find, FindError};
-use crate::application::repositories::tag::list::{List, ListError};
-use crate::application::repositories::tag::update::{Update, UpdateError, UpdatePayload};
+use crate::application::repositories::tag::{
+    CreateError, DeleteError, ExistsManyError, FindError, ListAllError, TagRepository, UpdateError,
+};
 use crate::domain::entities::tag::TagEntity;
-use crate::domain::types::{Id, DateTime};
+use crate::domain::types::{DateTime, Id};
 use crate::framework::storage::models::tag::TagModel;
 
 #[derive(Clone)]
-pub struct TagRepository {
+pub struct PgTagRepository {
     pool: PgPool,
 }
 
-impl TagRepository {
+impl PgTagRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait]
-impl ExistsAll for TagRepository {
-    async fn exists_all(&self, tags_id: &[Id]) -> Result<(), ExistsAllError> {
-        let tags_uuid = tags_id
-            .iter()
-            .map(|id| id.into_uuid())
-            .collect::<Vec<Uuid>>();
-
-        let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";
-        let selected_tags_uuid = sqlx::query_scalar::<_, Uuid>(select_any_q)
-            .bind(&tags_uuid)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(ExistsAllError::from_err)?;
-
-        let not_found_ids = tags_uuid
-            .into_iter()
-            .filter(|uuid| !selected_tags_uuid.contains(uuid))
-            .map(Id::from)
-            .collect::<Vec<Id>>();
-
-        if not_found_ids.is_empty() {
-            Ok(())
-        } else {
-            Err(ExistsAllError::NotFound(not_found_ids))
-        }
-    }
-}
-
-#[async_trait]
-impl Create for TagRepository {
-    async fn create(&self, payload: CreatePayload) -> Result<TagEntity, CreateError> {
+impl TagRepository for PgTagRepository {
+    async fn create(&self, tag: TagEntity) -> Result<TagEntity, CreateError> {
         let current_dt = DateTime::new().into_offset_dt();
         let create_q = r#"
             INSERT INTO tag (id, name, description, created_at, updated_at)
@@ -64,8 +32,8 @@ impl Create for TagRepository {
 
         let tag_model = sqlx::query_as::<_, TagModel>(create_q)
             .bind(Id::new().into_uuid())
-            .bind(payload.name.into_string())
-            .bind(payload.description.map(|d| d.into_string()))
+            .bind(tag.name.into_string())
+            .bind(tag.description.map(|d| d.into_string()))
             .bind(current_dt)
             .bind(current_dt)
             .fetch_one(&self.pool)
@@ -74,14 +42,11 @@ impl Create for TagRepository {
 
         tag_model.try_into_entity().map_err(CreateError::from_err)
     }
-}
 
-#[async_trait]
-impl Delete for TagRepository {
-    async fn delete(&self, id: Id) -> Result<(), DeleteError> {
-        let delete_q = "DELETE FROM tag WHERE id = $1";
+    async fn delete(&self, tag_id: Id) -> Result<(), DeleteError> {
+        let delete_q = "DELETE FROM tag WHERE id = $1 RETURNING id";
         sqlx::query(delete_q)
-            .bind(id.into_uuid())
+            .bind(tag_id.into_uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -91,11 +56,34 @@ impl Delete for TagRepository {
 
         Ok(())
     }
-}
 
-#[async_trait]
-impl Find for TagRepository {
-    async fn find(&self, id: Id) -> Result<TagEntity, FindError> {
+    async fn exists_many(&self, tag_ids: &[Id]) -> Result<(), ExistsManyError> {
+        let tag_uuids = tag_ids
+            .iter()
+            .map(|id| id.into_uuid())
+            .collect::<Vec<Uuid>>();
+
+        let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";
+        let selected_tag_uuids = sqlx::query_scalar::<_, Uuid>(select_any_q)
+            .bind(&tag_uuids)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(ExistsManyError::from_err)?;
+
+        let not_found_ids = tag_uuids
+            .into_iter()
+            .filter(|uuid| !selected_tag_uuids.contains(uuid))
+            .map(Id::from)
+            .collect::<Vec<Id>>();
+
+        if not_found_ids.is_empty() {
+            Ok(())
+        } else {
+            Err(ExistsManyError::NotFound(not_found_ids))
+        }
+    }
+
+    async fn find(&self, tag_id: Id) -> Result<TagEntity, FindError> {
         let find_q = r#"
             SELECT id, name, description, created_at, updated_at
             FROM tag
@@ -103,7 +91,7 @@ impl Find for TagRepository {
         "#;
 
         let tag_model = sqlx::query_as::<_, TagModel>(find_q)
-            .bind(id.into_uuid())
+            .bind(tag_id.into_uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -113,44 +101,37 @@ impl Find for TagRepository {
 
         tag_model.try_into_entity().map_err(FindError::from_err)
     }
-}
 
-#[async_trait]
-impl List for TagRepository {
-    async fn list(&self) -> Result<Vec<TagEntity>, ListError> {
-        let list_q = r#"
+    async fn list_all(&self) -> Result<Vec<TagEntity>, ListAllError> {
+        let list_all_q = r#"
             SELECT id, name, description, created_at, updated_at
             FROM tag
         "#;
 
-        let tag_models = sqlx::query_as::<_, TagModel>(list_q)
+        let tag_models = sqlx::query_as::<_, TagModel>(list_all_q)
             .fetch_all(&self.pool)
             .await
-            .map_err(ListError::from_err)?;
+            .map_err(ListAllError::from_err)?;
 
         tag_models
             .into_iter()
-            .map(|model| model.try_into_entity().map_err(ListError::from_err))
-            .collect::<Result<Vec<TagEntity>, ListError>>()
+            .map(|model| model.try_into_entity().map_err(ListAllError::from_err))
+            .collect::<Result<Vec<TagEntity>, ListAllError>>()
     }
-}
 
-#[async_trait]
-impl Update for TagRepository {
-    async fn update(&self, payload: UpdatePayload) -> Result<TagEntity, UpdateError> {
-        let current_dt = DateTime::new().into_offset_dt();
+    async fn update(&self, tag: TagEntity) -> Result<TagEntity, UpdateError> {
         let update_q = r#"
             UPDATE tag
             SET name = $1, description = $2, updated_at = $3
             WHERE id = $4
-            RETURNING id, name, description, created_at, updated_at
+            RETURNING tag.*
         "#;
 
         let tag_model = sqlx::query_as::<_, TagModel>(update_q)
-            .bind(payload.name.into_string())
-            .bind(payload.description.map(|d| d.into_string()))
-            .bind(current_dt)
-            .bind(payload.id.into_uuid())
+            .bind(tag.name.into_string())
+            .bind(tag.description.map(|d| d.into_string()))
+            .bind(tag.updated_at.into_offset_dt())
+            .bind(tag.id.into_uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {

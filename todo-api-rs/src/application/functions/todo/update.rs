@@ -1,11 +1,13 @@
 use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
 use crate::application::repositories::todo::{FindError, TodoRepository, UpdateError};
+use crate::domain::entities::todo::TodoEntity;
+use crate::domain::types::DateTime;
 
 pub async fn update_todo<T: TodoRepository>(
     ctx: UpdateTodoContext<'_, T>,
     input: UpdateTodoInput,
 ) -> Result<(), UpdateTodoError> {
-    let mut todo_entity = ctx
+    let todo_entity = ctx
         .todo_repository
         .find(input.id)
         .await
@@ -14,13 +16,17 @@ pub async fn update_todo<T: TodoRepository>(
             FindError::Internal(err) => UpdateTodoError::Repository(err),
         })?;
 
-    todo_entity.title = input.title;
-    todo_entity.description = input.description;
-    todo_entity.todo_at = input.todo_at;
-    todo_entity.status = input.status;
+    let updated_todo_entity = TodoEntity {
+        title: input.title,
+        description: input.description,
+        todo_at: input.todo_at,
+        status: input.status,
+        updated_at: DateTime::new(),
+        ..todo_entity
+    };
 
     ctx.todo_repository
-        .update(todo_entity)
+        .update(updated_todo_entity)
         .await
         .map_err(|err| match err {
             UpdateError::NotFound => UpdateTodoError::NotFound,

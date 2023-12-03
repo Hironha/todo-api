@@ -1,5 +1,5 @@
 use crate::application::dtos::todo::bind_tags::{BindTodoTagsError, BindTodoTagsInput};
-use crate::application::repositories::tag::exists_all::{ExistsAll, ExistsAllError};
+use crate::application::repositories::tag::{ExistsManyError, TagRepository};
 use crate::application::repositories::todo::{BindTagsError, ExistsError, TodoRepository};
 
 pub async fn bind_todo_tags<T, S>(
@@ -8,7 +8,7 @@ pub async fn bind_todo_tags<T, S>(
 ) -> Result<(), BindTodoTagsError>
 where
     T: TodoRepository,
-    S: ExistsAll,
+    S: TagRepository,
 {
     let todo_exists = ctx
         .todo_repository
@@ -23,11 +23,11 @@ where
     }
 
     ctx.tag_repository
-        .exists_all(&input.tags_id)
+        .exists_many(&input.tags_id)
         .await
         .map_err(|err| match err {
-            ExistsAllError::NotFound(tags_id) => BindTodoTagsError::TagNotFound(tags_id),
-            ExistsAllError::Internal(err) => BindTodoTagsError::Repository(err),
+            ExistsManyError::NotFound(tags_id) => BindTodoTagsError::TagNotFound(tags_id),
+            ExistsManyError::Internal(err) => BindTodoTagsError::Repository(err),
         })?;
 
     ctx.todo_repository
@@ -42,7 +42,7 @@ where
 pub struct BindTodoTagsContext<'a, T, S>
 where
     T: TodoRepository,
-    S: ExistsAll,
+    S: TagRepository,
 {
     pub todo_repository: &'a T,
     pub tag_repository: &'a S,

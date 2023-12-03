@@ -3,24 +3,29 @@ use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::dtos::tag::update::UpdateTagInput;
 use crate::application::functions::tag::update::{update_tag, UpdateTagContext};
-use crate::application::repositories::tag::update::Update;
+use crate::application::repositories::tag::TagRepository;
 
 #[derive(Clone, Debug)]
-pub struct UpdateController<Repo: Update> {
-    repository: Repo,
+pub struct UpdateController<T> {
+    tag_repository: T,
 }
 
-impl<Repo: Update> UpdateController<Repo> {
-    pub const fn new(repository: Repo) -> Self {
-        Self { repository }
+impl<T> UpdateController<T>
+where
+    T: TagRepository,
+{
+    pub const fn new(tag_repository: T) -> Self {
+        Self { tag_repository }
     }
 
-    pub async fn run<Req>(&self, req: Req) -> Result<TagPresenter, RunError>
+    pub async fn run<R>(&self, req: R) -> Result<TagPresenter, RunError>
     where
-        Req: Parse<UpdateTagInput, ParseError>,
+        R: Parse<UpdateTagInput, ParseError>,
     {
         let input = req.parse().map_err(RunError::Parsing)?;
-        let ctx = UpdateTagContext::new(&self.repository);
+        let ctx = UpdateTagContext {
+            tag_repository: &self.tag_repository,
+        };
 
         update_tag(ctx, input)
             .await

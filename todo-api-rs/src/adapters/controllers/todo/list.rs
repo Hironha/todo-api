@@ -6,19 +6,16 @@ use crate::application::functions::todo::list::{list_todo, ListTodoContext};
 use crate::application::repositories::todo::TodoRepository;
 
 #[derive(Clone, Debug)]
-pub struct ListController<T>
-where
-    T: TodoRepository,
-{
-    repository: T,
+pub struct ListController<T> {
+    todo_repository: T,
 }
 
 impl<T> ListController<T>
 where
     T: TodoRepository,
 {
-    pub const fn new(repository: T) -> Self {
-        Self { repository }
+    pub const fn new(todo_repository: T) -> Self {
+        Self { todo_repository }
     }
 
     pub async fn run<R>(&self, req: R) -> Result<ListResponse, RunError>
@@ -27,7 +24,7 @@ where
     {
         let input = req.parse().map_err(RunError::Parsing)?;
         let ctx = ListTodoContext {
-            todo_repository: &self.repository,
+            todo_repository: &self.todo_repository,
         };
 
         let todo_list = list_todo(ctx, input).await.map_err(RunError::Listing)?;

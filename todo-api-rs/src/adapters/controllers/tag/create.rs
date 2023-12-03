@@ -3,23 +3,28 @@ use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::dtos::tag::create::CreateTagInput;
 use crate::application::functions::tag::create::{create_tag, CreateTagContext};
-use crate::application::repositories::tag::create::Create;
+use crate::application::repositories::tag::TagRepository;
 
-pub struct CreateController<Repo: Create> {
-    repository: Repo,
+pub struct CreateController<T> {
+    tag_repository: T,
 }
 
-impl<Repo: Create> CreateController<Repo> {
-    pub const fn new(repository: Repo) -> Self {
-        Self { repository }
+impl<T> CreateController<T>
+where
+    T: TagRepository,
+{
+    pub const fn new(tag_repository: T) -> Self {
+        Self { tag_repository }
     }
 
-    pub async fn run<Req>(&self, req: Req) -> Result<TagPresenter, RunError>
+    pub async fn run<R>(&self, req: R) -> Result<TagPresenter, RunError>
     where
-        Req: Parse<CreateTagInput, ParseError>,
+        R: Parse<CreateTagInput, ParseError>,
     {
         let input = req.parse().map_err(RunError::Parsing)?;
-        let ctx = CreateTagContext::new(&self.repository);
+        let ctx = CreateTagContext {
+            tag_repository: &self.tag_repository,
+        };
 
         create_tag(ctx, input)
             .await

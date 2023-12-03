@@ -15,16 +15,16 @@ use find::find_tag;
 use list::list_tags;
 use update::update_tag;
 
-use crate::framework::storage::repositories::tag::TagRepository;
+use crate::framework::storage::repositories::tag::PgTagRepository;
 
 #[derive(Clone, FromRef)]
 pub struct TagState {
-    tag_repository: TagRepository,
+    tag_repository: PgTagRepository,
 }
 
 pub fn create_tag_router(pool: Pool<Postgres>) -> Router {
     let state = TagState {
-        tag_repository: TagRepository::new(pool),
+        tag_repository: PgTagRepository::new(pool),
     };
 
     Router::new()
