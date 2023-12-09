@@ -33,12 +33,14 @@ export default function App() {
 
       <Switch fallback={<Typography.Text>Failed loading todos :(</Typography.Text>}>
         <Match when={todoResource.loading}>
-          <Typography.Text>Loading todos...</Typography.Text>
+          <div class="w-full p-8 flex justify-center items-center">
+            <span class="text-primary loading loading-spinner loading-lg" />
+          </div>
         </Match>
 
         <Match when={todoResource()?.ok()}>
           {(todos) => (
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <For each={todos().value.data} fallback={<div>Loading...</div>}>
                 {(todo) => (
                   <TodoCard
