@@ -4,7 +4,7 @@ import { type JSX } from "solid-js/jsx-runtime";
 import { Typography } from "./components/ui/typography";
 import { Content } from "./components/ui/content";
 import { unreachable } from "./core/utils/unreachable";
-import { type TodoStatus, type Todo } from "./core/entities/todo";
+import { type TodoStatus, type Todo, TodoUtils } from "./core/entities/todo";
 import { useThemeConfig } from "./core/hooks/theme";
 import { classes } from "./core/utils/classes";
 
@@ -14,31 +14,32 @@ const items: Todo[] = [
     title: "Melhorar qualidade da UI",
     description: "A UI está bem cru ainda e precisa de algumas melhorias no design",
     status: "done",
-    todoAt: "2023-02-12",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    todoAt: new Date("2023-02-12"),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     id: "id2",
     title: "Melhorar qualidade da API",
     description: "O endpoint de criação de todo poderia aceitar tags talvez?",
     status: "in_progress",
-    todoAt: "2023-02-12",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    todoAt: new Date("2023-02-12"),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     id: "id3",
     title: "Melhorar qualidade do código",
     status: "todo",
-    todoAt: "2023-02-12",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    todoAt: new Date("2023-02-12"),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];
 
 export default function App() {
   const themeConfig = useThemeConfig();
+  const todos = items.map(TodoUtils.serializable);
 
   const setLightTheme = (): void => themeConfig.set("light");
   const setDarkTheme = (): void => themeConfig.set("dark");
@@ -59,7 +60,7 @@ export default function App() {
       </div>
 
       <div class="grid grid-cols-3 gap-4">
-        <For each={items} fallback={<div>Loading...</div>}>
+        <For each={todos} fallback={<div>Loading...</div>}>
           {(todo) => (
             <TodoCard title={todo.title} status={todo.status} description={todo.description} />
           )}
