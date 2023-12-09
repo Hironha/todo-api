@@ -26,10 +26,24 @@ export type Todo = {
   updatedAt: Date;
 };
 
+const todoSchema = object({
+  id: string(),
+  title: string(),
+  description: nullish(string()),
+  todoAt: nullish(date()),
+  status: union([literal("todo"), literal("in_progress"), literal("done")]),
+  createdAt: date(),
+  updatedAt: date(),
+});
+
 export class TodoUtils {
   static parse(value: unknown): Todo | undefined {
-    const parser = new TodoParser();
-    return parser.parse(value);
+    const parsed = safeParse(todoSchema, value);
+    if (parsed.success) {
+      return parsed.output as Todo;
+    } else {
+      return undefined;
+    }
   }
 
   static serializable(todo: Todo): SerializableTodo {
@@ -42,26 +56,5 @@ export class TodoUtils {
       createdAt: todo.createdAt.toISOString(),
       updatedAt: todo.updatedAt.toISOString(),
     };
-  }
-}
-
-class TodoParser {
-  private readonly parser = object({
-    id: string(),
-    title: string(),
-    description: nullish(string()),
-    todoAt: nullish(date()),
-    status: union([literal("todo"), literal("in_progress"), literal("done")]),
-    createdAt: date(),
-    updatedAt: date(),
-  });
-
-  parse(value: unknown): Todo | undefined {
-    const parsed = safeParse(this.parser, value);
-    if (parsed.success) {
-      return parsed.output as Todo;
-    } else {
-      return undefined;
-    }
   }
 }
