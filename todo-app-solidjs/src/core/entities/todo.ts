@@ -1,4 +1,4 @@
-import { object, string, nullish, date, union, literal, safeParse } from "valibot";
+import { object, string, nullish, date, union, literal, coerce, safeParse } from "valibot";
 import { DateUtils } from "../utils/date";
 
 export type TodoStatus = "todo" | "in_progress" | "done";
@@ -30,10 +30,10 @@ const todoSchema = object({
   id: string(),
   title: string(),
   description: nullish(string()),
-  todoAt: nullish(date()),
+  todoAt: nullish(coerce(date(), (todoAt) => new Date(todoAt as string))),
   status: union([literal("todo"), literal("in_progress"), literal("done")]),
-  createdAt: date(),
-  updatedAt: date(),
+  createdAt: coerce(date(), (createdAt) => new Date(createdAt as string)),
+  updatedAt: coerce(date(), (updatedAt) => new Date(updatedAt as string)),
 });
 
 export class TodoUtils {

@@ -1,45 +1,17 @@
-import { For, Show } from "solid-js";
+import { For, Show, Switch, Match, createResource } from "solid-js";
 import { type JSX } from "solid-js/jsx-runtime";
 
 import { Typography } from "./components/ui/typography";
 import { Content } from "./components/ui/content";
 import { unreachable } from "./core/utils/unreachable";
-import { type TodoStatus, type Todo, TodoUtils } from "./core/entities/todo";
-import { useThemeConfig } from "./core/hooks/theme";
+import { type TodoStatus } from "./core/entities/todo";
+import { useThemeConfig } from "./hooks/ui/theme";
 import { classes } from "./core/utils/classes";
-
-const items: Todo[] = [
-  {
-    id: "id1",
-    title: "Melhorar qualidade da UI",
-    description: "A UI está bem cru ainda e precisa de algumas melhorias no design",
-    status: "done",
-    todoAt: new Date("2023-02-12"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: "id2",
-    title: "Melhorar qualidade da API",
-    description: "O endpoint de criação de todo poderia aceitar tags talvez?",
-    status: "in_progress",
-    todoAt: new Date("2023-02-12"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: "id3",
-    title: "Melhorar qualidade do código",
-    status: "todo",
-    todoAt: new Date("2023-02-12"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+import { TodoService } from "./core/services/todo";
 
 export default function App() {
   const themeConfig = useThemeConfig();
-  const todos = items.map(TodoUtils.serializable);
+  const [todoResource] = createResource(TodoService.list);
 
   const setLightTheme = (): void => themeConfig.set("light");
   const setDarkTheme = (): void => themeConfig.set("dark");
@@ -59,13 +31,31 @@ export default function App() {
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-4">
-        <For each={todos} fallback={<div>Loading...</div>}>
-          {(todo) => (
-            <TodoCard title={todo.title} status={todo.status} description={todo.description} />
+      <Switch fallback={<Typography.Text>Failed loading todos :(</Typography.Text>}>
+        <Match when={todoResource.loading}>
+          <Typography.Text>Loading todos...</Typography.Text>
+        </Match>
+
+        <Match when={todoResource()?.ok()}>
+          {(todos) => (
+            <div class="grid grid-cols-3 gap-4">
+              <For each={todos().value.data} fallback={<div>Loading...</div>}>
+                {(todo) => (
+                  <TodoCard
+                    title={todo.title}
+                    status={todo.status}
+                    description={todo.description}
+                  />
+                )}
+              </For>
+            </div>
           )}
-        </For>
-      </div>
+        </Match>
+
+        <Match when={todoResource()?.err()}>
+          {(error) => <Typography.Text>{error().value}</Typography.Text>}
+        </Match>
+      </Switch>
     </Content>
   );
 }
