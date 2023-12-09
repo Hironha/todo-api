@@ -12,7 +12,7 @@ export type SerializableTodo = {
   status: TodoStatus;
   /** Date in RFC 3339 format, i.e date time */
   createdAt: string;
-  /** Date in RFC 339 format, i.e date time */
+  /** Date in RFC 3339 format, i.e date time */
   updatedAt: string;
 };
 
