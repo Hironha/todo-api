@@ -26,8 +26,9 @@ where
             todo_repository: &self.todo_repository,
         };
 
-        let todo = create_todo(ctx, input).await.map_err(RunError::Creating)?;
-
-        Ok(TodoPresenter::from(todo))
+        create_todo(ctx, input)
+            .await
+            .map(TodoPresenter::from)
+            .map_err(RunError::Creating)
     }
 }
