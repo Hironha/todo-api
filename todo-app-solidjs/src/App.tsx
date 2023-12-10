@@ -41,7 +41,7 @@ export default function App() {
         <Match when={todoResource()?.ok()}>
           {(todos) => (
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <For each={todos().value.data} fallback={<div>Loading...</div>}>
+              <For each={todos().data}>
                 {(todo) => (
                   <TodoCard
                     title={todo.title}
@@ -55,7 +55,7 @@ export default function App() {
         </Match>
 
         <Match when={todoResource()?.err()}>
-          {(error) => <Typography.Text>{error().value}</Typography.Text>}
+          {(error) => <Typography.Text>{error()}</Typography.Text>}
         </Match>
       </Switch>
     </Content>

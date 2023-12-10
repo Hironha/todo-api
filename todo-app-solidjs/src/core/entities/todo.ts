@@ -37,6 +37,8 @@ const todoSchema = object({
 });
 
 export class TodoUtils {
+  // TODO: return a `Result` with an error that allows identification
+  // of the field that failed parsing 
   static parse(value: unknown): Todo | undefined {
     const parsed = safeParse(todoSchema, value);
     if (parsed.success) {

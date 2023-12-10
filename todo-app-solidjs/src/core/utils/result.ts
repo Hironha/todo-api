@@ -1,85 +1,75 @@
 export type ResultUnion<T, E> = { kind: "ok"; value: T } | { kind: "err"; value: E };
 
-export class Result<T, E> {
-  private variant: Ok<T> | Err<E>;
-
-  private constructor(variant: Ok<T> | Err<E>) {
-    this.variant = variant;
-  }
-
-  static fromUnion<S, U>(union: ResultUnion<S, U>): Result<S, U> {
-    if (union.kind === "ok") {
-      return new Result<S, U>(new Ok(union.value));
-    } else {
-      return new Result<S, U>(new Err(union.value));
-    }
-  }
-
-  static ok<S, U>(value: S): Result<S, U> {
-    return new Result<S, U>(new Ok(value));
-  }
-
-  static err<S, U>(value: U): Result<S, U> {
-    return new Result<S, U>(new Err(value));
-  }
-
-  get value(): T | E {
-    return this.variant.value;
-  }
-
-  isOk(): this is Ok<T> {
-    return this.variant instanceof Ok;
-  }
-
-  isErr(): this is Err<E> {
-    return this.variant instanceof Err;
-  }
-
-  ok(): Ok<T> | undefined {
-    return this.variant instanceof Ok ? this.variant : undefined;
-  }
-
-  err(): Err<E> | undefined {
-    return this.variant instanceof Err ? this.variant : undefined;
-  }
-
-  map<U>(predicate: (value: T) => U): Result<U, E> {
-    if (this.isOk()) {
-      return Result.ok(predicate(this.value));
-    } else {
-      return this as unknown as Result<U, E>;
-    }
-  }
-
-  union(): ResultUnion<T, E> {
-    if (this.isOk()) {
-      return { kind: "ok", value: this.value };
-    } else {
-      return { kind: "err", value: this.value as E };
-    }
-  }
+export interface BaseResult<T, E> {
+  isOk(): this is Ok<T>;
+  isErr(): this is Err<E>;
+  map<U>(predicate: (value: T) => U): BaseResult<U, E>;
+  ok(): T | undefined;
+  err(): E | undefined;
 }
 
-export class Ok<T> {
-  private v: T;
+export type Result<T, E> = Ok<T> | Err<E>;
+
+export class Ok<T> implements BaseResult<T, never> {
+  private _value: T;
 
   constructor(value: T) {
-    this.v = value;
+    this._value = value;
   }
 
   get value(): T {
-    return this.v;
+    return this._value;
+  }
+
+  isOk(): this is Ok<T> {
+    return true;
+  }
+
+  isErr(): this is Err<never> {
+    return false;
+  }
+
+  map<U>(predicate: (value: T) => U): BaseResult<U, never> {
+    this._value = predicate(this._value) as any;
+    return this as any;
+  }
+
+  ok(): T {
+    return this.value;
+  }
+  err(): undefined {
+    return undefined;
   }
 }
 
-export class Err<E> {
-  private v: E;
+export class Err<E> implements BaseResult<never, E> {
+  private _value: E;
 
   constructor(value: E) {
-    this.v = value;
+    this._value = value;
   }
 
   get value(): E {
-    return this.v;
+    return this._value;
+  }
+
+  isOk(): this is Ok<never> {
+    return false;
+  }
+
+  isErr(): this is Err<E> {
+    return true;
+  }
+
+  map<U>(_predicate: (value: never) => U): BaseResult<U, E> {
+    return this;
+  }
+
+  ok(): undefined {
+    return undefined;
+  }
+
+  err(): E | undefined {
+    return this.value;
   }
 }
