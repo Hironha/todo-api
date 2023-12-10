@@ -1,5 +1,6 @@
 import { object, string, nullish, date, union, literal, coerce, safeParse } from "valibot";
 import { DateUtils } from "../utils/date";
+import { type Result, Ok, Err } from "../utils/result";
 
 export type TodoStatus = "todo" | "in_progress" | "done";
 
@@ -38,13 +39,14 @@ const todoSchema = object({
 
 export class TodoUtils {
   // TODO: return a `Result` with an error that allows identification
-  // of the field that failed parsing 
-  static parse(value: unknown): Todo | undefined {
+  // of the field that failed parsing
+  static parse(value: unknown): Result<Todo, keyof Todo> {
     const parsed = safeParse(todoSchema, value);
     if (parsed.success) {
-      return parsed.output as Todo;
+      return new Ok(parsed.output as Todo);
     } else {
-      return undefined;
+      console.log(parsed);
+      return new Err<keyof Todo>("status");
     }
   }
 
