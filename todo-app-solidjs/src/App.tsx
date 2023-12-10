@@ -14,13 +14,9 @@ export default function App() {
   let createModalRef: ModalRef | undefined = undefined;
   const [todoResource] = createResource(TodoService.list);
 
-  const showCreateModal = (): void => {
-    createModalRef?.show();
-  };
-
   return (
     <Content class="flex flex-col gap-2 justify-center">
-      <MainActions onCreateClick={showCreateModal} />
+      <MainActions onCreateClick={() => createModalRef?.show()} />
 
       <Switch fallback={<Typography.Text>Failed loading todos :(</Typography.Text>}>
         <Match when={todoResource.loading}>
@@ -56,7 +52,23 @@ export default function App() {
       </Switch>
 
       <Modal ref={createModalRef} id="create_todo_modal" title="Criar Todo">
-        <TodoForm onSubmit={console.log} />
+        <TodoForm id="create_todo_form" onSubmit={console.log} />
+
+        <div class="flex gap-3 justify-between mt-6">
+          <button
+            class="btn btn-primary btn-outline btn-sm"
+            onClick={() => createModalRef?.close()}
+          >
+            Cancelar
+          </button>
+
+          <input
+            class="btn btn-primary btn-sm"
+            type="submit"
+            form="create_todo_form"
+            value="Criar"
+          />
+        </div>
       </Modal>
     </Content>
   );
