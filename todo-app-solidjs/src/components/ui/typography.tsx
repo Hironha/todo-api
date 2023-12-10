@@ -1,3 +1,4 @@
+import { Switch, Match } from "solid-js";
 import { type JSX } from "solid-js/jsx-runtime";
 
 import { classes } from "../../core/utils/classes";
@@ -57,22 +58,34 @@ Typography.Title = (props: TitleProps): JSX.Element => {
     .build();
 
   const level = props.level ?? 1;
-  switch (level) {
-    case 1:
-      return <h1 class={styles}>{props.children}</h1>;
-    case 2:
-      return <h2 class={styles}>{props.children}</h2>;
-    case 3:
-      return <h3 class={styles}>{props.children}</h3>;
-    case 4:
-      return <h4 class={styles}>{props.children}</h4>;
-    case 5:
-      return <h5 class={styles}>{props.children}</h5>;
-    case 6:
-      return <h6 class={styles}>{props.children}</h6>;
-    default:
-      return unreachable(level);
-  }
+
+  return (
+    <Switch fallback={<h1 class={styles}>{props.children}</h1>}>
+      <Match when={level === 1}>
+        <h1 class={styles}>{props.children}</h1>
+      </Match>
+
+      <Match when={level === 2}>
+        <h2 class={styles}>{props.children}</h2>
+      </Match>
+
+      <Match when={level === 3}>
+        <h3 class={styles}>{props.children}</h3>
+      </Match>
+
+      <Match when={level === 4}>
+        <h4 class={styles}>{props.children}</h4>
+      </Match>
+
+      <Match when={level === 5}>
+        <h5 class={styles}>{props.children}</h5>
+      </Match>
+
+      <Match when={level === 6}>
+        <h6 class={styles}>{props.children}</h6>
+      </Match>
+    </Switch>
+  );
 };
 
 function getWeightStyle(weight: TypographyWeight) {
