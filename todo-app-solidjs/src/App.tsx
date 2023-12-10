@@ -3,6 +3,7 @@ import { type JSX } from "solid-js/jsx-runtime";
 
 import { Typography } from "./components/ui/typography";
 import { Content } from "./components/ui/content";
+import { Empty } from "./components/ui/empty";
 import { unreachable } from "./core/utils/unreachable";
 import { type TodoStatus } from "./core/entities/todo";
 import { useThemeConfig } from "./hooks/ui/theme";
@@ -40,17 +41,22 @@ export default function App() {
 
         <Match when={todoResource()?.ok()}>
           {(todos) => (
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <For each={todos().data}>
-                {(todo) => (
-                  <TodoCard
-                    title={todo.title}
-                    status={todo.status}
-                    description={todo.description}
-                  />
-                )}
-              </For>
-            </div>
+            <Show
+              when={todos().data.length > 0}
+              fallback={<Empty class="my-4" message="Ainda não há nenhum item cadastrado." />}
+            >
+              <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <For each={todos().data}>
+                  {(todo) => (
+                    <TodoCard
+                      title={todo.title}
+                      status={todo.status}
+                      description={todo.description}
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
           )}
         </Match>
 
