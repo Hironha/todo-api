@@ -19,7 +19,7 @@ export function Typography(props: TypographyProps): JSX.Element {
   const styles = classes(getWeightStyle(props.weight ?? "normal"))
     .add(getSizeStyle(props.size ?? "md"))
     .add("mb-2")
-    .add(props.class ?? "")
+    .add(props.class)
     .build();
 
   return <p class={styles}>{props.children}</p>;
@@ -35,7 +35,7 @@ export type TextProps = JSX.HTMLAttributes<HTMLSpanElement> & {
 Typography.Text = (props: TextProps): JSX.Element => {
   const styles = classes(getWeightStyle(props.weight ?? "normal"))
     .add(getSizeStyle(props.size ?? "md"))
-    .add(props.class ?? "")
+    .add(props.class)
     .build();
 
   return <span class={styles}>{props.children}</span>;
@@ -54,7 +54,7 @@ Typography.Title = (props: TitleProps): JSX.Element => {
   const styles = classes(getWeightStyle(props.weight ?? "bold"))
     .add(getSizeStyle(props.size ?? "xl"))
     .add("mb-2")
-    .add(props.class ?? "")
+    .add(props.class)
     .build();
 
   const level = props.level ?? 1;

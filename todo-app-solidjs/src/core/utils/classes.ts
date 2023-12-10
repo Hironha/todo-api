@@ -1,3 +1,6 @@
+export type MaybeClass = string | undefined | false | null
+
+/** A builder class responsible for providing a friendly way to compound `css` classes */
 export class ClassBuilder {
   private classes: string;
 
@@ -5,7 +8,8 @@ export class ClassBuilder {
     this.classes = from ?? "";
   }
 
-  add(name: string): this {
+  /** Try to append `name` in class list if it's a valid class */
+  add(name: MaybeClass): this {
     if (name) {
       this.classes += this.classes ? ` ${name}` : name;
     }

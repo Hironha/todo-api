@@ -9,7 +9,7 @@ export type EmptyProps = {
 
 export function Empty(props: EmptyProps): JSX.Element {
   const styles = classes("w-ful flex justify-center items-center")
-    .add(props.class ?? "")
+    .add(props.class)
     .build();
 
   return (
