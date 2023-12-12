@@ -40,13 +40,14 @@ const todoSchema = object({
 export class TodoUtils {
   // TODO: return a `Result` with an error that allows identification
   // of the field that failed parsing
-  static parse(value: unknown): Result<Todo, keyof Todo> {
+  static parse(value: unknown): Result<Todo, [keyof Todo, string]> {
     const parsed = safeParse(todoSchema, value);
     if (parsed.success) {
       return new Ok(parsed.output as Todo);
     } else {
-      console.log(parsed);
-      return new Err<keyof Todo>("status");
+      const firstIssue = parsed.issues[0];
+      const error: [keyof Todo, string] = [firstIssue.origin as keyof Todo, firstIssue.message];
+      return new Err(error);
     }
   }
 
