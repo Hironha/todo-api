@@ -2,7 +2,7 @@ import { type JSX } from "solid-js/jsx-runtime";
 
 import { Input, Field, Select } from "../ui/form";
 import { type TodoStatus } from "../../core/entities/todo";
-import { DateUtils } from "../../core/utils/date";
+import { formatDateConventional } from "../../core/utils/date";
 import { classes } from "../../core/utils/classes";
 
 export type TodoFormValues = {
@@ -49,7 +49,7 @@ export function TodoForm(props: TodoFormProps): JSX.Element {
         <Field for="todoAt" label="Data">
           <Input
             name="status"
-            placeholder={`Ex: ${DateUtils.toLocalYmd(new Date())}`}
+            placeholder={`Ex: ${formatDateConventional(new Date())}`}
           />
         </Field>
       </div>

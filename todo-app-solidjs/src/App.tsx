@@ -8,11 +8,11 @@ import { TodoCard } from "./components/todo/card";
 import { TodoForm } from "./components/todo/form";
 import { Modal, type ModalRef } from "./components/ui/modal";
 import { useThemeConfig } from "./hooks/ui/theme";
-import { TodoService } from "./core/services/todo";
+import { listTodos } from "./core/services/todo";
 
 export default function App() {
   let createModalRef: ModalRef | undefined = undefined;
-  const [todoResource] = createResource(TodoService.list);
+  const [todoResource] = createResource(listTodos);
 
   return (
     <Content class="flex flex-col gap-2 justify-center">
