@@ -11,7 +11,7 @@ import { useThemeConfig } from "./hooks/ui/theme";
 import { listTodos } from "./core/services/todo";
 
 export default function App() {
-  let createModalRef: ModalRef | undefined = undefined;
+  let createModalRef: ModalRef | undefined;
   const [todoResource] = createResource(listTodos);
 
   return (

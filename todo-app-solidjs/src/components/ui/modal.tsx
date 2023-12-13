@@ -1,4 +1,4 @@
-import { onMount, type Ref } from "solid-js";
+import { type Ref } from "solid-js";
 import { type JSX } from "solid-js/jsx-runtime";
 
 import { Typography } from "./typography";
@@ -17,15 +17,17 @@ export type ModalProps = {
 export function Modal(props: ModalProps): JSX.Element {
   const modalStyles = classes("modal").add(props.class).build();
 
-  onMount(() => {
-    const dialogRef = document.getElementById(props.id) as HTMLDialogElement | undefined;
-    if (dialogRef && typeof props.ref === "function") {
-      props.ref({ close: () => dialogRef.close(), show: () => dialogRef.showModal() });
+  const bindDialogRef = (dialog: HTMLDialogElement): void => {
+    if (typeof props.ref === "function") {
+      props.ref({
+        close: () => dialog.close(),
+        show: () => dialog.showModal(),
+      });
     }
-  });
+  };
 
   return (
-    <dialog id={props.id} class={modalStyles}>
+    <dialog ref={bindDialogRef} id={props.id} class={modalStyles}>
       <div class="modal-box">
         <Typography.Title level={3}>{props.title}</Typography.Title>
 
