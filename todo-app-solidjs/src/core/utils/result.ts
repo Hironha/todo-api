@@ -25,7 +25,7 @@ export class Ok<T> implements BaseResult<T, never> {
     return true;
   }
 
-  isErr(): this is Err<never> {
+  isErr(): this is never {
     return false;
   }
 
@@ -53,7 +53,7 @@ export class Err<E> implements BaseResult<never, E> {
     return this._value;
   }
 
-  isOk(): this is Ok<never> {
+  isOk(): this is never {
     return false;
   }
 
