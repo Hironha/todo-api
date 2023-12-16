@@ -1,26 +1,37 @@
-import { object, string, nullish, date, union, literal, coerce, safeParse } from "valibot";
+import {
+  object,
+  string,
+  nullish,
+  date,
+  union,
+  literal,
+  coerce,
+  safeParse,
+  minLength,
+  transform,
+} from "valibot";
 
-import { formatDateYmd } from "../utils/date";
+import { type Tag } from "../utils/tag";
 import { type Result, Ok, Err } from "../utils/result";
+import { formatDateYmd, formatDateTime, type DateYmd, type DateTime } from "../utils/date";
 
+export type TodoId = Tag<string, "todoId">;
+export type TodoTitle = Tag<string, "todoTitle">;
 export type TodoStatus = "todo" | "in_progress" | "done";
 
 export type SerializableTodo = {
   id: string;
   title: string;
   description?: string;
-  /** Date in ISO 8601 YYYY-MM-DD format */
-  todoAt?: string;
+  todoAt?: DateYmd;
   status: TodoStatus;
-  /** Date in RFC 3339 format, i.e date time */
-  createdAt: string;
-  /** Date in RFC 3339 format, i.e date time */
-  updatedAt: string;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 };
 
 export type Todo = {
-  id: string;
-  title: string;
+  id: TodoId;
+  title: TodoTitle;
   description?: string;
   todoAt?: Date;
   status: TodoStatus;
@@ -28,15 +39,31 @@ export type Todo = {
   updatedAt: Date;
 };
 
+const TODO_TITLE_SCHEMA = string([minLength(1)]);
+
 const TODO_SCHEMA = object({
   id: string(),
-  title: string(),
-  description: nullish(string()),
+  title: TODO_TITLE_SCHEMA,
+  description: transform(nullish(string()), (d) => (d?.length ? d : undefined)),
   todoAt: nullish(coerce(date(), (todoAt) => new Date(todoAt as string))),
   status: union([literal("todo"), literal("in_progress"), literal("done")]),
   createdAt: coerce(date(), (createdAt) => new Date(createdAt as string)),
   updatedAt: coerce(date(), (updatedAt) => new Date(updatedAt as string)),
 });
+
+export function parseTodoTitle(value: unknown): Result<TodoTitle, "length" | "string"> {
+  const parsed = safeParse(TODO_TITLE_SCHEMA, value);
+  if (parsed.success) {
+    return new Ok(parsed.output as TodoTitle);
+  }
+
+  switch (parsed.issues[0].validation) {
+    case "min_length":
+      return new Err<"length">("length");
+    default:
+      return new Err<"string">("string");
+  }
+}
 
 // TODO: return a `Result` with an error that allows identification
 // of the field that failed parsing
@@ -58,7 +85,7 @@ export function getSerializableTodo(todo: Todo): SerializableTodo {
     description: todo.description,
     todoAt: todo.todoAt ? formatDateYmd(todo.todoAt) : undefined,
     status: todo.status,
-    createdAt: todo.createdAt.toISOString(),
-    updatedAt: todo.updatedAt.toISOString(),
+    createdAt: formatDateTime(todo.createdAt),
+    updatedAt: formatDateTime(todo.updatedAt),
   };
 }
