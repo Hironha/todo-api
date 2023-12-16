@@ -5,14 +5,13 @@ import { unreachable } from "../../core/utils/unreachable";
 import { Show } from "solid-js";
 import { Typography } from "./typography";
 
-export type FieldStatus = { kind: "ok" } | { kind: "err"; message: string };
 export type FieldProps = JSX.LabelHTMLAttributes<HTMLLabelElement> & {
   label?: string;
-  status?: FieldStatus;
+  error?: string
 };
 
 export function Field(props: FieldProps): JSX.Element {
-  const { label, status, class: styles, ...labelProps } = props;
+  const { label, error, class: styles, ...labelProps } = props;
   const labelStyles = classes("form-control w-full").add(styles).build();
 
   return (
@@ -27,11 +26,11 @@ export function Field(props: FieldProps): JSX.Element {
 
       {props.children}
 
-      <Show when={status?.kind === "err" ? status : false}>
+      <Show when={error}>
         {(error) => (
           <div class="label">
             <Typography.Text class="label-text-alt text-error" size="sm">
-              {error().message}
+              {error()}
             </Typography.Text>
           </div>
         )}
@@ -41,8 +40,7 @@ export function Field(props: FieldProps): JSX.Element {
 }
 
 export type InputSize = "sm" | "md" | "lg";
-export type InputStatus = FieldStatus["kind"];
-
+export type InputStatus = 'ok' | 'err'
 export type InputProps = JSX.InputHTMLAttributes<HTMLInputElement> & {
   status?: InputStatus;
   /** @default "md" */
