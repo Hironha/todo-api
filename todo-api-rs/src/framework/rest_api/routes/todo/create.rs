@@ -1,5 +1,5 @@
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::{header, StatusCode};
 use axum::response::IntoResponse;
 use axum::Json;
 use serde::Deserialize;
@@ -33,7 +33,6 @@ pub(super) async fn create_todo(
     };
 
     let controller = CreateController::new(state.todo_repository);
-
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
@@ -42,7 +41,12 @@ pub(super) async fn create_todo(
         }
     };
 
-    (StatusCode::CREATED, Json(output)).into_response()
+    let mut headers = header::HeaderMap::new();
+    if let Ok(location) = format!("/todos/{}", output.id).parse::<header::HeaderValue>() {
+        headers.insert(header::LOCATION, location);
+    }
+
+    (StatusCode::CREATED, headers, Json(output)).into_response()
 }
 
 fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
@@ -52,7 +56,7 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
                 ParseError::InvalidDescription(_) => "description",
                 ParseError::InvalidTodoAt => "todoAt",
-                ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status"
+                ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
             };
             let details = ValidationError::new(field, parse_err.to_string());
             let api_error = ApiError::new("CTD-001", error.to_string()).with_details(details);

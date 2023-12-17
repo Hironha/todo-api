@@ -1,5 +1,5 @@
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::{header, StatusCode};
 use axum::response::IntoResponse;
 use axum::Json;
 use serde::Deserialize;
@@ -36,10 +36,15 @@ pub(super) async fn create_tag(
         }
     };
 
-    (StatusCode::CREATED, Json(output)).into_response()
+    let mut headers = header::HeaderMap::new();
+    if let Ok(location) = format!("/tags/{}", output.id).parse::<header::HeaderValue>() {
+        headers.insert(header::LOCATION, location);
+    }
+
+    (StatusCode::CREATED, headers, Json(output)).into_response()
 }
 
-fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {    
+fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
         RunError::Parsing(parse_err) => {
             let field = match parse_err {
