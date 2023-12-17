@@ -4,13 +4,13 @@ use crate::domain::entities::tag::TagEntity;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct TagPresenter {
-    id: String,
-    name: String,
-    description: Option<String>,
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
     #[serde(rename(serialize = "createdAt"))]
-    created_at: String,
+    pub created_at: String,
     #[serde(rename(serialize = "updatedAt"))]
-    updated_at: String,
+    pub updated_at: String,
 }
 
 impl From<TagEntity> for TagPresenter {
