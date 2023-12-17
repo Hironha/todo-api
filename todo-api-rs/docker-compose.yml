@@ -17,7 +17,7 @@ services:
       db:
         condition: service_healthy
   db:
-    image: postgres:16.0-alpine
+    image: postgres:16.0
     restart: always
     environment:
       - POSTGRES_DB=${DB_NAME}
