@@ -1,16 +1,47 @@
 import { tryMapArr } from "../utils/array";
+import { type DateYmd } from "../utils/date";
 import { type Result, Ok, Err } from "../utils/result";
 import { Pagination } from "../entities/pagination";
-import { type Todo, parseTodo } from "../entities/todo";
+import { parseTodo, type Todo, type TodoTitle, type TodoStatus } from "../entities/todo";
 
 const BASE_URL = "http://localhost:8000";
+
+export type CreateTodoPayload = {
+  title: TodoTitle;
+  description?: string;
+  status: TodoStatus;
+  todoAt?: DateYmd;
+};
+
+export async function createTodo(payload: CreateTodoPayload): Promise<Result<Todo, string>> {
+  const url = `${BASE_URL}/todos`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      return new Err("TODO: handle error");
+    }
+
+    return parseTodo(await response.json()).mapErr(() => "TODO: handle error");
+  } catch (e) {
+    console.log(e);
+    return new Err("TODO: handle error");
+  }
+}
 
 export async function listTodos(): Promise<Result<Pagination<Todo>, string>> {
   const url = `${BASE_URL}/todos`;
 
   try {
     const response = await fetch(url, {
-      headers: { method: "GET", mode: "cors", "Content-Type": "application/json" },
+      method: "GET",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
     });
     if (!response.ok) {
       return new Err("TODO: handle error");

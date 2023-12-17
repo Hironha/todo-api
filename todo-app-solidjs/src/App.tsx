@@ -5,27 +5,58 @@ import { Typography } from "./components/ui/typography";
 import { Content } from "./components/ui/content";
 import { Empty } from "./components/ui/empty";
 import { TodoCard } from "./components/todo/card";
-import { TodoForm } from "./components/todo/form";
+import { TodoForm, type FormController, TodoFormValues } from "./components/todo/form";
 import { Modal, type ModalRef } from "./components/ui/modal";
 import { useThemeConfig } from "./hooks/ui/theme";
-import { listTodos } from "./core/services/todo";
+import {
+  createTodo as createTodoService,
+  listTodos as listTodoService,
+} from "./core/services/todo";
+import { useMutation } from "./hooks/useMutation";
+import { formatDateYmd, getDateFromConventionalDate } from "./core/utils/date";
+
+const CREATE_TODO_FORM_ID = "create_todo_form";
 
 export default function App() {
   let createModalRef: ModalRef | undefined;
-  const [todoResource] = createResource(listTodos);
+  const [todoList, todoListActions] = createResource(listTodoService);
+  const createTodo = useMutation(createTodoService);
+
+  const submitCreateTodoForm = async (
+    form: FormController,
+    values: TodoFormValues
+  ): Promise<void> => {
+    const todoAt = values.todoAt
+      ? formatDateYmd(getDateFromConventionalDate(values.todoAt))
+      : undefined;
+
+    const response = await createTodo.mutate({
+      title: values.title,
+      status: values.status,
+      description: values.description,
+      todoAt,
+    });
+
+    if (response.isOk()) {
+      form.reset();
+      todoListActions.refetch();
+    } else {
+      console.log("TODO: handle error");
+    }
+  };
 
   return (
     <Content class="flex flex-col gap-2 justify-center">
       <MainActions onCreateClick={() => createModalRef?.show()} />
 
       <Switch fallback={<Typography.Text>Failed loading todos :(</Typography.Text>}>
-        <Match when={todoResource.loading}>
+        <Match when={todoList.loading}>
           <div class="w-full p-8 flex justify-center items-center">
             <span class="text-primary loading loading-spinner loading-lg" />
           </div>
         </Match>
 
-        <Match when={todoResource()?.ok()}>
+        <Match when={todoList()?.ok()}>
           {(todos) => (
             <Show
               when={todos().data.length > 0}
@@ -46,17 +77,20 @@ export default function App() {
           )}
         </Match>
 
-        <Match when={todoResource()?.err()}>
+        <Match when={todoList()?.err()}>
           {(error) => <Typography.Text>{error()}</Typography.Text>}
         </Match>
       </Switch>
 
       <Modal ref={createModalRef} id="create_todo_modal" title="Criar Todo">
-        <TodoForm id="create_todo_form" onSubmit={console.log} />
+        <TodoForm id={CREATE_TODO_FORM_ID} onSubmit={submitCreateTodoForm} />
 
         <div class="flex gap-3 justify-between mt-6">
           <button
+            form={CREATE_TODO_FORM_ID}
+            type="reset"
             class="btn btn-primary btn-outline btn-sm"
+            disabled={createTodo.loading()}
             onClick={() => createModalRef?.close()}
           >
             Cancelar
@@ -65,7 +99,8 @@ export default function App() {
           <input
             class="btn btn-primary btn-sm"
             type="submit"
-            form="create_todo_form"
+            form={CREATE_TODO_FORM_ID}
+            disabled={createTodo.loading()}
             value="Criar"
           />
         </div>
