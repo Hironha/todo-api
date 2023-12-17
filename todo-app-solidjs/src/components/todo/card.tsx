@@ -14,16 +14,16 @@ export type TodoCardProps = {
 
 export function TodoCard(props: TodoCardProps): JSX.Element {
   const statusConfig = getStatusConfig(props.status);
-  const statusStyles = classes("badge badge-outline my-2 whitespace-nowrap")
-    .add(statusConfig.color)
-    .build();
+  const statusStyles = (): string => {
+    return classes("badge badge-outline my-2 whitespace-nowrap").add(statusConfig.color).build();
+  };
 
   return (
     <div class="card shadow-xl">
       <div class="card-body">
         <div class="flex gap-3 justify-between">
           <Typography.Title level={2}>{props.title}</Typography.Title>
-          <div class={statusStyles}>
+          <div class={statusStyles()}>
             <Typography.Text size="sm">{statusConfig.label}</Typography.Text>
           </div>
         </div>

@@ -15,7 +15,9 @@ export type ModalProps = {
 };
 
 export function Modal(props: ModalProps): JSX.Element {
-  const modalStyles = classes("modal").add(props.class).build();
+  const dialogStyles = (): string => {
+    return classes("modal").add(props.class).build();
+  };
 
   const bindDialogRef = (dialog: HTMLDialogElement): void => {
     if (typeof props.ref === "function") {
@@ -27,7 +29,7 @@ export function Modal(props: ModalProps): JSX.Element {
   };
 
   return (
-    <dialog ref={bindDialogRef} id={props.id} class={modalStyles}>
+    <dialog ref={bindDialogRef} id={props.id} class={dialogStyles()}>
       <div class="modal-box">
         <Typography.Title level={3}>{props.title}</Typography.Title>
 

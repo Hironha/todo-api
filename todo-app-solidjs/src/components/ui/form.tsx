@@ -1,22 +1,24 @@
+import { splitProps, Show } from "solid-js";
 import { type JSX } from "solid-js/jsx-runtime";
 
 import { classes } from "../../core/utils/classes";
 import { unreachable } from "../../core/utils/unreachable";
-import { Show } from "solid-js";
 import { Typography } from "./typography";
 
 export type FieldProps = JSX.LabelHTMLAttributes<HTMLLabelElement> & {
   label?: string;
-  error?: string
+  error?: string;
 };
 
 export function Field(props: FieldProps): JSX.Element {
-  const { label, error, class: styles, ...labelProps } = props;
-  const labelStyles = classes("form-control w-full").add(styles).build();
+  const [local, labelProps] = splitProps(props, ["label", "error", "class"]);
+  const labelStyles = (): string => {
+    return classes("form-control w-full").add(local.class).build();
+  };
 
   return (
-    <label {...labelProps} class={labelStyles}>
-      <Show when={label}>
+    <label {...labelProps} class={labelStyles()}>
+      <Show when={local.label}>
         {(label) => (
           <div class="label">
             <span class="label-text">{label()}</span>
@@ -26,7 +28,7 @@ export function Field(props: FieldProps): JSX.Element {
 
       {props.children}
 
-      <Show when={error}>
+      <Show when={local.error}>
         {(error) => (
           <div class="label">
             <Typography.Text class="label-text-alt text-error" size="sm">
@@ -40,7 +42,7 @@ export function Field(props: FieldProps): JSX.Element {
 }
 
 export type InputSize = "sm" | "md" | "lg";
-export type InputStatus = 'ok' | 'err'
+export type InputStatus = "ok" | "err";
 export type InputProps = JSX.InputHTMLAttributes<HTMLInputElement> & {
   status?: InputStatus;
   /** @default "md" */
@@ -49,15 +51,17 @@ export type InputProps = JSX.InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export function Input(props: InputProps): JSX.Element {
-  const { status, size, class: styles, ...inputProps } = props;
-  const inputStyles = classes("input input-bordered w-full")
-    .add(status && getStatusStyle(status))
-    .add(getSizeStyle(size ?? "md"))
-    .add("focus-within:border-primary focus-within:outline-none")
-    .add(styles)
-    .build();
+  const [local, inputProps] = splitProps(props, ["status", "size", "class"]);
+  const styles = (): string => {
+    return classes("input input-bordered w-full")
+      .add(local.status && getStatusStyle(local.status))
+      .add(getSizeStyle(local.size ?? "md"))
+      .add("focus-within:border-primary focus-within:outline-none")
+      .add(local.class)
+      .build();
+  };
 
-  return <input {...inputProps} class={inputStyles} />;
+  return <input {...inputProps} class={styles()} />;
 }
 
 export type SelectProps = JSX.SelectHTMLAttributes<HTMLSelectElement> & {
@@ -67,15 +71,17 @@ export type SelectProps = JSX.SelectHTMLAttributes<HTMLSelectElement> & {
 };
 
 export function Select(props: SelectProps): JSX.Element {
-  const { status, size, class: styles, ...inputProps } = props;
-  const inputStyles = classes("select select-bordered w-full")
-    .add(status && getStatusStyle(status))
-    .add(getSizeStyle(size ?? "md"))
-    .add("focus-within:border-primary focus-within:outline-none")
-    .add(styles)
-    .build();
+  const [local, selectProps] = splitProps(props, ["status", "size", "class"]);
+  const styles = (): string => {
+    return classes("select select-bordered w-full")
+      .add(local.status && getStatusStyle(local.status))
+      .add(getSizeStyle(local.size ?? "md"))
+      .add("focus-within:border-primary focus-within:outline-none")
+      .add(local.class)
+      .build();
+  };
 
-  return <select {...inputProps} class={inputStyles} />;
+  return <select {...selectProps} class={styles()} />;
 }
 
 function getStatusStyle(status: InputStatus): string {

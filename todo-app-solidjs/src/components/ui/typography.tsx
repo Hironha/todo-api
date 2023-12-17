@@ -16,13 +16,15 @@ export type TypographyProps = JSX.HTMLAttributes<HTMLParagraphElement> & {
 };
 
 export function Typography(props: TypographyProps): JSX.Element {
-  const styles = classes(getWeightStyle(props.weight ?? "normal"))
-    .add(getSizeStyle(props.size ?? "md"))
-    .add("mb-2")
-    .add(props.class)
-    .build();
+  const styles = (): string => {
+    return classes(getWeightStyle(props.weight ?? "normal"))
+      .add(getSizeStyle(props.size ?? "md"))
+      .add("mb-2")
+      .add(props.class)
+      .build();
+  };
 
-  return <p class={styles}>{props.children}</p>;
+  return <p class={styles()}>{props.children}</p>;
 }
 
 export type TextProps = JSX.HTMLAttributes<HTMLSpanElement> & {
@@ -33,12 +35,14 @@ export type TextProps = JSX.HTMLAttributes<HTMLSpanElement> & {
 };
 
 Typography.Text = (props: TextProps): JSX.Element => {
-  const styles = classes(getWeightStyle(props.weight ?? "normal"))
-    .add(getSizeStyle(props.size ?? "md"))
-    .add(props.class)
-    .build();
+  const styles = (): string => {
+    return classes(getWeightStyle(props.weight ?? "normal"))
+      .add(getSizeStyle(props.size ?? "md"))
+      .add(props.class)
+      .build();
+  };
 
-  return <span class={styles}>{props.children}</span>;
+  return <span class={styles()}>{props.children}</span>;
 };
 
 export type TitleProps = JSX.HTMLAttributes<HTMLHeadingElement> & {
@@ -51,38 +55,40 @@ export type TitleProps = JSX.HTMLAttributes<HTMLHeadingElement> & {
 };
 
 Typography.Title = (props: TitleProps): JSX.Element => {
-  const styles = classes(getWeightStyle(props.weight ?? "bold"))
-    .add(getSizeStyle(props.size ?? "xl"))
-    .add("mb-2")
-    .add(props.class)
-    .build();
+  const styles = (): string => {
+    return classes(getWeightStyle(props.weight ?? "bold"))
+      .add(getSizeStyle(props.size ?? "xl"))
+      .add("mb-2")
+      .add(props.class)
+      .build();
+  };
 
   const level = props.level ?? 1;
 
   return (
-    <Switch fallback={<h1 class={styles}>{props.children}</h1>}>
+    <Switch fallback={<h1 class={styles()}>{props.children}</h1>}>
       <Match when={level === 1}>
-        <h1 class={styles}>{props.children}</h1>
+        <h1 class={styles()}>{props.children}</h1>
       </Match>
 
       <Match when={level === 2}>
-        <h2 class={styles}>{props.children}</h2>
+        <h2 class={styles()}>{props.children}</h2>
       </Match>
 
       <Match when={level === 3}>
-        <h3 class={styles}>{props.children}</h3>
+        <h3 class={styles()}>{props.children}</h3>
       </Match>
 
       <Match when={level === 4}>
-        <h4 class={styles}>{props.children}</h4>
+        <h4 class={styles()}>{props.children}</h4>
       </Match>
 
       <Match when={level === 5}>
-        <h5 class={styles}>{props.children}</h5>
+        <h5 class={styles()}>{props.children}</h5>
       </Match>
 
       <Match when={level === 6}>
-        <h6 class={styles}>{props.children}</h6>
+        <h6 class={styles()}>{props.children}</h6>
       </Match>
     </Switch>
   );

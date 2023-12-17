@@ -8,12 +8,12 @@ export type EmptyProps = {
 };
 
 export function Empty(props: EmptyProps): JSX.Element {
-  const styles = classes("w-ful flex justify-center items-center")
-    .add(props.class)
-    .build();
+  const styles = (): string => {
+    return classes("w-ful flex justify-center items-center").add(props.class).build();
+  };
 
   return (
-    <div class={styles}>
+    <div class={styles()}>
       <Typography>{props.message}</Typography>
     </div>
   );
