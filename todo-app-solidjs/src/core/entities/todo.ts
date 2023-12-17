@@ -40,13 +40,14 @@ export type Todo = {
 };
 
 const TODO_TITLE_SCHEMA = string([minLength(1)]);
+const TODO_STATUS_SCHEMA = union([literal("todo"), literal("in_progress"), literal("done")]);
 
 const TODO_SCHEMA = object({
   id: string(),
   title: TODO_TITLE_SCHEMA,
   description: transform(nullish(string()), (d) => (d?.length ? d : undefined)),
   todoAt: nullish(coerce(date(), (todoAt) => new Date(todoAt as string))),
-  status: union([literal("todo"), literal("in_progress"), literal("done")]),
+  status: TODO_STATUS_SCHEMA,
   createdAt: coerce(date(), (createdAt) => new Date(createdAt as string)),
   updatedAt: coerce(date(), (updatedAt) => new Date(updatedAt as string)),
 });
@@ -76,6 +77,15 @@ export function parseTodo(value: unknown): Result<Todo, [keyof Todo, string]> {
   const firstIssue = parsed.issues[0];
   const error: [keyof Todo, string] = [firstIssue.origin as keyof Todo, firstIssue.message];
   return new Err(error);
+}
+
+export function parseTodoStatus(value: unknown): Result<TodoStatus, undefined> {
+  const parsed = safeParse(TODO_STATUS_SCHEMA, value);
+  if (parsed.success) {
+    return new Ok(parsed.output);
+  }
+
+  return new Err(undefined);
 }
 
 export function getSerializableTodo(todo: Todo): SerializableTodo {

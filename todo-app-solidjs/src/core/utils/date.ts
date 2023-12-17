@@ -15,6 +15,10 @@ export function formatDateYmd(date: Date): DateYmd {
   return `${fullYear}-${month}-${day}` as DateYmd;
 }
 
+export function formatDateTime(date: Date): DateTime {
+  return date.toISOString() as DateTime;
+}
+
 export function formatConventionalDate(date: Date): ConventionalDate {
   const fullYear = date.getUTCFullYear();
   const month = (date.getUTCMonth() + 1).toString().padStart(2, "0");
@@ -23,6 +27,17 @@ export function formatConventionalDate(date: Date): ConventionalDate {
   return `${day}/${month}/${fullYear}` as ConventionalDate;
 }
 
-export function formatDateTime(date: Date): DateTime {
-  return date.toISOString() as DateTime;
+export function isConventionalDate(value: string): value is ConventionalDate {
+  const slashed = /\d{2}\/\d{2}\/\d{4}/.test(value);
+  if (!slashed) {
+    return false;
+  }
+
+  const date = getDateFromConventionalDate(value as ConventionalDate);
+  return !Number.isNaN(date.getTime());
+}
+
+export function getDateFromConventionalDate(date: ConventionalDate): Date {
+  const [day, month, fullYear] = date.split("/");
+  return new Date(`${month}/${day}/${fullYear}`);
 }
