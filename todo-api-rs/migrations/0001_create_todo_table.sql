@@ -1,4 +1,8 @@
-CREATE TYPE IF NOT EXISTS todo_status as ENUM ('todo', 'in_progress', 'done');
+DO $$ BEGIN
+    CREATE TYPE todo_status AS ENUM ('todo', 'in_progress', 'done');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS todo (
     id uuid UNIQUE NOT NULL,
