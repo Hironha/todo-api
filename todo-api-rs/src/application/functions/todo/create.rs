@@ -1,5 +1,5 @@
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
-use crate::application::repositories::todo::{CreateError, TodoRepository};
+use crate::application::repositories::todo::TodoRepository;
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::{DateTime, Id};
 
@@ -25,9 +25,7 @@ where
     ctx.todo_repository
         .create(todo_entity)
         .await
-        .map_err(|err| match err {
-            CreateError::Internal(err) => CreateTodoError::Repository(err),
-        })
+        .map_err(CreateTodoError::Creating)
 }
 
 #[derive(Clone, Debug)]

@@ -60,6 +60,7 @@ impl Error for BindTagsError {
 
 #[derive(Debug)]
 pub enum CreateError {
+    DuplicatedTitle(String),
     Internal(Box<dyn Error>),
 }
 
@@ -72,6 +73,7 @@ impl CreateError {
 impl fmt::Display for CreateError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::DuplicatedTitle(title) => write!(f, "todo with title {title} already exists"),
             Self::Internal(err) => err.fmt(f),
         }
     }
@@ -80,6 +82,7 @@ impl fmt::Display for CreateError {
 impl Error for CreateError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
+            Self::DuplicatedTitle(..) => None,
             Self::Internal(err) => Some(err.as_ref()),
         }
     }

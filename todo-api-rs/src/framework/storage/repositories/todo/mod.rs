@@ -99,24 +99,30 @@ impl TodoRepository for PgTodoRepository {
     }
 
     async fn create(&self, todo: TodoEntity) -> Result<TodoEntity, CreateError> {
-        let current_dt = DateTime::new().into_offset_dt();
         let insert_q = r#"
             INSERT INTO todo (id, title, description, todo_at, status, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING todo.*
         "#;
 
-        let todo_model = sqlx::query_as::<_, TodoModel>(insert_q)
-            .bind(Id::new().into_uuid())
-            .bind(todo.title.into_string())
+        let title = todo.title.into_string();
+        let result = sqlx::query_as::<_, TodoModel>(insert_q)
+            .bind(todo.id.into_uuid())
+            .bind(title.as_str())
             .bind(todo.description.map(|d| d.into_string()))
             .bind(todo.todo_at.map(|at| at.into_date()))
             .bind(TodoModelStatus::from(todo.status))
-            .bind(current_dt)
-            .bind(current_dt)
+            .bind(todo.created_at.into_offset_dt())
+            .bind(todo.updated_at.into_offset_dt())
             .fetch_one(&self.pool)
-            .await
-            .map_err(CreateError::from_err)?;
+            .await;
+
+        let todo_model = result.map_err(|err| {
+            err.as_database_error()
+                .filter(|e| e.is_unique_violation())
+                .map(|_| CreateError::DuplicatedTitle(title))
+                .unwrap_or(CreateError::from_err(err))
+        })?;
 
         todo_model
             .try_into_entity(Vec::new())

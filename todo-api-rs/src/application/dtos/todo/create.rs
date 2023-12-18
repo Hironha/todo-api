@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fmt;
 
+use crate::application::repositories::todo::CreateError;
 use crate::domain::entities::todo::{Description, Title, TodoStatus};
 use crate::domain::types::Date;
 
@@ -14,13 +15,13 @@ pub struct CreateTodoInput {
 
 #[derive(Debug)]
 pub enum CreateTodoError {
-    Repository(Box<dyn Error>),
+    Creating(CreateError),
 }
 
 impl fmt::Display for CreateTodoError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Repository(err) => err.fmt(f),
+            Self::Creating(err) => err.fmt(f),
         }
     }
 }
@@ -28,7 +29,7 @@ impl fmt::Display for CreateTodoError {
 impl Error for CreateTodoError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::Repository(err) => Some(err.as_ref()),
+            Self::Creating(err) => Some(err),
         }
     }
 }

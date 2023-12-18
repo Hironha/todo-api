@@ -8,6 +8,7 @@ use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateController;
 use crate::adapters::dtos::todo::create::{CreateRequest, ParseError, RunError};
 use crate::application::dtos::todo::create::CreateTodoError;
+use crate::application::repositories::todo::CreateError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -49,8 +50,8 @@ pub(super) async fn create_todo(
     (StatusCode::CREATED, headers, Json(output)).into_response()
 }
 
-fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
-    match error {
+fn config_error_response(run_err: &RunError) -> (StatusCode, ApiError<ValidationError>) {
+    match run_err {
         RunError::Parsing(parse_err) => {
             let field = match parse_err {
                 ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
@@ -59,15 +60,21 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
             };
             let details = ValidationError::new(field, parse_err.to_string());
-            let api_error = ApiError::new("CTD-001", error.to_string()).with_details(details);
+            let api_error = ApiError::new("CTD-001", run_err.to_string()).with_details(details);
             (StatusCode::BAD_REQUEST, api_error)
         }
         RunError::Creating(create_err) => match create_err {
-            CreateTodoError::Repository(repository_err) => {
-                tracing::error!("create todo repository error: {repository_err}");
-                let api_error = ApiError::new("CTD-002", error.to_string());
-                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
-            }
+            CreateTodoError::Creating(err) => match err {
+                CreateError::DuplicatedTitle(..) => {
+                    let api_error = ApiError::new("CTD-002", err.to_string());
+                    (StatusCode::CONFLICT, api_error)
+                }
+                CreateError::Internal(internal_err) => {
+                    tracing::error!("create todo repository error: {internal_err}");
+                    let api_error = ApiError::new("CTD-003", run_err.to_string());
+                    (StatusCode::INTERNAL_SERVER_ERROR, api_error)
+                }
+            },
         },
     }
 }
