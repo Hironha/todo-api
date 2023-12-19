@@ -1,7 +1,7 @@
-use std::error::Error;
-use std::fmt;
+use std::error;
 
-use crate::application::repositories::todo::CreateError;
+use thiserror::Error;
+
 use crate::domain::entities::todo::{Description, Title, TodoStatus};
 use crate::domain::types::Date;
 
@@ -13,23 +13,10 @@ pub struct CreateTodoInput {
     pub status: TodoStatus,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum CreateTodoError {
-    Creating(CreateError),
-}
-
-impl fmt::Display for CreateTodoError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Creating(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for CreateTodoError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Creating(err) => Some(err),
-        }
-    }
+    #[error("todo with title {0} already exists")]
+    DuplicatedTitle(String),
+    #[error(transparent)]
+    Repository(#[from] Box<dyn error::Error>),
 }

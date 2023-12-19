@@ -1,5 +1,6 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
+
+use std::error;
 use std::num::NonZeroU32;
 
 use async_trait::async_trait;
@@ -31,203 +32,52 @@ pub struct PaginatedList {
     pub items: Vec<TodoEntity>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum BindTagsError {
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl BindTagsError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for BindTagsError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for BindTagsError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum CreateError {
+    #[error("todo with title {0} already exists")]
     DuplicatedTitle(String),
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl CreateError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for CreateError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::DuplicatedTitle(title) => write!(f, "todo with title {title} already exists"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for CreateError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::DuplicatedTitle(..) => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum DeleteError {
+    #[error("delete failed because todo could not be found")]
     NotFound,
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl DeleteError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for DeleteError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound => write!(f, "todo not found"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for DeleteError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::NotFound => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ExistsError {
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl ExistsError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for ExistsError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for ExistsError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum FindError {
+    #[error("todo could not be found")]
     NotFound,
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl FindError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for FindError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound => write!(f, "todo not found"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for FindError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::NotFound => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ListError {
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl ListError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for ListError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for ListError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum UpdateError {
+    #[error("update failed because todo could not be found")]
     NotFound,
-    Internal(Box<dyn Error>),
-}
-
-impl UpdateError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for UpdateError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound => write!(f, "todo not found"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for UpdateError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::NotFound => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }

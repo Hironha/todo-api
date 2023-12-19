@@ -8,7 +8,6 @@ use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateController;
 use crate::adapters::dtos::todo::create::{CreateRequest, ParseError, RunError};
 use crate::application::dtos::todo::create::CreateTodoError;
-use crate::application::repositories::todo::CreateError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -64,17 +63,15 @@ fn config_error_response(run_err: &RunError) -> (StatusCode, ApiError<Validation
             (StatusCode::BAD_REQUEST, api_error)
         }
         RunError::Creating(create_err) => match create_err {
-            CreateTodoError::Creating(err) => match err {
-                CreateError::DuplicatedTitle(..) => {
-                    let api_error = ApiError::new("CTD-002", err.to_string());
-                    (StatusCode::CONFLICT, api_error)
-                }
-                CreateError::Internal(internal_err) => {
-                    tracing::error!("create todo repository error: {internal_err}");
-                    let api_error = ApiError::new("CTD-003", run_err.to_string());
-                    (StatusCode::INTERNAL_SERVER_ERROR, api_error)
-                }
-            },
+            CreateTodoError::DuplicatedTitle(..) => {
+                let api_error = ApiError::new("CTD-002", create_err.to_string());
+                (StatusCode::CONFLICT, api_error)
+            }
+            CreateTodoError::Repository(repo_err) => {
+                tracing::error!("create todo repository error: {repo_err}");
+                let api_error = ApiError::new("CTD-003", run_err.to_string());
+                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
+            }
         },
     }
 }

@@ -65,7 +65,11 @@ impl PgTodoRepository {
 #[async_trait]
 impl TodoRepository for PgTodoRepository {
     async fn bind_tags(&self, todo_id: Id, tag_ids: Vec<Id>) -> Result<(), BindTagsError> {
-        let mut trx = self.pool.begin().await.map_err(BindTagsError::from_err)?;
+        let mut trx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| BindTagsError::Internal(e.into()))?;
         let todo_uuid = todo_id.into_uuid();
 
         let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
@@ -73,7 +77,7 @@ impl TodoRepository for PgTodoRepository {
             .bind(todo_uuid)
             .execute(trx.as_mut())
             .await
-            .map_err(BindTagsError::from_err)?;
+            .map_err(|e| BindTagsError::Internal(e.into()))?;
 
         let tag_uuids = tag_ids
             .into_iter()
@@ -92,10 +96,12 @@ impl TodoRepository for PgTodoRepository {
                 .build()
                 .execute(trx.as_mut())
                 .await
-                .map_err(BindTagsError::from_err)?;
+                .map_err(|e| BindTagsError::Internal(e.into()))?;
         }
 
-        trx.commit().await.map_err(BindTagsError::from_err)
+        trx.commit()
+            .await
+            .map_err(|e| BindTagsError::Internal(e.into()))
     }
 
     async fn create(&self, todo: TodoEntity) -> Result<TodoEntity, CreateError> {
@@ -121,12 +127,12 @@ impl TodoRepository for PgTodoRepository {
             err.as_database_error()
                 .filter(|e| e.is_unique_violation())
                 .map(|_| CreateError::DuplicatedTitle(title))
-                .unwrap_or(CreateError::from_err(err))
+                .unwrap_or(CreateError::Internal(err.into()))
         })?;
 
         todo_model
             .try_into_entity(Vec::new())
-            .map_err(CreateError::from_err)
+            .map_err(|e| CreateError::Internal(e.into()))
     }
 
     async fn delete(&self, todo_id: Id) -> Result<(), DeleteError> {
@@ -137,7 +143,7 @@ impl TodoRepository for PgTodoRepository {
             .await
             .map_err(|err| match err {
                 SqlxError::RowNotFound => DeleteError::NotFound,
-                _ => DeleteError::from_err(err),
+                _ => DeleteError::Internal(err.into()),
             })?;
 
         Ok(())
@@ -149,7 +155,7 @@ impl TodoRepository for PgTodoRepository {
             .bind(todo_id.into_uuid())
             .fetch_one(&self.pool)
             .await
-            .map_err(ExistsError::from_err)
+            .map_err(|e| ExistsError::Internal(e.into()))
     }
 
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError> {
@@ -159,22 +165,26 @@ impl TodoRepository for PgTodoRepository {
             .bind(todo_uuid)
             .fetch_one(&self.pool)
             .await
-            .map_err(|err| match err {
+            .map_err(|e| match e {
                 SqlxError::RowNotFound => FindError::NotFound,
-                _ => FindError::from_err(err),
+                _ => FindError::Internal(e.into()),
             })?;
 
         let related_tag_entities = self
             .find_related_tags(todo_uuid)
             .await
-            .map_err(FindError::from_err)?
+            .map_err(|e| FindError::Internal(e.into()))?
             .into_iter()
-            .map(|model| model.try_into_entity().map_err(FindError::from_err))
+            .map(|model| {
+                model
+                    .try_into_entity()
+                    .map_err(|e| FindError::Internal(e.into()))
+            })
             .collect::<Result<Vec<TagEntity>, FindError>>()?;
 
         todo_model
             .try_into_entity(related_tag_entities)
-            .map_err(FindError::from_err)
+            .map_err(|e| FindError::Internal(e.into()))
     }
 
     async fn list(&self, payload: ListPayload) -> Result<PaginatedList, ListError> {
@@ -193,7 +203,7 @@ impl TodoRepository for PgTodoRepository {
             .build_query_scalar::<i64>()
             .fetch_one(&self.pool)
             .await
-            .map_err(ListError::from_err)?;
+            .map_err(|e| ListError::Internal(e.into()))?;
 
         let limit: i64 = u32::from(payload.per_page).into();
         let page: i64 = u32::from(payload.page).into();
@@ -207,7 +217,7 @@ impl TodoRepository for PgTodoRepository {
             .build_query_as::<TodoModel>()
             .fetch_all(&self.pool)
             .await
-            .map_err(ListError::from_err)?;
+            .map_err(|e| ListError::Internal(e.into()))?;
 
         let todo_uuids = todo_models
             .iter()
@@ -217,19 +227,25 @@ impl TodoRepository for PgTodoRepository {
         let related_tag_models = self
             .find_many_related_tags(&todo_uuids)
             .await
-            .map_err(ListError::from_err)?;
+            .map_err(|e| ListError::Internal(e.into()))?;
 
         let related_tag_entities = related_tag_models
             .into_iter()
             .map(|(todo_uuid, tag_model)| {
-                let tag_entity = tag_model.try_into_entity().map_err(ListError::from_err)?;
-                Ok((todo_uuid, tag_entity))
+                tag_model
+                    .try_into_entity()
+                    .map(|entity| (todo_uuid, entity))
+                    .map_err(|e| ListError::Internal(e.into()))
             })
             .collect::<Result<Vec<(Uuid, TagEntity)>, ListError>>()?;
 
         let mut todo_entities = todo_models
             .into_iter()
-            .map(|m| m.try_into_entity(Vec::new()).map_err(ListError::from_err))
+            .map(|model| {
+                model
+                    .try_into_entity(Vec::new())
+                    .map_err(|e| ListError::Internal(e.into()))
+            })
             .collect::<Result<Vec<TodoEntity>, ListError>>()?;
 
         for (todo_uuid, tag) in related_tag_entities.into_iter() {
@@ -263,9 +279,9 @@ impl TodoRepository for PgTodoRepository {
             .bind(todo.id.into_uuid())
             .fetch_one(&self.pool)
             .await
-            .map_err(|err| match err {
+            .map_err(|e| match e {
                 SqlxError::RowNotFound => UpdateError::NotFound,
-                _ => UpdateError::from_err(err),
+                _ => UpdateError::Internal(e.into()),
             })?;
 
         Ok(())
