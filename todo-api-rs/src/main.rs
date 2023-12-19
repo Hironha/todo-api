@@ -10,6 +10,7 @@ use std::net::SocketAddr;
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
+use tokio::net::TcpListener;
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::cors::CorsLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
@@ -44,10 +45,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .layer(create_tracing_layer());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-    tracing::info!("server listening on {addr:?}");
+    let listener = TcpListener::bind(addr)
+        .await
+        .unwrap_or_else(|_| panic!("failed binding tcp listener to address {addr}"));
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    tracing::info!("server listening on {addr}");
+
+    axum::serve(listener, app.into_make_service())
         .await
         .expect("failed initiating server");
 

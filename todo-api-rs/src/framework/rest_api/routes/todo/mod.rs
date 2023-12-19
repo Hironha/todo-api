@@ -23,7 +23,7 @@ use update::update_todo;
 pub fn create_todo_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
         todo_repository: PgTodoRepository::new(pool.clone()),
-        tag_repository: PgTagRepository::new(pool)
+        tag_repository: PgTagRepository::new(pool),
     };
 
     Router::new()
@@ -36,7 +36,7 @@ pub fn create_todo_router(pool: Pool<Postgres>) -> Router {
         .with_state(state)
 }
 
-#[derive(Clone, FromRef)]
+#[derive(FromRef, Clone)]
 struct TodoState {
     todo_repository: PgTodoRepository,
     tag_repository: PgTagRepository,
