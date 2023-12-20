@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use sqlx::types::time::{Date as TimeDate, OffsetDateTime};
 use sqlx::types::Uuid;
@@ -72,28 +71,10 @@ impl TodoStatus {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum TodoModelEntityError {
-    Title(TitleError),
-    Description(DescriptionError),
-}
-
-impl fmt::Display for TodoModelEntityError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Title(err) => write!(f, "todo model title incompatible with entity: {err}"),
-            Self::Description(err) => {
-                write!(f, "todo model description incompatible with entity: {err}")
-            }
-        }
-    }
-}
-
-impl Error for TodoModelEntityError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Title(err) => Some(err),
-            Self::Description(err) => Some(err),
-        }
-    }
+    #[error("todo model title incompatible with entity: {0}")]
+    Title(#[source] TitleError),
+    #[error("todo model description incompatible with entity: {0}")]
+    Description(#[source] DescriptionError),
 }

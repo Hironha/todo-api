@@ -1,7 +1,7 @@
-use std::error::Error;
-use std::fmt;
+use std::error;
 
 use async_trait::async_trait;
+use thiserror::Error;
 
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
@@ -16,176 +16,46 @@ pub trait TagRepository {
     async fn update(&self, tag: TagEntity) -> Result<TagEntity, UpdateError>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum CreateError {
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl CreateError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for CreateError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for CreateError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum DeleteError {
+    #[error("tag could not be found")]
     NotFound,
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl DeleteError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for DeleteError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound => write!(f, "tag not found"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for DeleteError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::NotFound => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ExistsManyError {
+    #[error("following tags were not found: {0:?}")]
     NotFound(Vec<Id>),
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl ExistsManyError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for ExistsManyError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound(tags_id) => write!(f, "following tags were not found: {tags_id:?}"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for ExistsManyError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::NotFound(_) => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum FindError {
+    #[error("tag could not be found")]
     NotFound,
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl FindError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for FindError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound => write!(f, "tag not found"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for FindError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::NotFound => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ListAllError {
-    Internal(Box<dyn Error>),
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }
 
-impl ListAllError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for ListAllError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for ListAllError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum UpdateError {
+    #[error("tag could not be found")]
     NotFound,
-    Internal(Box<dyn Error>),
-}
-
-impl UpdateError {
-    pub fn from_err(err: impl Into<Box<dyn Error>>) -> Self {
-        Self::Internal(err.into())
-    }
-}
-
-impl fmt::Display for UpdateError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotFound => write!(f, "tag not found"),
-            Self::Internal(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for UpdateError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::NotFound => None,
-            Self::Internal(err) => Some(err.as_ref()),
-        }
-    }
+    #[error(transparent)]
+    Internal(Box<dyn error::Error>),
 }

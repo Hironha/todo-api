@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use sqlx::types::time::OffsetDateTime;
 use sqlx::types::uuid::Uuid;
@@ -35,28 +34,10 @@ impl TagModel {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum TagModelEntityError {
-    Name(NameError),
-    Description(DescriptionError),
-}
-
-impl fmt::Display for TagModelEntityError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Name(err) => write!(f, "tag model name incompatible with entity: {err}"),
-            Self::Description(err) => {
-                write!(f, "tag model description incompatible with entity: {err}")
-            }
-        }
-    }
-}
-
-impl Error for TagModelEntityError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Name(err) => Some(err),
-            Self::Description(err) => Some(err),
-        }
-    }
+    #[error("tag model name incompatible with entity: {0}")]
+    Name(#[source] NameError),
+    #[error("tag model description incompatible entity: {0}")]
+    Description(#[source] DescriptionError),
 }

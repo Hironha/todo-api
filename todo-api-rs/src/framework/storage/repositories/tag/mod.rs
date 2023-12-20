@@ -6,7 +6,7 @@ use crate::application::repositories::tag::{
     CreateError, DeleteError, ExistsManyError, FindError, ListAllError, TagRepository, UpdateError,
 };
 use crate::domain::entities::tag::TagEntity;
-use crate::domain::types::{DateTime, Id};
+use crate::domain::types::Id;
 use crate::framework::storage::models::tag::TagModel;
 
 #[derive(Clone)]
@@ -23,7 +23,6 @@ impl PgTagRepository {
 #[async_trait]
 impl TagRepository for PgTagRepository {
     async fn create(&self, tag: TagEntity) -> Result<TagEntity, CreateError> {
-        let current_dt = DateTime::new().into_offset_dt();
         let create_q = r#"
             INSERT INTO tag (id, name, description, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5)
@@ -31,16 +30,18 @@ impl TagRepository for PgTagRepository {
         "#;
 
         let tag_model = sqlx::query_as::<_, TagModel>(create_q)
-            .bind(Id::new().into_uuid())
+            .bind(tag.id.into_uuid())
             .bind(tag.name.into_string())
             .bind(tag.description.map(|d| d.into_string()))
-            .bind(current_dt)
-            .bind(current_dt)
+            .bind(tag.created_at.into_offset_dt())
+            .bind(tag.updated_at.into_offset_dt())
             .fetch_one(&self.pool)
             .await
-            .map_err(CreateError::from_err)?;
+            .map_err(|e| CreateError::Internal(e.into()))?;
 
-        tag_model.try_into_entity().map_err(CreateError::from_err)
+        tag_model
+            .try_into_entity()
+            .map_err(|e| CreateError::Internal(e.into()))
     }
 
     async fn delete(&self, tag_id: Id) -> Result<(), DeleteError> {
@@ -51,7 +52,7 @@ impl TagRepository for PgTagRepository {
             .await
             .map_err(|err| match err {
                 SqlxError::RowNotFound => DeleteError::NotFound,
-                _ => DeleteError::from_err(err),
+                _ => DeleteError::Internal(err.into()),
             })?;
 
         Ok(())
@@ -68,7 +69,7 @@ impl TagRepository for PgTagRepository {
             .bind(&tag_uuids)
             .fetch_all(&self.pool)
             .await
-            .map_err(ExistsManyError::from_err)?;
+            .map_err(|e| ExistsManyError::Internal(e.into()))?;
 
         let not_found_ids = tag_uuids
             .into_iter()
@@ -96,10 +97,12 @@ impl TagRepository for PgTagRepository {
             .await
             .map_err(|err| match err {
                 SqlxError::RowNotFound => FindError::NotFound,
-                _ => FindError::from_err(err),
+                _ => FindError::Internal(err.into()),
             })?;
 
-        tag_model.try_into_entity().map_err(FindError::from_err)
+        tag_model
+            .try_into_entity()
+            .map_err(|e| FindError::Internal(e.into()))
     }
 
     async fn list_all(&self) -> Result<Vec<TagEntity>, ListAllError> {
@@ -111,11 +114,15 @@ impl TagRepository for PgTagRepository {
         let tag_models = sqlx::query_as::<_, TagModel>(list_all_q)
             .fetch_all(&self.pool)
             .await
-            .map_err(ListAllError::from_err)?;
+            .map_err(|e| ListAllError::Internal(e.into()))?;
 
         tag_models
             .into_iter()
-            .map(|model| model.try_into_entity().map_err(ListAllError::from_err))
+            .map(|model| {
+                model
+                    .try_into_entity()
+                    .map_err(|e| ListAllError::Internal(e.into()))
+            })
             .collect::<Result<Vec<TagEntity>, ListAllError>>()
     }
 
@@ -136,9 +143,11 @@ impl TagRepository for PgTagRepository {
             .await
             .map_err(|err| match err {
                 SqlxError::RowNotFound => UpdateError::NotFound,
-                _ => UpdateError::from_err(err),
+                _ => UpdateError::Internal(err.into()),
             })?;
 
-        tag_model.try_into_entity().map_err(UpdateError::from_err)
+        tag_model
+            .try_into_entity()
+            .map_err(|e| UpdateError::Internal(e.into()))
     }
 }

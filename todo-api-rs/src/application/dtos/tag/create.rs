@@ -1,5 +1,6 @@
-use std::error::Error;
-use std::fmt;
+use std::error;
+
+use thiserror::Error;
 
 use crate::domain::entities::tag::{Description, Name};
 
@@ -9,23 +10,8 @@ pub struct CreateTagInput {
     pub description: Option<Description>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum CreateTagError {
-    Repository(Box<dyn Error>),
-}
-
-impl fmt::Display for CreateTagError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Repository(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for CreateTagError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Repository(err) => Some(err.as_ref()),
-        }
-    }
+    #[error(transparent)]
+    Repository(Box<dyn error::Error>),
 }

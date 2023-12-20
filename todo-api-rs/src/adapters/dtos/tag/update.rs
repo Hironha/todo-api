@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput};
@@ -39,57 +38,24 @@ impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RunError {
+    #[error(transparent)]
     Parsing(ParseError),
+    #[error(transparent)]
     Updating(UpdateTagError),
 }
 
-impl fmt::Display for RunError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Parsing(_) => write!(f, "failed parsing update tag input"),
-            Self::Updating(_) => write!(f, "failed updating tag"),
-        }
-    }
-}
-
-impl Error for RunError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Parsing(err) => Some(err),
-            Self::Updating(err) => Some(err),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
+    #[error("id is required")]
     EmptyId,
+    #[error("invalid id format")]
     InvalidId,
+    #[error("name is required")]
     EmptyName,
+    #[error("invalid name: {0}")]
     InvalidName(NameError),
+    #[error("invalid description: {0}")]
     InvalidDescription(DescriptionError),
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::EmptyId => write!(f, "required string"),
-            Self::InvalidId => write!(f, "invalid id format"),
-            Self::EmptyName => write!(f, "required string"),
-            Self::InvalidName(err) => err.fmt(f),
-            Self::InvalidDescription(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for ParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::EmptyId | Self::InvalidId | Self::EmptyName => None,
-            Self::InvalidName(err) => Some(err),
-            Self::InvalidDescription(err) => Some(err),
-        }
-    }
 }

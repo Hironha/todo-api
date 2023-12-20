@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use crate::domain::types::{DateTime, Id};
 
@@ -51,46 +50,16 @@ impl Description {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum NameError {
+    #[error("tag name cannot be empty")]
     Empty,
+    #[error("tag name cannot have more than 64 characters")]
     Length,
 }
 
-impl fmt::Display for NameError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Empty => write!(f, "cannot be empty"),
-            Self::Length => write!(f, "cannot have more than 64 characters"),
-        }
-    }
-}
-
-impl Error for NameError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Empty | Self::Length => None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum DescriptionError {
+    #[error("tag description cannot have more than 64 characters")]
     Length,
-}
-
-impl fmt::Display for DescriptionError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Length => write!(f, "cannot have more than 128 characters"),
-        }
-    }
-}
-
-impl Error for DescriptionError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Length => None,
-        }
-    }
 }

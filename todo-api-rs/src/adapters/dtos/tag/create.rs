@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::create::{CreateTagError, CreateTagInput};
@@ -28,53 +27,20 @@ impl Parse<CreateTagInput, ParseError> for CreateRequest {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RunError {
+    #[error(transparent)]
     Parsing(ParseError),
+    #[error(transparent)]
     Creating(CreateTagError),
 }
 
-impl fmt::Display for RunError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Parsing(_) => write!(f, "failed parsing create tag input"),
-            Self::Creating(_) => write!(f, "failed creating tag"),
-        }
-    }
-}
-
-impl Error for RunError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Parsing(err) => Some(err),
-            Self::Creating(err) => Some(err),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
+    #[error("name is required")]
     EmptyName,
+    #[error("invalid name: {0}")]
     InvalidName(NameError),
+    #[error("invalid description: {0}")]
     InvalidDescription(DescriptionError),
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::EmptyName => write!(f, "required string"),
-            Self::InvalidName(err) => err.fmt(f),
-            Self::InvalidDescription(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for ParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::EmptyName => None,
-            Self::InvalidName(err) => Some(err),
-            Self::InvalidDescription(err) => Some(err),
-        }
-    }
 }
