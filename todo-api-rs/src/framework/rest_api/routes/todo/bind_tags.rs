@@ -26,15 +26,16 @@ pub(super) async fn bind_todo_tags(
     Path(path): Path<BindTagsPathParams>,
     Json(body): Json<BindTagsBody>,
 ) -> impl IntoResponse {
-    tracing::info!("bind todo tags: {body:?}");
-
-    let input = BindTagsRequest {
+    let req = BindTagsRequest {
         tags_id: body.tags_id,
         todo_id: path.id,
     };
-    let controller = BindTagsController::new(state.todo_repository, state.tag_repository);
 
-    if let Err(err) = controller.run(input).await {
+    tracing::info!("bind todo tags request: {req:?}");
+
+    let controller = BindTagsController::new(state.todo_repository, state.tag_repository);
+    if let Err(err) = controller.run(req).await {
+        tracing::error!("bind todo tags error: {err}");
         let (status, error) = config_error_response(&err);
         return (status, Json(error)).into_response();
     }
@@ -62,10 +63,8 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::new("BTD-003", bind_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            BindTodoTagsError::Repository(repository_err) => {
-                tracing::error!("bind todo tags repository error: {repository_err}");
-
-                let api_error = ApiError::new("BTD-004", error.to_string());
+            BindTodoTagsError::Repository(..) => {
+                let api_error = ApiError::internal("BTD-004");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },

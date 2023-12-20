@@ -19,14 +19,15 @@ pub(super) async fn find_todo(
     State(state): State<TodoState>,
     Path(path): Path<FindPathParams>,
 ) -> impl IntoResponse {
-    tracing::info!("find todo path input {path:?}");
+    let req = FindRequest { id: path.id };
 
-    let input = FindRequest { id: path.id };
+    tracing::info!("find todo request: {req:?}");
+
     let controller = FindController::new(state.todo_repository);
-
-    let output = match controller.run(input).await {
+    let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
+            tracing::error!("find todo error: {err}");
             let (status_code, message) = config_error_response(&err);
             return (status_code, Json(message)).into_response();
         }
@@ -50,9 +51,8 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::new("FTD-002", find_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            FindTodoError::Repository(repository_err) => {
-                tracing::error!("find todo repository error: {repository_err}");
-                let api_error = ApiError::new("FTD-003", error.to_string());
+            FindTodoError::Repository(..) => {
+                let api_error = ApiError::internal("FTD-003");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },

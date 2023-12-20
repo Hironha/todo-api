@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::find::{FindTodoError, FindTodoInput};
@@ -20,42 +19,20 @@ impl Parse<FindTodoInput, ParseError> for FindRequest {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RunError {
+    #[error(transparent)]
     Parsing(ParseError),
+    #[error(transparent)]
     Finding(FindTodoError),
 }
 
-impl fmt::Display for RunError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Parsing(_) => write!(f, "failed parsing find todo input"),
-            Self::Finding(_) => write!(f, "failed finding todo"),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
+    #[error("id is required")]
     EmptyId,
+    #[error("invalid id format")]
     InvalidId,
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::EmptyId => write!(f, "required string"),
-            Self::InvalidId => write!(f, "invalid id format"),
-        }
-    }
-}
-
-impl Error for ParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::EmptyId | Self::InvalidId => None,
-        }
-    }
 }
 
 #[cfg(test)]

@@ -23,19 +23,20 @@ pub(super) async fn create_todo(
     State(state): State<TodoState>,
     Json(body): Json<CreateBody>,
 ) -> impl IntoResponse {
-    tracing::info!("create todo body: {body:?}");
-
-    let input = CreateRequest {
+    let req = CreateRequest {
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
         status: body.status,
     };
 
+    tracing::info!("create todo request: {req:?}");
+
     let controller = CreateController::new(state.todo_repository);
-    let output = match controller.run(input).await {
+    let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
+            tracing::error!("create todo error: {err}");
             let (status, error) = config_error_response(&err);
             return (status, Json(error)).into_response();
         }
@@ -52,12 +53,7 @@ pub(super) async fn create_todo(
 fn config_error_response(run_err: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match run_err {
         RunError::Parsing(parse_err) => {
-            let field = match parse_err {
-                ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
-                ParseError::InvalidDescription(_) => "description",
-                ParseError::InvalidTodoAt => "todoAt",
-                ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
-            };
+            let field = get_parse_error_field(parse_err);
             let details = ValidationError::new(field, parse_err.to_string());
             let api_error = ApiError::new("CTD-001", run_err.to_string()).with_details(details);
             (StatusCode::BAD_REQUEST, api_error)
@@ -67,11 +63,19 @@ fn config_error_response(run_err: &RunError) -> (StatusCode, ApiError<Validation
                 let api_error = ApiError::new("CTD-002", create_err.to_string());
                 (StatusCode::CONFLICT, api_error)
             }
-            CreateTodoError::Repository(repo_err) => {
-                tracing::error!("create todo repository error: {repo_err}");
-                let api_error = ApiError::new("CTD-003", run_err.to_string());
+            CreateTodoError::Repository(..) => {
+                let api_error = ApiError::internal("CTD-003");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },
+    }
+}
+
+fn get_parse_error_field(err: &ParseError) -> &str {
+    match err {
+        ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
+        ParseError::InvalidDescription(_) => "description",
+        ParseError::InvalidTodoAt => "todoAt",
+        ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
     }
 }

@@ -3,14 +3,11 @@ use serde::Serialize;
 #[derive(Clone, Debug, Serialize)]
 pub struct ValidationError {
     field: String,
-    description: String
+    description: String,
 }
 
 impl ValidationError {
-    pub fn new(
-        field: impl Into<String>,
-        description: impl Into<String>,
-    ) -> Self {
+    pub fn new(field: impl Into<String>, description: impl Into<String>) -> Self {
         Self {
             field: field.into(),
             description: description.into(),
@@ -27,10 +24,15 @@ pub struct ApiError<D: Serialize> {
 }
 
 impl<D: Serialize> ApiError<D> {
-    pub fn new(
-        code: impl Into<String>,
-        message: impl Into<String>,
-    ) -> Self {
+    pub fn internal(code: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            message: String::from("internal server error"),
+            details: None,
+        }
+    }
+
+    pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             code: code.into(),
             message: message.into(),

@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use crate::domain::types::{Date, DateTime, Id};
 
@@ -67,10 +66,16 @@ pub enum TodoStatus {
     Done,
 }
 
-impl<'a> TryFrom<&'a str> for TodoStatus {
-    type Error = ParseTodoStatusError;
+impl TodoStatus {
+    pub fn into_string(self) -> String {
+        match self {
+            Self::Todo => String::from("todo"),
+            Self::InProgress => String::from("in_progress"),
+            Self::Done => String::from("done"),
+        }
+    }
 
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+    pub fn parse_str(value: &str) -> Result<Self, ParseTodoStatusError> {
         match value {
             "todo" => Ok(Self::Todo),
             "in_progress" => Ok(Self::InProgress),
@@ -80,70 +85,20 @@ impl<'a> TryFrom<&'a str> for TodoStatus {
     }
 }
 
-impl fmt::Display for TodoStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Todo => write!(f, "todo"),
-            Self::InProgress => write!(f, "in_progress"),
-            Self::Done => write!(f, "done"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum TitleError {
+    #[error("todo title cannot be empty")]
     Empty,
+    #[error("todo title cannot have more than 64 characters")]
     Length,
 }
 
-impl fmt::Display for TitleError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Empty => write!(f, "cannot be empty"),
-            Self::Length => write!(f, "cannot have more than 64 characters"),
-        }
-    }
-}
-
-impl Error for TitleError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum DescriptionError {
+    #[error("todo description cannot have more than 64 characters")]
     Length,
 }
 
-impl fmt::Display for DescriptionError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Length => write!(f, "cannot have more than 256 characters"),
-        }
-    }
-}
-
-impl Error for DescriptionError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
+#[error("todo status must be one the following values: todo, in_progress or done")]
 pub struct ParseTodoStatusError;
-
-impl fmt::Display for ParseTodoStatusError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "must be one of the following values: todo, in_progress or done"
-        )
-    }
-}
-
-impl Error for ParseTodoStatusError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
-    }
-}

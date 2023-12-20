@@ -48,7 +48,7 @@ pub enum CreateError {
 
 #[derive(Debug, Error)]
 pub enum DeleteError {
-    #[error("delete failed because todo could not be found")]
+    #[error("todo could not be found")]
     NotFound,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
@@ -76,7 +76,7 @@ pub enum ListError {
 
 #[derive(Debug, Error)]
 pub enum UpdateError {
-    #[error("update failed because todo could not be found")]
+    #[error("todo could not be found")]
     NotFound,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),

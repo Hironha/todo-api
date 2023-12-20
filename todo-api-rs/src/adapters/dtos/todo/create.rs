@@ -1,10 +1,9 @@
-use std::error::Error;
-use std::fmt;
+use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
 use crate::domain::entities::todo::{
-    Description, DescriptionError, Title, TitleError, TodoStatus, ParseTodoStatusError,
+    Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
 };
 use crate::domain::types::Date;
 
@@ -39,7 +38,7 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
             .status
             .ok_or(ParseError::EmptyStatus)
             .and_then(|status| {
-                TodoStatus::try_from(status.as_str()).map_err(ParseError::InvalidStatus)
+                TodoStatus::parse_str(status.as_str()).map_err(ParseError::InvalidStatus)
             })?;
 
         Ok(CreateTodoInput {
@@ -51,60 +50,26 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RunError {
+    #[error(transparent)]
     Parsing(ParseError),
+    #[error(transparent)]
     Creating(CreateTodoError),
 }
 
-impl fmt::Display for RunError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Parsing(_) => write!(f, "failed parsing create todo input"),
-            Self::Creating(_) => write!(f, "failed creating todo"),
-        }
-    }
-}
-
-impl Error for RunError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Parsing(err) => Some(err),
-            Self::Creating(err) => Some(err),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
+    #[error("title is required")]
     EmptyTitle,
-    InvalidTitle(TitleError),
-    InvalidDescription(DescriptionError),
+    #[error("invalid title: {0}")]
+    InvalidTitle(#[source] TitleError),
+    #[error("invalid description: {0}")]
+    InvalidDescription(#[source] DescriptionError),
+    #[error("invalid todo at: should be an UTC date on YYYY-MM-DD format")]
     InvalidTodoAt,
+    #[error("status is required")]
     EmptyStatus,
-    InvalidStatus(ParseTodoStatusError),
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::EmptyTitle => write!(f, "required string"),
-            Self::InvalidTitle(err) => err.fmt(f),
-            Self::InvalidDescription(err) => err.fmt(f),
-            Self::InvalidTodoAt => write!(f, "optional UTC date on YYYY-MM_DD format"),
-            Self::EmptyStatus => write!(f, "required string"),
-            Self::InvalidStatus(err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for ParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::InvalidTitle(err) => Some(err),
-            Self::InvalidDescription(err) => Some(err),
-            Self::InvalidStatus(err) => Some(err),
-            Self::EmptyTitle | Self::InvalidTodoAt | Self::EmptyStatus => None,
-        }
-    }
+    #[error("invalid status: {0}")]
+    InvalidStatus(#[source] ParseTodoStatusError),
 }

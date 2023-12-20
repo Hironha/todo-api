@@ -22,16 +22,19 @@ pub(super) async fn list_todo(
     State(state): State<TodoState>,
     Query(query): Query<QueryParams>,
 ) -> impl IntoResponse {
-    let input = ListRequest {
+    let req = ListRequest {
         page: query.page,
         per_page: query.per_page,
         title: query.title,
     };
-    let controller = ListController::new(state.todo_repository);
 
-    let output = match controller.run(input).await {
+    tracing::info!("list todos request: {req:?}");
+
+    let controller = ListController::new(state.todo_repository);
+    let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
+            tracing::error!("list todos error: {err}");
             let (status, error) = config_error_response(&err);
             return (status, Json(error)).into_response();
         }
@@ -53,9 +56,8 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
             (StatusCode::BAD_REQUEST, api_error)
         }
         RunError::Listing(list_err) => match list_err {
-            ListTodoError::Repository(repository_err) => {
-                tracing::error!("list todo repository error: {repository_err}");
-                let api_error = ApiError::new("LTD-001", error.to_string());
+            ListTodoError::Repository(..) => {
+                let api_error = ApiError::internal("LTD-002");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },

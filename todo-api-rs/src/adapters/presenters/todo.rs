@@ -35,7 +35,7 @@ impl From<TodoEntity> for TodoPresenter {
             id: todo.id.to_string(),
             title: todo.title.into_string(),
             description: todo.description.map(|d| d.into_string()),
-            status: todo.status.to_string(),
+            status: todo.status.into_string(),
             todo_at: todo.todo_at.map(|at| at.to_ymd()),
             tags: tag_presenters,
             created_at: todo.created_at.to_rfc3339(),

@@ -19,12 +19,13 @@ pub(super) async fn delete_todo(
     State(state): State<TodoState>,
     Path(path): Path<DeletePathParams>,
 ) -> impl IntoResponse {
-    tracing::info!("delete todo path input {path:?}");
+    let req = DeleteRequest { id: path.id };
 
-    let input = DeleteRequest { id: path.id };
+    tracing::info!("delete todo request {req:?}");
+
     let controller = DeleteController::new(state.todo_repository);
-
-    if let Err(err) = controller.run(input).await {
+    if let Err(err) = controller.run(req).await {
+        tracing::error!("delete todo error: {err}");
         let (status_code, message) = config_error_response(&err);
         (status_code, Json(message)).into_response()
     } else {
@@ -47,9 +48,8 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::new("DTD-002", delete_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            DeleteTodoError::Repository(repository_err) => {
-                tracing::error!("delete todo repository error: {repository_err}");
-                let api_error = ApiError::new("DTD-003", error.to_string());
+            DeleteTodoError::Repository(..) => {
+                let api_error = ApiError::internal("DTD-003");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },

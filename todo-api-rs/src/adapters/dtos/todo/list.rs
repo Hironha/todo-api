@@ -1,8 +1,7 @@
-use std::error::Error;
-use std::fmt;
 use std::num::NonZeroU32;
 
 use serde::Serialize;
+use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
@@ -46,53 +45,23 @@ pub struct ListResponse {
     pub items: Vec<TodoPresenter>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RunError {
+    #[error(transparent)]
     Parsing(ParseError),
+    #[error(transparent)]
     Listing(ListTodoError),
 }
 
-impl fmt::Display for RunError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Parsing(_) => write!(f, "failed parsing list todo input"),
-            Self::Listing(_) => write!(f, "failed listing todos"),
-        }
-    }
-}
-
-impl Error for RunError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Listing(err) => Some(err),
-            Self::Parsing(err) => Some(err),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
+    #[error("invalid page: should be an integer ranging from 0 to {}", u32::MAX)]
     InvalidPage,
+    #[error(
+        "invalid per page: should be an integer ranging from 0 to {}",
+        u32::MAX
+    )]
     InvalidPerPage,
+    #[error("invalid title: {0}")]
     Title(TitleError),
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidPage | Self::InvalidPerPage => {
-                write!(f, "optional non zero natural number")
-            }
-            Self::Title(err) => write!(f, "optional {err}"),
-        }
-    }
-}
-
-impl Error for ParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::InvalidPage | Self::InvalidPerPage => None,
-            Self::Title(err) => Some(err),
-        }
-    }
 }

@@ -29,10 +29,7 @@ pub(super) async fn update_todo(
     Path(path): Path<UpdatePathParams>,
     Json(body): Json<UpdateBody>,
 ) -> impl IntoResponse {
-    tracing::info!("update todo path input {path:?}");
-    tracing::info!("update todo body {body:?}");
-
-    let input = UpdateRequest {
+    let req = UpdateRequest {
         id: path.id,
         title: body.title,
         description: body.description,
@@ -40,9 +37,11 @@ pub(super) async fn update_todo(
         status: body.status,
     };
 
-    let controller = UpdateController::new(state.todo_repository);
+    tracing::info!("update todo request: {req:?}");
 
-    if let Err(err) = controller.run(input).await {
+    let controller = UpdateController::new(state.todo_repository);
+    if let Err(err) = controller.run(req).await {
+        tracing::error!("update todo error: {err}");
         let (status_code, message) = config_error_response(&err);
         (status_code, Json(message)).into_response()
     } else {
@@ -53,13 +52,7 @@ pub(super) async fn update_todo(
 fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
     match error {
         RunError::Parsing(parse_err) => {
-            let field = match parse_err {
-                ParseError::EmptyId | ParseError::InvalidId => "id",
-                ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
-                ParseError::InvalidDescription(_) => "description",
-                ParseError::TodoAt => "todoAt",
-                ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
-            };
+            let field = get_parse_error_field(parse_err);
             let details = ValidationError::new(field, parse_err.to_string());
             let api_error = ApiError::new("UTD-001", error.to_string()).with_details(details);
             (StatusCode::BAD_REQUEST, api_error)
@@ -69,11 +62,20 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::new("UTD-002", update_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            UpdateTodoError::Repository(repository_err) => {
-                tracing::error!("update todo repository error: {repository_err}");
-                let api_error = ApiError::new("UTD-003", error.to_string());
+            UpdateTodoError::Repository(..) => {
+                let api_error = ApiError::internal("UTD-003");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },
+    }
+}
+
+fn get_parse_error_field(err: &ParseError) -> &str {
+    match err {
+        ParseError::EmptyId | ParseError::InvalidId => "id",
+        ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
+        ParseError::InvalidDescription(_) => "description",
+        ParseError::InvalidTodoAt => "todoAt",
+        ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
     }
 }
