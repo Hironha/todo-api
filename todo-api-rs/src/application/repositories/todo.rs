@@ -78,6 +78,8 @@ pub enum ListError {
 pub enum UpdateError {
     #[error("todo could not be found")]
     NotFound,
+    #[error("todo with title {0} already exists")]
+    DuplicatedTitle(String),
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }

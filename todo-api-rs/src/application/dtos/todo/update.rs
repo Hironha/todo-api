@@ -18,6 +18,8 @@ pub struct UpdateTodoInput {
 pub enum UpdateTodoError {
     #[error("todo could not be found")]
     NotFound,
+    #[error("todo with title {0} already exists")]
+    DuplicatedTitle(String),
     #[error(transparent)]
     Repository(Box<dyn error::Error>),
 }

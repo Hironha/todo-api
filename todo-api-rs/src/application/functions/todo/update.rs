@@ -30,6 +30,7 @@ pub async fn update_todo<T: TodoRepository>(
         .await
         .map_err(|err| match err {
             UpdateError::NotFound => UpdateTodoError::NotFound,
+            UpdateError::DuplicatedTitle(title) => UpdateTodoError::DuplicatedTitle(title),
             UpdateError::Internal(err) => UpdateTodoError::Repository(err),
         })
 }

@@ -62,6 +62,10 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::new("UTD-002", update_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
+            UpdateTodoError::DuplicatedTitle(..) => {
+                let api_error = ApiError::new("UTD-003", update_err.to_string());
+                (StatusCode::NOT_FOUND, api_error)
+            }
             UpdateTodoError::Repository(..) => {
                 let api_error = ApiError::internal("UTD-003");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)

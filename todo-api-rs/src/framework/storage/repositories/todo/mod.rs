@@ -270,8 +270,9 @@ impl TodoRepository for PgTodoRepository {
             WHERE id = $6
         "#;
 
+        let title = todo.title.into_string();
         sqlx::query(update_q)
-            .bind(todo.title.into_string())
+            .bind(title.as_str())
             .bind(todo.description.map(|d| d.into_string()))
             .bind(todo.todo_at.map(|at| at.into_date()))
             .bind(TodoModelStatus::from(todo.status))
@@ -280,6 +281,10 @@ impl TodoRepository for PgTodoRepository {
             .fetch_one(&self.pool)
             .await
             .map_err(|e| match e {
+                SqlxError::Database(db_err) if db_err.is_unique_violation() => {
+                    UpdateError::DuplicatedTitle(title)
+                }
+                SqlxError::Database(db_err) => UpdateError::Internal(db_err.into()),
                 SqlxError::RowNotFound => UpdateError::NotFound,
                 _ => UpdateError::Internal(e.into()),
             })?;
