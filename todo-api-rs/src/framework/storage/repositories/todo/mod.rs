@@ -280,13 +280,12 @@ impl TodoRepository for PgTodoRepository {
             .bind(todo.id.into_uuid())
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| match e {
+            .map_err(|err| match err {
                 SqlxError::Database(db_err) if db_err.is_unique_violation() => {
                     UpdateError::DuplicatedTitle(title)
                 }
-                SqlxError::Database(db_err) => UpdateError::Internal(db_err.into()),
                 SqlxError::RowNotFound => UpdateError::NotFound,
-                _ => UpdateError::Internal(e.into()),
+                _ => UpdateError::Internal(err.into()),
             })?;
 
         Ok(())
