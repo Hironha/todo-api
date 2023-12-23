@@ -31,6 +31,7 @@ pub(super) async fn create_tag(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
+            tracing::error!("create tag error: {err}");
             let (status, error) = config_error_response(&err);
             return (status, Json(error)).into_response();
         }
@@ -56,9 +57,12 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
             (StatusCode::BAD_REQUEST, api_error)
         }
         RunError::Creating(create_err) => match create_err {
-            CreateTagError::Repository(repository_err) => {
-                tracing::error!("create tag repository error: {repository_err}");
-                let api_error = ApiError::new("CTG-002", error.to_string());
+            CreateTagError::DuplicatedName(..) => {
+                let api_error = ApiError::new("CTG-002", create_err.to_string());
+                (StatusCode::CONFLICT, api_error)
+            }
+            CreateTagError::Repository(..) => {
+                let api_error = ApiError::new("CTG-003", error.to_string());
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },

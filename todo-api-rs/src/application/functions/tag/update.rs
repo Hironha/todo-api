@@ -19,7 +19,7 @@ where
         })?;
 
     let updated_tag_entity = TagEntity {
-        name: input.name,
+        name: input.name.clone(),
         description: input.description,
         ..tag_entity
     };
@@ -29,6 +29,7 @@ where
         .await
         .map_err(|err| match err {
             UpdateError::NotFound => UpdateTagError::NotFound,
+            UpdateError::DuplicatedName => UpdateTagError::DuplicatedName(input.name),
             UpdateError::Internal(err) => UpdateTagError::Repository(err),
         })
 }

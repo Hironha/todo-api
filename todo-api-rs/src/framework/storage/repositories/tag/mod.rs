@@ -29,15 +29,21 @@ impl TagRepository for PgTagRepository {
             RETURNING id, name, description, created_at, updated_at
         "#;
 
+        let name = tag.name.into_string();
         let tag_model = sqlx::query_as::<_, TagModel>(create_q)
             .bind(tag.id.into_uuid())
-            .bind(tag.name.into_string())
+            .bind(name.as_str())
             .bind(tag.description.map(|d| d.into_string()))
             .bind(tag.created_at.into_offset_dt())
             .bind(tag.updated_at.into_offset_dt())
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| CreateError::Internal(e.into()))?;
+            .map_err(|err| match err {
+                SqlxError::Database(db_err) if db_err.is_unique_violation() => {
+                    CreateError::DuplicatedName
+                }
+                _ => CreateError::Internal(err.into()),
+            })?;
 
         tag_model
             .try_into_entity()
@@ -142,6 +148,9 @@ impl TagRepository for PgTagRepository {
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
+                SqlxError::Database(db_err) if db_err.is_unique_violation() => {
+                    UpdateError::DuplicatedName
+                }
                 SqlxError::RowNotFound => UpdateError::NotFound,
                 _ => UpdateError::Internal(err.into()),
             })?;

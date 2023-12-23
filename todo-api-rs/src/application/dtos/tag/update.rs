@@ -16,6 +16,8 @@ pub struct UpdateTagInput {
 pub enum UpdateTagError {
     #[error("tag could not be found")]
     NotFound,
+    #[error("tag with name {0} already exists")]
+    DuplicatedName(Name),
     #[error(transparent)]
     Repository(Box<dyn error::Error>),
 }

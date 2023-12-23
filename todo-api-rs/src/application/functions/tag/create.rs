@@ -13,7 +13,7 @@ where
     let current_dt = DateTime::new();
     let tag_entity = TagEntity {
         id: Id::new(),
-        name: input.name,
+        name: input.name.clone(),
         description: input.description,
         created_at: current_dt,
         updated_at: current_dt,
@@ -23,6 +23,7 @@ where
         .create(tag_entity)
         .await
         .map_err(|err| match err {
+            CreateError::DuplicatedName => CreateTagError::DuplicatedName(input.name),
             CreateError::Internal(err) => CreateTagError::Repository(err),
         })
 }

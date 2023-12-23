@@ -18,6 +18,8 @@ pub trait TagRepository {
 
 #[derive(Debug, Error)]
 pub enum CreateError {
+    #[error("tag name already exists")]
+    DuplicatedName,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }
@@ -56,6 +58,8 @@ pub enum ListAllError {
 pub enum UpdateError {
     #[error("tag could not be found")]
     NotFound,
+    #[error("tag name already exists")]
+    DuplicatedName,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }

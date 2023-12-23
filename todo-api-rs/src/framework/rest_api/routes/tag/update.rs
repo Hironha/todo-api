@@ -39,6 +39,7 @@ pub(super) async fn update_tag(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
+            tracing::error!("update tag error: {err}");
             let (status, error) = config_error_response(&err);
             return (status, Json(error)).into_response();
         }
@@ -64,9 +65,12 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::new("UTG-002", update_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            UpdateTagError::Repository(repository_err) => {
-                tracing::error!("update tag repository error: {repository_err}");
-                let api_error = ApiError::new("UTG-003", error.to_string());
+            UpdateTagError::DuplicatedName(..) => {
+                let api_error = ApiError::new("UTG-003", update_err.to_string());
+                (StatusCode::CONFLICT, api_error)
+            }
+            UpdateTagError::Repository(..) => {
+                let api_error = ApiError::new("UTG-004", error.to_string());
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         },
