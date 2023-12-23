@@ -19,7 +19,7 @@ pub enum UpdateTodoError {
     #[error("todo could not be found")]
     NotFound,
     #[error("todo with title {0} already exists")]
-    DuplicatedTitle(String),
+    DuplicatedTitle(Title),
     #[error(transparent)]
     Repository(Box<dyn error::Error>),
 }

@@ -13,7 +13,7 @@ where
     let current_dt = DateTime::new();
     let todo_entity = TodoEntity {
         id: Id::new(),
-        title: input.title,
+        title: input.title.clone(),
         description: input.description,
         status: input.status,
         todo_at: input.todo_at,
@@ -26,7 +26,7 @@ where
         .create(todo_entity)
         .await
         .map_err(|err| match err {
-            CreateError::DuplicatedTitle(title) => CreateTodoError::DuplicatedTitle(title),
+            CreateError::DuplicatedTitle => CreateTodoError::DuplicatedTitle(input.title),
             CreateError::Internal(err) => CreateTodoError::Repository(err),
         })
 }

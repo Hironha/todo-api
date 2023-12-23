@@ -111,24 +111,22 @@ impl TodoRepository for PgTodoRepository {
             RETURNING todo.*
         "#;
 
-        let title = todo.title.into_string();
-        let result = sqlx::query_as::<_, TodoModel>(insert_q)
+        let todo_model = sqlx::query_as::<_, TodoModel>(insert_q)
             .bind(todo.id.into_uuid())
-            .bind(title.as_str())
+            .bind(todo.title.into_string())
             .bind(todo.description.map(|d| d.into_string()))
             .bind(todo.todo_at.map(|at| at.into_date()))
             .bind(TodoModelStatus::from(todo.status))
             .bind(todo.created_at.into_offset_dt())
             .bind(todo.updated_at.into_offset_dt())
             .fetch_one(&self.pool)
-            .await;
-
-        let todo_model = result.map_err(|err| {
-            err.as_database_error()
-                .filter(|e| e.is_unique_violation())
-                .map(|_| CreateError::DuplicatedTitle(title))
-                .unwrap_or(CreateError::Internal(err.into()))
-        })?;
+            .await
+            .map_err(|err| match err {
+                SqlxError::Database(db_err) if db_err.is_unique_violation() => {
+                    CreateError::DuplicatedTitle
+                }
+                _ => CreateError::Internal(err.into()),
+            })?;
 
         todo_model
             .try_into_entity(Vec::new())
@@ -270,9 +268,8 @@ impl TodoRepository for PgTodoRepository {
             WHERE id = $6
         "#;
 
-        let title = todo.title.into_string();
         sqlx::query(update_q)
-            .bind(title.as_str())
+            .bind(todo.title.into_string())
             .bind(todo.description.map(|d| d.into_string()))
             .bind(todo.todo_at.map(|at| at.into_date()))
             .bind(TodoModelStatus::from(todo.status))
@@ -282,7 +279,7 @@ impl TodoRepository for PgTodoRepository {
             .await
             .map_err(|err| match err {
                 SqlxError::Database(db_err) if db_err.is_unique_violation() => {
-                    UpdateError::DuplicatedTitle(title)
+                    UpdateError::DuplicatedTitle
                 }
                 SqlxError::RowNotFound => UpdateError::NotFound,
                 _ => UpdateError::Internal(err.into()),

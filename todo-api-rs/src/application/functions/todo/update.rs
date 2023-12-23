@@ -17,7 +17,7 @@ pub async fn update_todo<T: TodoRepository>(
         })?;
 
     let updated_todo_entity = TodoEntity {
-        title: input.title,
+        title: input.title.clone(),
         description: input.description,
         todo_at: input.todo_at,
         status: input.status,
@@ -30,7 +30,7 @@ pub async fn update_todo<T: TodoRepository>(
         .await
         .map_err(|err| match err {
             UpdateError::NotFound => UpdateTodoError::NotFound,
-            UpdateError::DuplicatedTitle(title) => UpdateTodoError::DuplicatedTitle(title),
+            UpdateError::DuplicatedTitle => UpdateTodoError::DuplicatedTitle(input.title),
             UpdateError::Internal(err) => UpdateTodoError::Repository(err),
         })
 }

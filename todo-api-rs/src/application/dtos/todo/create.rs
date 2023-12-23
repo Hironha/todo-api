@@ -16,7 +16,7 @@ pub struct CreateTodoInput {
 #[derive(Debug, Error)]
 pub enum CreateTodoError {
     #[error("todo with title {0} already exists")]
-    DuplicatedTitle(String),
+    DuplicatedTitle(Title),
     #[error(transparent)]
     Repository(#[from] Box<dyn error::Error>),
 }

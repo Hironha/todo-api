@@ -40,8 +40,8 @@ pub enum BindTagsError {
 
 #[derive(Debug, Error)]
 pub enum CreateError {
-    #[error("todo with title {0} already exists")]
-    DuplicatedTitle(String),
+    #[error("todo title already exists")]
+    DuplicatedTitle,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }
@@ -78,8 +78,8 @@ pub enum ListError {
 pub enum UpdateError {
     #[error("todo could not be found")]
     NotFound,
-    #[error("todo with title {0} already exists")]
-    DuplicatedTitle(String),
+    #[error("todo title already exists")]
+    DuplicatedTitle,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }
