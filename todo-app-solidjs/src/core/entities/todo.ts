@@ -39,21 +39,21 @@ export type Todo = {
   updatedAt: Date;
 };
 
-const TODO_TITLE_SCHEMA = string([minLength(1)]);
-const TODO_STATUS_SCHEMA = union([literal("todo"), literal("in_progress"), literal("done")]);
+const TITLE_SCHEMA = string([minLength(1)]);
+const STATUS_SCHEMA = union([literal("todo"), literal("in_progress"), literal("done")]);
 
 const TODO_SCHEMA = object({
   id: string(),
-  title: TODO_TITLE_SCHEMA,
+  title: TITLE_SCHEMA,
   description: transform(nullish(string()), (d) => (d?.length ? d : undefined)),
   todoAt: nullish(coerce(date(), (todoAt) => new Date(todoAt as string))),
-  status: TODO_STATUS_SCHEMA,
+  status: STATUS_SCHEMA,
   createdAt: coerce(date(), (createdAt) => new Date(createdAt as string)),
   updatedAt: coerce(date(), (updatedAt) => new Date(updatedAt as string)),
 });
 
 export function parseTodoTitle(value: unknown): Result<TodoTitle, "length" | "string"> {
-  const parsed = safeParse(TODO_TITLE_SCHEMA, value);
+  const parsed = safeParse(TITLE_SCHEMA, value);
   if (parsed.success) {
     return new Ok(parsed.output as TodoTitle);
   }
@@ -80,7 +80,7 @@ export function parseTodo(value: unknown): Result<Todo, [keyof Todo, string]> {
 }
 
 export function parseTodoStatus(value: unknown): Result<TodoStatus, undefined> {
-  const parsed = safeParse(TODO_STATUS_SCHEMA, value);
+  const parsed = safeParse(STATUS_SCHEMA, value);
   if (parsed.success) {
     return new Ok(parsed.output);
   }

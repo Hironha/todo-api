@@ -12,6 +12,10 @@ type MutationStore<T> = { loading: boolean; data?: T };
 export function useMutation<P, T>(mutateFn: MutateFn<P, T>): Mutation<P, T> {
   const [store, setStore] = createStore<MutationStore<T>>({ loading: false });
 
+  const data = (): T | undefined => store.data;
+
+  const loading = (): boolean => store.loading;
+
   const mutate = async (payload: P): Promise<T> => {
     setStore({ loading: true });
     const response = await mutateFn(payload);
@@ -20,8 +24,8 @@ export function useMutation<P, T>(mutateFn: MutateFn<P, T>): Mutation<P, T> {
   };
 
   return {
-    loading: () => store.loading,
-    data: () => store.data,
+    loading,
+    data,
     mutate,
   };
 }
