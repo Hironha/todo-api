@@ -1,4 +1,4 @@
-import { For, Show, Switch, Match, createResource } from "solid-js";
+import { For, Show, Switch, Match, Suspense, createResource } from "solid-js";
 import { type JSX } from "solid-js/jsx-runtime";
 
 import { Typography } from "./components/ui/typography";
@@ -49,38 +49,40 @@ export default function App() {
     <Content class="flex flex-col gap-2 justify-center">
       <MainActions onCreateClick={() => createModalRef?.show()} />
 
-      <Switch fallback={<Typography.Text>Failed loading todos :(</Typography.Text>}>
-        <Match when={todoList.loading}>
+      <Suspense
+        fallback={
           <div class="w-full p-8 flex justify-center items-center">
             <span class="text-primary loading loading-spinner loading-lg" />
           </div>
-        </Match>
+        }
+      >
+        <Switch>
+          <Match when={todoList()?.ok()}>
+            {(todos) => (
+              <Show
+                when={todos().data.length > 0}
+                fallback={<Empty class="my-4" message="Ainda não há nenhum item cadastrado." />}
+              >
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <For each={todos().data}>
+                    {(todo) => (
+                      <TodoCard
+                        title={todo.title}
+                        status={todo.status}
+                        description={todo.description}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+            )}
+          </Match>
 
-        <Match when={todoList()?.ok()}>
-          {(todos) => (
-            <Show
-              when={todos().data.length > 0}
-              fallback={<Empty class="my-4" message="Ainda não há nenhum item cadastrado." />}
-            >
-              <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <For each={todos().data}>
-                  {(todo) => (
-                    <TodoCard
-                      title={todo.title}
-                      status={todo.status}
-                      description={todo.description}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
-          )}
-        </Match>
-
-        <Match when={todoList()?.err()}>
-          {(error) => <Typography.Text>{error()}</Typography.Text>}
-        </Match>
-      </Switch>
+          <Match when={todoList()?.err()}>
+            {(error) => <Typography.Text>{error()}</Typography.Text>}
+          </Match>
+        </Switch>
+      </Suspense>
 
       <Modal ref={createModalRef} id="create_todo_modal" title="Criar Todo">
         <TodoForm
