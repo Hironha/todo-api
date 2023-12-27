@@ -2,11 +2,6 @@ use std::error;
 
 use thiserror::Error;
 
-use crate::domain::types::Id;
-
-#[derive(Clone, Debug)]
-pub struct FindTodoInput(pub Id);
-
 #[derive(Debug, Error)]
 pub enum FindTodoError {
     #[error("todo could not be found")]

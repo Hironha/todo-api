@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::find::{FindTodoError, FindTodoInput};
+use crate::application::dtos::todo::find::FindTodoError;
 use crate::domain::types::Id;
 
 #[derive(Debug)]
@@ -9,13 +9,12 @@ pub struct FindRequest {
     pub id: Option<String>,
 }
 
-impl Parse<FindTodoInput, ParseError> for FindRequest {
-    fn parse(self) -> Result<FindTodoInput, ParseError> {
+impl Parse<Id, ParseError> for FindRequest {
+    fn parse(self) -> Result<Id, ParseError> {
         self.id
             .filter(|id| !id.is_empty())
             .ok_or(ParseError::EmptyId)
             .and_then(|id| Id::parse_str(&id).or(Err(ParseError::InvalidId)))
-            .map(FindTodoInput)
     }
 }
 

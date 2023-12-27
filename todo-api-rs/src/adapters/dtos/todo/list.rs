@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
-use crate::application::dtos::todo::list::{ListTodoError, ListTodoInput};
+use crate::application::dtos::todo::list::{ListTodoError, ListTodosInput};
 use crate::domain::entities::todo::{Title, TitleError};
 
 #[derive(Clone, Debug)]
@@ -15,8 +15,8 @@ pub struct ListRequest {
     pub title: Option<String>,
 }
 
-impl Parse<ListTodoInput, ParseError> for ListRequest {
-    fn parse(self) -> Result<ListTodoInput, ParseError> {
+impl Parse<ListTodosInput, ParseError> for ListRequest {
+    fn parse(self) -> Result<ListTodosInput, ParseError> {
         let page = NonZeroU32::new(self.page.unwrap_or(1)).ok_or(ParseError::InvalidPage)?;
         let per_page =
             NonZeroU32::new(self.per_page.unwrap_or(10)).ok_or(ParseError::InvalidPerPage)?;
@@ -28,7 +28,7 @@ impl Parse<ListTodoInput, ParseError> for ListRequest {
             .transpose()
             .map_err(ParseError::Title)?;
 
-        Ok(ListTodoInput {
+        Ok(ListTodosInput {
             page,
             per_page,
             title,

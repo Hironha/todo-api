@@ -6,14 +6,14 @@ use thiserror::Error;
 use crate::domain::entities::todo::{Title, TodoEntity};
 
 #[derive(Clone, Debug)]
-pub struct ListTodoInput {
+pub struct ListTodosInput {
     pub page: NonZeroU32,
     pub per_page: NonZeroU32,
     pub title: Option<Title>,
 }
 
 #[derive(Clone, Debug)]
-pub struct TodoList {
+pub struct TodosList {
     pub count: u64,
     pub page: NonZeroU32,
     pub per_page: NonZeroU32,

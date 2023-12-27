@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput};
+use crate::application::dtos::todo::delete::DeleteTodoError;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -9,13 +9,12 @@ pub struct DeleteRequest {
     pub id: Option<String>,
 }
 
-impl Parse<DeleteTodoInput, ParseError> for DeleteRequest {
-    fn parse(self) -> Result<DeleteTodoInput, ParseError> {
+impl Parse<Id, ParseError> for DeleteRequest {
+    fn parse(self) -> Result<Id, ParseError> {
         self.id
             .filter(|id| !id.is_empty())
             .ok_or(ParseError::EmptyId)
             .and_then(|id| Id::parse_str(&id).or(Err(ParseError::InvalidId)))
-            .map(DeleteTodoInput)
     }
 }
 
