@@ -2,16 +2,20 @@ use crate::adapters::dtos::tag::create::{ParseError, RunError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::dtos::tag::create::CreateTagInput;
-use crate::application::functions::tag::create::{create_tag, CreateTagContext};
 use crate::application::repositories::tag::TagRepository;
+use crate::application::use_cases::tag::create::CreateTagUseCase;
 
-pub struct CreateController<T> {
+#[derive(Clone, Debug)]
+pub struct CreateController<T>
+where
+    T: TagRepository + Clone,
+{
     tag_repository: T,
 }
 
 impl<T> CreateController<T>
 where
-    T: TagRepository,
+    T: TagRepository + Clone,
 {
     pub const fn new(tag_repository: T) -> Self {
         Self { tag_repository }
@@ -22,11 +26,9 @@ where
         R: Parse<CreateTagInput, ParseError>,
     {
         let input = req.parse().map_err(RunError::Parsing)?;
-        let ctx = CreateTagContext {
-            tag_repository: &self.tag_repository,
-        };
 
-        create_tag(ctx, input)
+        CreateTagUseCase::new(self.tag_repository.clone())
+            .exec(input)
             .await
             .map(TagPresenter::from)
             .map_err(RunError::Creating)

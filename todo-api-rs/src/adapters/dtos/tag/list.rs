@@ -5,7 +5,7 @@ use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::dtos::tag::list::ListTagError;
 
 #[derive(Clone, Debug, Serialize)]
-pub struct TagList {
+pub struct TagsList {
     pub items: Vec<TagPresenter>,
     pub count: u64,
 }
