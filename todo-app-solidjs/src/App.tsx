@@ -83,7 +83,12 @@ export default function App() {
       </Switch>
 
       <Modal ref={createModalRef} id="create_todo_modal" title="Criar Todo">
-        <TodoForm id={CREATE_TODO_FORM_ID} onSubmit={submitCreateTodoForm} />
+        <TodoForm
+          action="#"
+          method="post"
+          id={CREATE_TODO_FORM_ID}
+          onSubmit={submitCreateTodoForm}
+        />
 
         <div class="flex gap-3 justify-between mt-6">
           <button

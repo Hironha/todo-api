@@ -1,5 +1,6 @@
+import { splitProps } from "solid-js";
 import { type JSX } from "solid-js/jsx-runtime";
-import { createForm, reset } from "@modular-forms/solid";
+import { createForm, reset, type FormProps, type FieldStore } from "@modular-forms/solid";
 
 import { Input, Field, Select } from "../ui/form";
 import {
@@ -24,8 +25,10 @@ export type TodoFormValues = {
 };
 
 export type FormController = { reset: () => void };
-export type TodoFormProps = {
-  id: string;
+export type TodoFormProps = Omit<
+  FormProps<TodoFormValues, undefined>,
+  "of" | "onSubmit" | "children"
+> & {
   class?: string;
   onSubmit: (form: FormController, values: TodoFormValues) => void | Promise<void>;
 };
@@ -38,7 +41,12 @@ const INITIAL_VALUES: Partial<TodoFormValues> = {
 };
 
 export function TodoForm(props: TodoFormProps): JSX.Element {
-  const formStyles = classes("flex flex-col gap-4").add(props.class).build();
+  const [localProps, formProps] = splitProps(props, ["class", "onSubmit"]);
+
+  const formStyles = (): string => {
+    return classes("flex flex-col gap-4").add(localProps.class).build();
+  };
+
   const [form, { Form, Field: FormField }] = createForm<TodoFormValues>({
     initialValues: INITIAL_VALUES,
     validateOn: "blur",
@@ -46,11 +54,11 @@ export function TodoForm(props: TodoFormProps): JSX.Element {
 
   const submit = (values: TodoFormValues): void => {
     const controller: FormController = { reset: () => reset(form) };
-    props.onSubmit(controller, values);
+    localProps.onSubmit(controller, values);
   };
 
   return (
-    <Form class={formStyles} id={props.id} action="#" onSubmit={submit}>
+    <Form {...formProps} class={formStyles()} onSubmit={submit}>
       <FormField name="title" validate={validateTitle}>
         {(field, props) => (
           <Field for="title" label="Título" error={field.error}>
@@ -60,7 +68,7 @@ export function TodoForm(props: TodoFormProps): JSX.Element {
               value={field.value}
               name="title"
               placeholder="Informe o título"
-              status={getInputStatus(field.dirty, field.error)}
+              status={getInputStatus(field)}
             />
           </Field>
         )}
@@ -74,7 +82,7 @@ export function TodoForm(props: TodoFormProps): JSX.Element {
               value={field.value}
               name="description"
               placeholder="Informe a descrição"
-              status={getInputStatus(field.dirty, field.error)}
+              status={getInputStatus(field)}
             />
           </Field>
         )}
@@ -89,7 +97,7 @@ export function TodoForm(props: TodoFormProps): JSX.Element {
                 required
                 value={field.value}
                 name="status"
-                status={getInputStatus(field.dirty, field.error)}
+                status={getInputStatus(field)}
               >
                 <option hidden></option>
                 <option value="todo">A fazer</option>
@@ -107,7 +115,7 @@ export function TodoForm(props: TodoFormProps): JSX.Element {
                 {...props}
                 value={field.value}
                 name="todoAt"
-                status={getInputStatus(field.dirty, field.error)}
+                status={getInputStatus(field)}
                 placeholder={`Ex: ${formatConventionalDate(new Date())}`}
               />
             </Field>
@@ -118,11 +126,11 @@ export function TodoForm(props: TodoFormProps): JSX.Element {
   );
 }
 
-function getInputStatus(dirty: boolean, error?: string): "ok" | "err" | undefined {
-  if (error) {
+function getInputStatus<F extends FieldStore<any, any>>(field: F): "ok" | "err" | undefined {
+  if (field.error) {
     return "err";
   }
-  return dirty ? "ok" : undefined;
+  return field.dirty ? "ok" : undefined;
 }
 
 async function validateTitle(value: unknown): Promise<string> {
