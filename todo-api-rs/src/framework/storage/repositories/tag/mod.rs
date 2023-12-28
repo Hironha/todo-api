@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool};
 
@@ -20,7 +19,6 @@ impl PgTagRepository {
     }
 }
 
-#[async_trait]
 impl TagRepository for PgTagRepository {
     async fn create(&self, tag: TagEntity) -> Result<TagEntity, CreateError> {
         let create_q = r#"

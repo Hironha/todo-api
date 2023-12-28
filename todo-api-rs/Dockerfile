@@ -1,4 +1,4 @@
-FROM rust:1.74.1-buster as builder
+FROM rust:1.75-buster as builder
 
 # add `x86_64-unknown-linux-musl` target
 RUN rustup target add x86_64-unknown-linux-musl

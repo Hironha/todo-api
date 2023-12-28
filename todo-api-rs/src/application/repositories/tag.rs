@@ -1,12 +1,10 @@
 use std::error;
 
-use async_trait::async_trait;
 use thiserror::Error;
 
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
 
-#[async_trait]
 pub trait TagRepository {
     async fn create(&self, tag: TagEntity) -> Result<TagEntity, CreateError>;
     async fn delete(&self, tag_id: Id) -> Result<(), DeleteError>;

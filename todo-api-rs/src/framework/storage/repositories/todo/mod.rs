@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, FromRow, PgPool, Postgres, QueryBuilder, Row};
 
@@ -62,7 +61,6 @@ impl PgTodoRepository {
     }
 }
 
-#[async_trait]
 impl TodoRepository for PgTodoRepository {
     async fn bind_tags(&self, todo_id: Id, tag_ids: Vec<Id>) -> Result<(), BindTagsError> {
         let mut trx = self

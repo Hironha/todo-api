@@ -1,14 +1,11 @@
-use thiserror::Error;
-
 use std::error;
 use std::num::NonZeroU32;
 
-use async_trait::async_trait;
+use thiserror::Error;
 
 use crate::domain::entities::todo::{Title, TodoEntity};
 use crate::domain::types::Id;
 
-#[async_trait]
 pub trait TodoRepository {
     async fn bind_tags(&self, todo_id: Id, tag_ids: Vec<Id>) -> Result<(), BindTagsError>;
     async fn create(&self, todo: TodoEntity) -> Result<TodoEntity, CreateError>;
