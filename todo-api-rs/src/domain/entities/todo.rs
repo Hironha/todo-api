@@ -18,22 +18,24 @@ pub struct TodoEntity {
     pub updated_at: DateTime,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Title(String);
 
 impl Title {
+    pub const MAX_LENGTH: usize = 64;
+
     pub fn new(title: impl Into<String>) -> Result<Self, TitleError> {
         let title: String = title.into();
         if title.is_empty() {
             return Err(TitleError::Empty);
-        } else if title.len() > 64 {
+        } else if title.len() > Self::MAX_LENGTH {
             return Err(TitleError::Length);
         }
 
         Ok(Self(title))
     }
 
-    pub fn into_string(self) -> String {
+    pub fn into_inner(self) -> String {
         self.0
     }
 
@@ -48,26 +50,27 @@ impl fmt::Display for Title {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Description(String);
 
 impl Description {
+    pub const MAX_LENGTH: usize = 256;
+
     pub fn new(description: impl Into<String>) -> Result<Self, DescriptionError> {
         let description: String = description.into();
-
-        if description.len() > 256 {
+        if description.len() > Self::MAX_LENGTH {
             return Err(DescriptionError::Length);
         }
 
         Ok(Self(description))
     }
 
-    pub fn into_string(self) -> String {
+    pub fn into_inner(self) -> String {
         self.0
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TodoStatus {
     Todo,
     InProgress,
@@ -75,20 +78,26 @@ pub enum TodoStatus {
 }
 
 impl TodoStatus {
-    pub fn into_string(self) -> String {
-        match self {
-            Self::Todo => String::from("todo"),
-            Self::InProgress => String::from("in_progress"),
-            Self::Done => String::from("done"),
-        }
-    }
+    const TODO_STR: &'static str = "todo";
+    const IN_PROGRESS_STR: &'static str = "in_progress";
+    const DONE_STR: &'static str = "done";
 
     pub fn parse_str(value: &str) -> Result<Self, ParseTodoStatusError> {
         match value {
-            "todo" => Ok(Self::Todo),
-            "in_progress" => Ok(Self::InProgress),
-            "done" => Ok(Self::Done),
+            Self::TODO_STR => Ok(Self::Todo),
+            Self::IN_PROGRESS_STR => Ok(Self::InProgress),
+            Self::DONE_STR => Ok(Self::Done),
             _ => Err(ParseTodoStatusError),
+        }
+    }
+}
+
+impl fmt::Display for TodoStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Todo => f.write_str(Self::TODO_STR),
+            Self::InProgress => f.write_str(Self::IN_PROGRESS_STR),
+            Self::Done => f.write_str(Self::DONE_STR),
         }
     }
 }

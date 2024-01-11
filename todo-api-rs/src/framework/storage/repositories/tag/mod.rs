@@ -27,13 +27,13 @@ impl TagRepository for PgTagRepository {
             RETURNING id, name, description, created_at, updated_at
         "#;
 
-        let name = tag.name.into_string();
+        let name = tag.name.into_inner();
         let tag_model = sqlx::query_as::<_, TagModel>(create_q)
-            .bind(tag.id.into_uuid())
+            .bind(tag.id.uuid())
             .bind(name.as_str())
-            .bind(tag.description.map(|d| d.into_string()))
-            .bind(tag.created_at.into_offset_dt())
-            .bind(tag.updated_at.into_offset_dt())
+            .bind(tag.description.map(|d| d.into_inner()))
+            .bind(tag.created_at.date_time())
+            .bind(tag.updated_at.date_time())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -51,7 +51,7 @@ impl TagRepository for PgTagRepository {
     async fn delete(&self, tag_id: Id) -> Result<(), DeleteError> {
         let delete_q = "DELETE FROM tag WHERE id = $1 RETURNING id";
         sqlx::query(delete_q)
-            .bind(tag_id.into_uuid())
+            .bind(tag_id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -65,7 +65,7 @@ impl TagRepository for PgTagRepository {
     async fn exists_many(&self, tag_ids: &[Id]) -> Result<(), ExistsManyError> {
         let tag_uuids = tag_ids
             .iter()
-            .map(|id| id.into_uuid())
+            .map(|id| id.uuid())
             .collect::<Vec<Uuid>>();
 
         let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";
@@ -96,7 +96,7 @@ impl TagRepository for PgTagRepository {
         "#;
 
         let tag_model = sqlx::query_as::<_, TagModel>(find_q)
-            .bind(tag_id.into_uuid())
+            .bind(tag_id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -139,10 +139,10 @@ impl TagRepository for PgTagRepository {
         "#;
 
         let tag_model = sqlx::query_as::<_, TagModel>(update_q)
-            .bind(tag.name.into_string())
-            .bind(tag.description.map(|d| d.into_string()))
-            .bind(tag.updated_at.into_offset_dt())
-            .bind(tag.id.into_uuid())
+            .bind(tag.name.into_inner())
+            .bind(tag.description.map(|d| d.into_inner()))
+            .bind(tag.updated_at.date_time())
+            .bind(tag.id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {

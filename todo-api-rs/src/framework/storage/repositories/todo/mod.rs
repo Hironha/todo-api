@@ -68,7 +68,7 @@ impl TodoRepository for PgTodoRepository {
             .begin()
             .await
             .map_err(|e| BindTagsError::Internal(e.into()))?;
-        let todo_uuid = todo_id.into_uuid();
+        let todo_uuid = todo_id.uuid();
 
         let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
         sqlx::query(delete_relations_q)
@@ -79,11 +79,11 @@ impl TodoRepository for PgTodoRepository {
 
         let tag_uuids = tag_ids
             .into_iter()
-            .map(|id| id.into_uuid())
+            .map(|id| id.uuid())
             .collect::<Vec<Uuid>>();
 
         if !tag_uuids.is_empty() {
-            let current_dt = DateTime::new().into_offset_dt();
+            let current_dt = DateTime::now().date_time();
             let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
             QueryBuilder::<'_, Postgres>::new(base_bind_tags_q)
                 .push_values(tag_uuids, |mut q, tag_id| {
@@ -110,13 +110,13 @@ impl TodoRepository for PgTodoRepository {
         "#;
 
         let todo_model = sqlx::query_as::<_, TodoModel>(insert_q)
-            .bind(todo.id.into_uuid())
-            .bind(todo.title.into_string())
-            .bind(todo.description.map(|d| d.into_string()))
-            .bind(todo.todo_at.map(|at| at.into_date()))
+            .bind(todo.id.uuid())
+            .bind(todo.title.into_inner())
+            .bind(todo.description.map(|d| d.into_inner()))
+            .bind(todo.todo_at.map(|at| at.date()))
             .bind(TodoModelStatus::from(todo.status))
-            .bind(todo.created_at.into_offset_dt())
-            .bind(todo.updated_at.into_offset_dt())
+            .bind(todo.created_at.date_time())
+            .bind(todo.updated_at.date_time())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -134,7 +134,7 @@ impl TodoRepository for PgTodoRepository {
     async fn delete(&self, todo_id: Id) -> Result<(), DeleteError> {
         let delete_q = "DELETE FROM todo WHERE id = $1 RETURNING id";
         sqlx::query_scalar::<_, Uuid>(delete_q)
-            .bind(todo_id.into_uuid())
+            .bind(todo_id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -148,14 +148,14 @@ impl TodoRepository for PgTodoRepository {
     async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError> {
         let todo_exists_q = "SELECT EXISTS(SELECT 1 FROM todo WHERE id = $1)";
         sqlx::query_scalar::<_, bool>(todo_exists_q)
-            .bind(todo_id.into_uuid())
+            .bind(todo_id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|e| ExistsError::Internal(e.into()))
     }
 
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError> {
-        let todo_uuid = todo_id.into_uuid();
+        let todo_uuid = todo_id.uuid();
         let find_todo_q = "SELECT todo.* FROM todo WHERE id = $1";
         let todo_model = sqlx::query_as::<_, TodoModel>(find_todo_q)
             .bind(todo_uuid)
@@ -246,7 +246,7 @@ impl TodoRepository for PgTodoRepository {
 
         for (todo_uuid, tag) in related_tag_entities.into_iter() {
             for todo in todo_entities.iter_mut() {
-                if todo.id.into_uuid() == todo_uuid {
+                if todo.id.uuid() == todo_uuid {
                     todo.tags.push(tag);
                     break;
                 }
@@ -267,12 +267,12 @@ impl TodoRepository for PgTodoRepository {
         "#;
 
         sqlx::query(update_q)
-            .bind(todo.title.into_string())
-            .bind(todo.description.map(|d| d.into_string()))
-            .bind(todo.todo_at.map(|at| at.into_date()))
+            .bind(todo.title.into_inner())
+            .bind(todo.description.map(|d| d.into_inner()))
+            .bind(todo.todo_at.map(|at| at.date()))
             .bind(TodoModelStatus::from(todo.status))
-            .bind(todo.updated_at.into_offset_dt())
-            .bind(todo.id.into_uuid())
+            .bind(todo.updated_at.date_time())
+            .bind(todo.id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {

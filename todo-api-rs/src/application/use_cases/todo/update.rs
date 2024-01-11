@@ -28,7 +28,7 @@ impl<T: TodoRepository> UpdateTodoUseCase<T> {
             description: input.description,
             todo_at: input.todo_at,
             status: input.status,
-            updated_at: DateTime::new(),
+            updated_at: DateTime::now(),
             ..todo_entity
         };
 

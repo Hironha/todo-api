@@ -6,14 +6,14 @@ use time::OffsetDateTime;
 pub struct Date(time::Date);
 
 impl Date {
-    pub fn into_date(self) -> time::Date {
+    pub fn date(&self) -> time::Date {
         self.0
     }
 
     /// Stringify into `YYYY-MM-DD` using UTC date
     pub fn to_ymd(self) -> String {
         let ydm_description = format_description!("[year]-[month]-[day]");
-        self.into_date().format(ydm_description).unwrap()
+        self.date().format(ydm_description).unwrap()
     }
 
     pub fn parse_str(input: &str) -> Result<Self, ()> {
@@ -35,11 +35,11 @@ pub struct DateTime(OffsetDateTime);
 
 impl DateTime {
     /// Create a new `DateTime` with the current date and time in UTC.
-    pub fn new() -> Self {
+    pub fn now() -> Self {
         Self(OffsetDateTime::now_utc())
     }
 
-    pub fn into_offset_dt(self) -> OffsetDateTime {
+    pub fn date_time(&self) -> OffsetDateTime {
         self.0
     }
 

@@ -17,8 +17,8 @@ impl From<TagEntity> for TagPresenter {
     fn from(tag: TagEntity) -> Self {
         Self {
             id: tag.id.to_string(),
-            name: tag.name.into_string(),
-            description: tag.description.map(|d| d.into_string()),
+            name: tag.name.into_inner(),
+            description: tag.description.map(|d| d.into_inner()),
             created_at: tag.created_at.to_rfc3339(),
             updated_at: tag.updated_at.to_rfc3339(),
         }

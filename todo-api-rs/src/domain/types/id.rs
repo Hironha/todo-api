@@ -1,7 +1,8 @@
-use std::fmt::Display;
+use std::fmt;
+
 use uuid::Uuid;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Id(Uuid);
 
 impl Id {
@@ -13,13 +14,13 @@ impl Id {
         Uuid::parse_str(input).map(Self).or(Err(()))
     }
 
-    pub fn into_uuid(self) -> Uuid {
+    pub fn uuid(self) -> Uuid {
         self.0
     }
 }
 
-impl Display for Id {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Id {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.0.to_string().as_str())
     }
 }

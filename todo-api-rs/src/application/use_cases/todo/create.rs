@@ -14,7 +14,7 @@ impl<T: TodoRepository> CreateTodoUseCase<T> {
     }
 
     pub async fn exec(&self, input: CreateTodoInput) -> Result<TodoEntity, CreateTodoError> {
-        let current_dt = DateTime::new();
+        let current_dt = DateTime::now();
         let todo_entity = TodoEntity {
             id: Id::new(),
             title: input.title.clone(),

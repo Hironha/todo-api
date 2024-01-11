@@ -14,7 +14,7 @@ impl<T: TagRepository> CreateTagUseCase<T> {
     }
 
     pub async fn exec(&self, input: CreateTagInput) -> Result<TagEntity, CreateTagError> {
-        let current_dt = DateTime::new();
+        let current_dt = DateTime::now();
         let tag_entity = TagEntity {
             id: Id::new(),
             name: input.name.clone(),

@@ -13,22 +13,24 @@ pub struct TagEntity {
     pub updated_at: DateTime,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Name(String);
 
 impl Name {
+    pub const MAX_LENGTH: usize = 64;
+
     pub fn new(name: impl Into<String>) -> Result<Self, NameError> {
         let name: String = name.into();
         if name.is_empty() {
             return Err(NameError::Empty);
-        } else if name.len() > 64 {
+        } else if name.len() > Self::MAX_LENGTH {
             return Err(NameError::Length);
         }
 
         Ok(Self(name))
     }
 
-    pub fn into_string(self) -> String {
+    pub fn into_inner(self) -> String {
         self.0
     }
 }
@@ -39,21 +41,22 @@ impl fmt::Display for Name {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Description(String);
 
 impl Description {
+    pub const MAX_LENGTH: usize = 128;
+
     pub fn new(description: impl Into<String>) -> Result<Self, DescriptionError> {
         let description: String = description.into();
-
-        if description.len() > 128 {
+        if description.len() > Self::MAX_LENGTH {
             return Err(DescriptionError::Length);
         }
 
         Ok(Self(description))
     }
 
-    pub fn into_string(self) -> String {
+    pub fn into_inner(self) -> String {
         self.0
     }
 }
