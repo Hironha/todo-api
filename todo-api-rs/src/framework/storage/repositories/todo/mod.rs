@@ -67,12 +67,11 @@ impl TodoRepository for PgTodoRepository {
             .pool
             .begin()
             .await
-            .map_err(|e| BindTagsError::Internal(e.into()))?;
-        let todo_uuid = todo_id.uuid();
+            .map_err(|err| BindTagsError::Internal(err.into()))?;
 
         let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
         sqlx::query(delete_relations_q)
-            .bind(todo_uuid)
+            .bind(todo_id.uuid())
             .execute(trx.as_mut())
             .await
             .map_err(|e| BindTagsError::Internal(e.into()))?;
@@ -85,9 +84,9 @@ impl TodoRepository for PgTodoRepository {
         if !tag_uuids.is_empty() {
             let current_dt = DateTime::now().date_time();
             let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
-            QueryBuilder::<'_, Postgres>::new(base_bind_tags_q)
+            QueryBuilder::<Postgres>::new(base_bind_tags_q)
                 .push_values(tag_uuids, |mut q, tag_id| {
-                    q.push_bind(todo_uuid)
+                    q.push_bind(todo_id.uuid())
                         .push_bind(tag_id)
                         .push_bind(current_dt);
                 })
@@ -186,8 +185,8 @@ impl TodoRepository for PgTodoRepository {
     async fn list(&self, payload: ListPayload) -> Result<PaginatedList, ListError> {
         let base_count_q = "SELECT COUNT(*) FROM todo";
         let base_list_q = "SELECT todo.* FROM todo";
-        let mut count_q = QueryBuilder::<'_, Postgres>::new(base_count_q);
-        let mut list_q = QueryBuilder::<'_, Postgres>::new(base_list_q);
+        let mut count_q = QueryBuilder::<Postgres>::new(base_count_q);
+        let mut list_q = QueryBuilder::<Postgres>::new(base_list_q);
 
         let title_filter = payload.title.as_ref().map(|t| format!("%{}%", t.as_str()));
         if let Some(constraint) = title_filter.as_deref() {
