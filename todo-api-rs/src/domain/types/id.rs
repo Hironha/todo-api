@@ -14,7 +14,7 @@ impl Id {
         Uuid::parse_str(input).map(Self).or(Err(()))
     }
 
-    pub fn uuid(self) -> Uuid {
+    pub fn uuid(&self) -> Uuid {
         self.0
     }
 }
