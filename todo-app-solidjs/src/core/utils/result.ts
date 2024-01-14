@@ -1,12 +1,8 @@
-export type ResultUnion<T, E> = { kind: "ok"; value: T } | { kind: "err"; value: E };
-
 export interface BaseResult<T, E> {
   isOk(): this is Ok<T>;
   isErr(): this is Err<E>;
   ok(): T | undefined;
   err(): E | undefined;
-  map<U>(predicate: (value: T) => U): Result<U, E>;
-  mapErr<U>(predicate: (err: E) => U): Result<T, U>;
 }
 
 export type Result<T, E> = Ok<T> | Err<E>;
@@ -31,19 +27,11 @@ export class Ok<T> implements BaseResult<T, never> {
   }
 
   ok(): T {
-    return this.value;
+    return this._value;
   }
 
   err(): undefined {
     return undefined;
-  }
-
-  map<U>(predicate: (value: T) => U): Result<U, never> {
-    return new Ok(predicate(this.value));
-  }
-
-  mapErr(): Result<T, never> {
-    return this;
   }
 }
 
@@ -71,14 +59,6 @@ export class Err<E> implements BaseResult<never, E> {
   }
 
   err(): E | undefined {
-    return this.value;
-  }
-
-  map(): Result<never, E> {
-    return this;
-  }
-
-  mapErr<U>(predicate: (err: E) => U): Result<never, U> {
-    return new Err(predicate(this.value));
+    return this._value;
   }
 }

@@ -27,7 +27,12 @@ export async function createTodo(payload: CreateTodoPayload): Promise<Result<Tod
       return new Err("TODO: handle error");
     }
 
-    return parseTodo(await response.json()).mapErr(() => "TODO: handle error");
+    const data = parseTodo(await response.json());
+    if (data.isErr()) {
+      return new Err(`failed parsing todo: ${data.value[0]}`);
+    }
+
+    return data;
   } catch (e) {
     console.log(e);
     return new Err("TODO: handle error");
