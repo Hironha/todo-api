@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use axum::extract::State;
 use axum::http::{header, StatusCode};
 use axum::response::IntoResponse;
@@ -6,7 +8,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateController;
-use crate::adapters::dtos::todo::create::{CreateRequest, ParseError, RunError};
+use crate::adapters::dtos::todo::create::{CreateRequest, ParseError};
 use crate::application::dtos::todo::create::CreateTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -37,7 +39,7 @@ pub(super) async fn create_todo(
         Ok(output) => output,
         Err(err) => {
             tracing::error!("create todo error: {err}");
-            let (status, error) = config_error_response(&err);
+            let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
     };
@@ -50,15 +52,16 @@ pub(super) async fn create_todo(
     (StatusCode::CREATED, headers, Json(output)).into_response()
 }
 
-fn config_error_response(run_err: &RunError) -> (StatusCode, ApiError<ValidationError>) {
-    match run_err {
-        RunError::Parsing(parse_err) => {
-            let field = get_parse_error_field(parse_err);
-            let details = ValidationError::new(field, parse_err.to_string());
-            let api_error = ApiError::new("CTD-001", run_err.to_string()).with_details(details);
-            (StatusCode::BAD_REQUEST, api_error)
-        }
-        RunError::Creating(create_err) => match create_err {
+fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<ValidationError>) {
+    if let Some(parse_err) = error.downcast_ref::<ParseError>() {
+        let field = get_parse_error_field(parse_err);
+        let details = ValidationError::new(field, parse_err.to_string());
+        let api_error = ApiError::new("CTD-001", "invalid input").with_details(details);
+        return (StatusCode::BAD_REQUEST, api_error);
+    }
+
+    if let Some(create_err) = error.downcast_ref::<CreateTodoError>() {
+        return match create_err {
             CreateTodoError::DuplicatedTitle(..) => {
                 let api_error = ApiError::new("CTD-002", create_err.to_string());
                 (StatusCode::CONFLICT, api_error)
@@ -67,8 +70,11 @@ fn config_error_response(run_err: &RunError) -> (StatusCode, ApiError<Validation
                 let api_error = ApiError::internal("CTD-003");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
-        },
+        };
     }
+
+    let default_err = ApiError::new("CTD-004", error.to_string());
+    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
 }
 
 fn get_parse_error_field(err: &ParseError) -> &str {

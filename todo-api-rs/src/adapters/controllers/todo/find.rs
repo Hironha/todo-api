@@ -1,4 +1,6 @@
-use crate::adapters::dtos::todo::find::{ParseError, RunError};
+use std::error::Error;
+
+use crate::adapters::dtos::todo::find::ParseError;
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::repositories::todo::TodoRepository;
@@ -21,16 +23,16 @@ where
         Self { todo_repository }
     }
 
-    pub async fn run<R>(&self, req: R) -> Result<TodoPresenter, RunError>
+    pub async fn run<R>(&self, req: R) -> Result<TodoPresenter, Box<dyn Error>>
     where
         R: Parse<Id, ParseError>,
     {
-        let todo_id = req.parse().map_err(RunError::Parsing)?;
+        let todo_id = req.parse()?;
 
         FindTodoUseCase::new(self.todo_repository.clone())
             .exec(todo_id)
             .await
+            .map_err(Box::from)
             .map(TodoPresenter::from)
-            .map_err(RunError::Finding)
     }
 }

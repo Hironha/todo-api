@@ -1,4 +1,6 @@
-use crate::adapters::dtos::todo::bind_tags::{ParseError, RunError};
+use std::error::Error;
+
+use crate::adapters::dtos::todo::bind_tags::ParseError;
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::bind_tags::BindTodoTagsInput;
 use crate::application::repositories::tag::TagRepository;
@@ -27,15 +29,15 @@ where
         }
     }
 
-    pub async fn run<R>(&self, req: R) -> Result<(), RunError>
+    pub async fn run<R>(&self, req: R) -> Result<(), Box<dyn Error>>
     where
         R: Parse<BindTodoTagsInput, ParseError>,
     {
-        let input = req.parse().map_err(RunError::Parsing)?;
+        let input = req.parse()?;
 
         BindTodoTagsUseCase::new(self.todo_repository.clone(), self.tag_repository.clone())
             .exec(input)
             .await
-            .map_err(RunError::Binding)
+            .map_err(Box::from)
     }
 }

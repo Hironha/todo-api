@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
+use crate::application::dtos::todo::update::UpdateTodoInput;
 use crate::domain::entities::todo::{
     Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
 };
@@ -57,14 +57,6 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
             status,
         })
     }
-}
-
-#[derive(Debug, Error)]
-pub enum RunError {
-    #[error(transparent)]
-    Parsing(ParseError),
-    #[error(transparent)]
-    Updating(UpdateTodoError),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]

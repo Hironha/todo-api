@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -6,7 +8,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::update::UpdateController;
-use crate::adapters::dtos::todo::update::{ParseError, RunError, UpdateRequest};
+use crate::adapters::dtos::todo::update::{ParseError, UpdateRequest};
 use crate::application::dtos::todo::update::UpdateTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -42,22 +44,23 @@ pub(super) async fn update_todo(
     let controller = UpdateController::new(state.todo_repository);
     if let Err(err) = controller.run(req).await {
         tracing::error!("update todo error: {err}");
-        let (status_code, message) = config_error_response(&err);
+        let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {
         (StatusCode::OK).into_response()
     }
 }
 
-fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
-    match error {
-        RunError::Parsing(parse_err) => {
-            let field = get_parse_error_field(parse_err);
-            let details = ValidationError::new(field, parse_err.to_string());
-            let api_error = ApiError::new("UTD-001", error.to_string()).with_details(details);
-            (StatusCode::BAD_REQUEST, api_error)
-        }
-        RunError::Updating(update_err) => match update_err {
+fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<ValidationError>) {
+    if let Some(parse_err) = error.downcast_ref::<ParseError>() {
+        let field = get_parse_error_field(parse_err);
+        let details = ValidationError::new(field, parse_err.to_string());
+        let api_error = ApiError::new("UTD-001", "invalid input").with_details(details);
+        return (StatusCode::BAD_REQUEST, api_error);
+    }
+
+    if let Some(update_err) = error.downcast_ref::<UpdateTodoError>() {
+        return match update_err {
             UpdateTodoError::NotFound => {
                 let api_error = ApiError::new("UTD-002", update_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
@@ -70,8 +73,11 @@ fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationEr
                 let api_error = ApiError::internal("UTD-003");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
-        },
+        };
     }
+
+    let default_err = ApiError::new("UTD-004", error.to_string());
+    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
 }
 
 fn get_parse_error_field(err: &ParseError) -> &str {

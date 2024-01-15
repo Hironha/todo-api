@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
-use crate::application::dtos::todo::list::{ListTodoError, ListTodosInput};
+use crate::application::dtos::todo::list::ListTodosInput;
 use crate::domain::entities::todo::{Title, TitleError};
 
 #[derive(Clone, Debug)]
@@ -43,14 +43,6 @@ pub struct ListResponse {
     pub per_page: u32,
     pub count: u64,
     pub items: Vec<TodoPresenter>,
-}
-
-#[derive(Debug, Error)]
-pub enum RunError {
-    #[error(transparent)]
-    Parsing(ParseError),
-    #[error(transparent)]
-    Listing(ListTodoError),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]

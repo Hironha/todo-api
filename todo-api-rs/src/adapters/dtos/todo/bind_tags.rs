@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::bind_tags::{BindTodoTagsError, BindTodoTagsInput};
+use crate::application::dtos::todo::bind_tags::BindTodoTagsInput;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -27,14 +27,6 @@ impl Parse<BindTodoTagsInput, ParseError> for BindTagsRequest {
 
         Ok(BindTodoTagsInput { todo_id, tags_id })
     }
-}
-
-#[derive(Debug, Error)]
-pub enum RunError {
-    #[error(transparent)]
-    Parsing(ParseError),
-    #[error(transparent)]
-    Binding(BindTodoTagsError),
 }
 
 #[derive(Debug, PartialEq, Eq, Error)]

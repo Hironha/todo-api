@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -6,7 +8,7 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::list::ListController;
-use crate::adapters::dtos::todo::list::{ListRequest, ParseError, RunError};
+use crate::adapters::dtos::todo::list::{ListRequest, ParseError};
 use crate::application::dtos::todo::list::ListTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -35,7 +37,7 @@ pub(super) async fn list_todo(
         Ok(output) => output,
         Err(err) => {
             tracing::error!("list todos error: {err}");
-            let (status, error) = config_error_response(&err);
+            let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
     };
@@ -43,23 +45,27 @@ pub(super) async fn list_todo(
     (StatusCode::OK, Json(output)).into_response()
 }
 
-fn config_error_response(error: &RunError) -> (StatusCode, ApiError<ValidationError>) {
-    match error {
-        RunError::Parsing(parse_err) => {
-            let field = match parse_err {
-                ParseError::InvalidPage => "page",
-                ParseError::InvalidPerPage => "perPage",
-                ParseError::Title(_) => "title",
-            };
-            let details = ValidationError::new(field, parse_err.to_string());
-            let api_error = ApiError::new("LTD-001", error.to_string()).with_details(details);
-            (StatusCode::BAD_REQUEST, api_error)
-        }
-        RunError::Listing(list_err) => match list_err {
+fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<ValidationError>) {
+    if let Some(parse_err) = error.downcast_ref::<ParseError>() {
+        let field = match parse_err {
+            ParseError::InvalidPage => "page",
+            ParseError::InvalidPerPage => "perPage",
+            ParseError::Title(_) => "title",
+        };
+        let details = ValidationError::new(field, parse_err.to_string());
+        let api_error = ApiError::new("LTD-001", "invalid input").with_details(details);
+        return (StatusCode::BAD_REQUEST, api_error);
+    }
+
+    if let Some(list_err) = error.downcast_ref::<ListTodoError>() {
+        return match list_err {
             ListTodoError::Repository(..) => {
                 let api_error = ApiError::internal("LTD-002");
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
-        },
+        };
     }
+
+    let default_err = ApiError::new("LTD-003", error.to_string());
+    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
 }

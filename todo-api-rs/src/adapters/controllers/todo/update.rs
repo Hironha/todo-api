@@ -1,4 +1,6 @@
-use crate::adapters::dtos::todo::update::{ParseError, RunError};
+use std::error::Error;
+
+use crate::adapters::dtos::todo::update::ParseError;
 use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::update::UpdateTodoInput;
 use crate::application::repositories::todo::TodoRepository;
@@ -19,15 +21,15 @@ where
         Self { todo_repository }
     }
 
-    pub async fn run<R>(self, req: R) -> Result<(), RunError>
+    pub async fn run<R>(self, req: R) -> Result<(), Box<dyn Error>>
     where
         R: Parse<UpdateTodoInput, ParseError>,
     {
-        let input = req.parse().map_err(RunError::Parsing)?;
+        let input = req.parse()?;
 
         UpdateTodoUseCase::new(self.todo_repository.clone())
             .exec(input)
             .await
-            .map_err(RunError::Updating)
+            .map_err(Box::from)
     }
 }

@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::create::{CreateTodoError, CreateTodoInput};
+use crate::application::dtos::todo::create::CreateTodoInput;
 use crate::domain::entities::todo::{
     Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
 };
@@ -48,14 +48,6 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
             status,
         })
     }
-}
-
-#[derive(Debug, Error)]
-pub enum RunError {
-    #[error(transparent)]
-    Parsing(ParseError),
-    #[error(transparent)]
-    Creating(CreateTodoError),
 }
 
 #[derive(Debug, PartialEq, Eq, Error)]

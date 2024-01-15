@@ -1,4 +1,6 @@
-use crate::adapters::dtos::todo::list::{ListResponse, ParseError, RunError};
+use std::error::Error;
+
+use crate::adapters::dtos::todo::list::{ListResponse, ParseError};
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::todo::TodoPresenter;
 use crate::application::dtos::todo::list::ListTodosInput;
@@ -21,16 +23,15 @@ where
         Self { todo_repository }
     }
 
-    pub async fn run<R>(&self, req: R) -> Result<ListResponse, RunError>
+    pub async fn run<R>(&self, req: R) -> Result<ListResponse, Box<dyn Error>>
     where
         R: Parse<ListTodosInput, ParseError>,
     {
-        let input = req.parse().map_err(RunError::Parsing)?;
+        let input = req.parse()?;
 
         let todo_list = ListTodosUseCase::new(self.todo_repository.clone())
             .exec(input)
-            .await
-            .map_err(RunError::Listing)?;
+            .await?;
 
         let response = ListResponse {
             page: todo_list.page.into(),

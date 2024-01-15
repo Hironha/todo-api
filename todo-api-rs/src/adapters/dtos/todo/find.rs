@@ -1,7 +1,6 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::todo::find::FindTodoError;
 use crate::domain::types::Id;
 
 #[derive(Debug)]
@@ -16,14 +15,6 @@ impl Parse<Id, ParseError> for FindRequest {
             .ok_or(ParseError::EmptyId)
             .and_then(|id| Id::parse_str(&id).or(Err(ParseError::InvalidId)))
     }
-}
-
-#[derive(Debug, Error)]
-pub enum RunError {
-    #[error(transparent)]
-    Parsing(ParseError),
-    #[error(transparent)]
-    Finding(FindTodoError),
 }
 
 #[derive(Debug, PartialEq, Eq, Error)]
