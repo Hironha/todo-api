@@ -1,4 +1,6 @@
-use crate::adapters::dtos::tag::delete::{ParseError, RunError};
+use std::error::Error;
+
+use crate::adapters::dtos::tag::delete::ParseError;
 use crate::adapters::dtos::Parse;
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::delete::DeleteTagUseCase;
@@ -20,15 +22,15 @@ where
         Self { tag_repository }
     }
 
-    pub async fn run<R>(&self, req: R) -> Result<(), RunError>
+    pub async fn run<R>(&self, req: R) -> Result<(), Box<dyn Error>>
     where
         R: Parse<Id, ParseError>,
     {
-        let tag_id = req.parse().map_err(RunError::Parsing)?;
+        let tag_id = req.parse()?;
 
         DeleteTagUseCase::new(self.tag_repository.clone())
             .exec(tag_id)
             .await
-            .map_err(RunError::Deleting)
+            .map_err(Box::from)
     }
 }

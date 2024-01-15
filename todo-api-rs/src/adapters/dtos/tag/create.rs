@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::tag::create::{CreateTagError, CreateTagInput};
+use crate::application::dtos::tag::create::CreateTagInput;
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
 
 #[derive(Clone, Debug)]
@@ -25,14 +25,6 @@ impl Parse<CreateTagInput, ParseError> for CreateRequest {
 
         Ok(CreateTagInput { name, description })
     }
-}
-
-#[derive(Debug, Error)]
-pub enum RunError {
-    #[error(transparent)]
-    Parsing(ParseError),
-    #[error(transparent)]
-    Creating(CreateTagError),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]

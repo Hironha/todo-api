@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::adapters::dtos::Parse;
-use crate::application::dtos::tag::update::{UpdateTagError, UpdateTagInput};
+use crate::application::dtos::tag::update::UpdateTagInput;
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
 use crate::domain::types::Id;
 
@@ -36,14 +36,6 @@ impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
             description,
         })
     }
-}
-
-#[derive(Debug, Error)]
-pub enum RunError {
-    #[error(transparent)]
-    Parsing(ParseError),
-    #[error(transparent)]
-    Updating(UpdateTagError),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]

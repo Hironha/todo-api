@@ -1,4 +1,6 @@
-use crate::adapters::dtos::tag::list::{RunError, TagsList};
+use std::error::Error;
+
+use crate::adapters::dtos::tag::list::TagsList;
 use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::list::ListTagsUseCase;
@@ -19,11 +21,10 @@ where
         Self { tag_repository }
     }
 
-    pub async fn run(&self) -> Result<TagsList, RunError> {
+    pub async fn run(&self) -> Result<TagsList, Box<dyn Error>> {
         let tags = ListTagsUseCase::new(self.tag_repository.clone())
             .exec()
-            .await
-            .map_err(RunError::Listing)?;
+            .await?;
 
         let list = TagsList {
             count: u64::try_from(tags.len()).unwrap_or(tags.len() as u64),

@@ -1,4 +1,6 @@
-use crate::adapters::dtos::tag::find::{ParseError, RunError};
+use std::error::Error;
+
+use crate::adapters::dtos::tag::find::ParseError;
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::repositories::tag::TagRepository;
@@ -21,16 +23,16 @@ where
         Self { tag_repository }
     }
 
-    pub async fn run<R>(&self, req: R) -> Result<TagPresenter, RunError>
+    pub async fn run<R>(&self, req: R) -> Result<TagPresenter, Box<dyn Error>>
     where
         R: Parse<Id, ParseError>,
     {
-        let tag_id = req.parse().map_err(RunError::Parsing)?;
+        let tag_id = req.parse()?;
 
         FindTagUseCase::new(self.tag_repository.clone())
             .exec(tag_id)
             .await
             .map(TagPresenter::from)
-            .map_err(RunError::Finding)
+            .map_err(Box::from)
     }
 }

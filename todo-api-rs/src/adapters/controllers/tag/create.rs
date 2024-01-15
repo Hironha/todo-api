@@ -1,4 +1,6 @@
-use crate::adapters::dtos::tag::create::{ParseError, RunError};
+use std::error::Error;
+
+use crate::adapters::dtos::tag::create::ParseError;
 use crate::adapters::dtos::Parse;
 use crate::adapters::presenters::tag::TagPresenter;
 use crate::application::dtos::tag::create::CreateTagInput;
@@ -21,16 +23,16 @@ where
         Self { tag_repository }
     }
 
-    pub async fn run<R>(&self, req: R) -> Result<TagPresenter, RunError>
+    pub async fn run<R>(&self, req: R) -> Result<TagPresenter, Box<dyn Error>>
     where
         R: Parse<CreateTagInput, ParseError>,
     {
-        let input = req.parse().map_err(RunError::Parsing)?;
+        let input = req.parse()?;
 
         CreateTagUseCase::new(self.tag_repository.clone())
             .exec(input)
             .await
             .map(TagPresenter::from)
-            .map_err(RunError::Creating)
+            .map_err(Box::from)
     }
 }
