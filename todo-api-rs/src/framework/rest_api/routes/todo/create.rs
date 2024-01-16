@@ -78,9 +78,9 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
 
 fn get_parse_error_field(err: &ParseError) -> &str {
     match err {
-        ParseError::InvalidTitle(_) => "title",
-        ParseError::InvalidDescription(_) => "description",
-        ParseError::InvalidTodoAt => "todoAt",
-        ParseError::InvalidStatus(_) => "status",
+        ParseError::Title(_) => "title",
+        ParseError::Description(_) => "description",
+        ParseError::TodoAt => "todoAt",
+        ParseError::Status(_) => "status",
     }
 }

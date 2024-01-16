@@ -19,26 +19,26 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
     fn parse(self) -> Result<CreateTodoInput, ParseError> {
         let title = self
             .title
-            .ok_or(ParseError::InvalidTitle(TitleError::Empty))
-            .and_then(|title| Title::new(title).map_err(ParseError::InvalidTitle))?;
+            .ok_or(ParseError::Title(TitleError::Empty))
+            .and_then(|title| Title::new(title).map_err(ParseError::Title))?;
 
         let description = self
             .description
             .map(Description::new)
             .transpose()
-            .map_err(ParseError::InvalidDescription)?;
+            .map_err(ParseError::Description)?;
 
         let todo_at = self
             .todo_at
             .map(|at| Date::parse_str(&at))
             .transpose()
-            .map_err(|_| ParseError::InvalidTodoAt)?;
+            .map_err(|_| ParseError::TodoAt)?;
 
         let status = self
             .status
-            .ok_or(ParseError::InvalidStatus(ParseTodoStatusError))
+            .ok_or(ParseError::Status(ParseTodoStatusError))
             .and_then(|status| {
-                TodoStatus::parse_str(status.as_str()).map_err(ParseError::InvalidStatus)
+                TodoStatus::parse_str(status.as_str()).map_err(ParseError::Status)
             })?;
 
         Ok(CreateTodoInput {
@@ -53,11 +53,11 @@ impl Parse<CreateTodoInput, ParseError> for CreateRequest {
 #[derive(Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
     #[error(transparent)]
-    InvalidTitle(TitleError),
+    Title(TitleError),
     #[error(transparent)]
-    InvalidDescription(DescriptionError),
+    Description(DescriptionError),
     #[error("Invalid todo at: should be an UTC date on YYYY-MM-DD format")]
-    InvalidTodoAt,
+    TodoAt,
     #[error(transparent)]
-    InvalidStatus(ParseTodoStatusError),
+    Status(ParseTodoStatusError),
 }
