@@ -20,7 +20,7 @@ impl<T: TodoRepository> UpdateTodoUseCase<T> {
             .await
             .map_err(|err| match err {
                 FindError::NotFound => UpdateTodoError::NotFound,
-                FindError::Internal(err) => UpdateTodoError::Repository(err),
+                FindError::Internal(err) => UpdateTodoError::Internal(err),
             })?;
 
         let updated_todo_entity = TodoEntity {
@@ -38,7 +38,7 @@ impl<T: TodoRepository> UpdateTodoUseCase<T> {
             .map_err(|err| match err {
                 UpdateError::NotFound => UpdateTodoError::NotFound,
                 UpdateError::DuplicatedTitle => UpdateTodoError::DuplicatedTitle(input.title),
-                UpdateError::Internal(err) => UpdateTodoError::Repository(err),
+                UpdateError::Internal(err) => UpdateTodoError::Internal(err),
             })
     }
 }

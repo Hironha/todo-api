@@ -29,14 +29,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .init();
 
     if let Err(err) = dotenvy::dotenv() {
-        tracing::error!("failed loading .env {err}");
+        tracing::error!("Failed loading .env {err}");
     }
 
     let pool = create_db_pool(5).await;
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
-        .expect("failed running migrations");
+        .expect("Failed running migrations");
 
     let app = Router::new()
         .merge(todo::create_todo_router(pool.clone()))
@@ -47,34 +47,34 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
     let listener = TcpListener::bind(addr)
         .await
-        .unwrap_or_else(|_| panic!("failed binding tcp listener to address {addr}"));
+        .unwrap_or_else(|_| panic!("Failed binding tcp listener to address {addr}"));
 
-    tracing::info!("server listening on {addr}");
+    tracing::info!("Server listening on {addr}");
 
     axum::serve(listener, app.into_make_service())
         .await
-        .expect("failed initiating server");
+        .expect("Failed initiating server");
 
     Ok(())
 }
 
 async fn create_db_pool(connections: u32) -> Pool<Postgres> {
     let env = std::env::vars().collect::<HashMap<String, String>>();
-    let user = env.get("DB_USER").expect("missing DB_USER env");
-    let password = env.get("DB_PASSWORD").expect("missing DB_PASSWORD env");
-    let host = env.get("DB_HOST").expect("missing DB_HOST env");
-    let port = env.get("DB_PORT").expect("missing DB_PORT env");
-    let db_name = env.get("DB_NAME").expect("missing DB_NAME env");
+    let user = env.get("DB_USER").expect("Missing DB_USER env");
+    let password = env.get("DB_PASSWORD").expect("Missing DB_PASSWORD env");
+    let host = env.get("DB_HOST").expect("Missing DB_HOST env");
+    let port = env.get("DB_PORT").expect("Missing DB_PORT env");
+    let db_name = env.get("DB_NAME").expect("Missing DB_NAME env");
 
     let url = format!("postgres://{user}:{password}@{host}:{port}/{db_name}");
 
-    tracing::info!("connecting to database at {url}");
+    tracing::info!("Connecting to database at {url}");
 
     PgPoolOptions::new()
         .max_connections(connections)
         .connect(url.as_str())
         .await
-        .expect("failed connecting to postgres database")
+        .expect("Failed connecting to postgres database")
 }
 
 fn create_tracing_layer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {

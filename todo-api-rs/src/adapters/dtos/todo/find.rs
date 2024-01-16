@@ -19,9 +19,9 @@ impl Parse<Id, ParseError> for FindRequest {
 
 #[derive(Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
-    #[error("id is required")]
+    #[error("Todo id is required")]
     EmptyId,
-    #[error("invalid id format")]
+    #[error("Invalid id format")]
     InvalidId,
 }
 

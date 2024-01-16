@@ -23,5 +23,5 @@ pub struct TodosList {
 #[derive(Debug, Error)]
 pub enum ListTodoError {
     #[error(transparent)]
-    Repository(Box<dyn error::Error>),
+    Internal(Box<dyn error::Error>),
 }

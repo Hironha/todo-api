@@ -104,18 +104,18 @@ impl fmt::Display for TodoStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum TitleError {
-    #[error("todo title cannot be empty")]
+    #[error("Todo title cannot be empty")]
     Empty,
-    #[error("todo title cannot have more than 64 characters")]
+    #[error("Todo title cannot have more than 64 characters")]
     Length,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum DescriptionError {
-    #[error("todo description cannot have more than 64 characters")]
+    #[error("Todo description cannot have more than 64 characters")]
     Length,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
-#[error("todo status must be one the following values: todo, in_progress or done")]
+#[error("Todo status must be one the following values: todo, in_progress or done")]
 pub struct ParseTodoStatusError;

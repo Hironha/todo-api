@@ -4,8 +4,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum FindTodoError {
-    #[error("todo could not be found")]
+    #[error("Todo could not be found")]
     NotFound,
     #[error(transparent)]
-    Repository(Box<dyn error::Error>),
+    Internal(Box<dyn error::Error>),
 }

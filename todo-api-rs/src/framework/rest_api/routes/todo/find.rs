@@ -23,13 +23,13 @@ pub(super) async fn find_todo(
 ) -> impl IntoResponse {
     let req = FindRequest { id: path.id };
 
-    tracing::info!("find todo request: {req:?}");
+    tracing::info!("Find todo request: {req:?}");
 
     let controller = FindController::new(state.todo_repository);
     let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
-            tracing::error!("find todo error: {err}");
+            tracing::error!("Find todo error: {err:?}");
             let (status_code, message) = config_error_response(err);
             return (status_code, Json(message)).into_response();
         }
@@ -44,23 +44,22 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
             ParseError::EmptyId | ParseError::InvalidId => "id",
         };
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("FTD-001", "invalid input").with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(find_err) = error.downcast_ref::<FindTodoError>() {
         return match find_err {
             FindTodoError::NotFound => {
-                let api_error = ApiError::new("FTD-002", find_err.to_string());
+                let api_error = ApiError::new("NotFound", find_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            FindTodoError::Repository(..) => {
-                let api_error = ApiError::internal("FTD-003");
+            FindTodoError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
-        }
+        };
     }
 
-    let default_err = ApiError::new("FTD-004", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

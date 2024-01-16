@@ -47,13 +47,13 @@ pub struct ListResponse {
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
-    #[error("invalid page: should be an integer ranging from 0 to {}", u32::MAX)]
+    #[error("Invalid page: should be an integer ranging from 0 to {}", u32::MAX)]
     InvalidPage,
     #[error(
-        "invalid per page: should be an integer ranging from 0 to {}",
+        "Invalid per page: should be an integer ranging from 0 to {}",
         u32::MAX
     )]
     InvalidPerPage,
-    #[error("invalid title: {0}")]
+    #[error(transparent)]
     Title(TitleError),
 }

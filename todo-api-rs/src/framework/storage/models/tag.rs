@@ -36,8 +36,8 @@ impl TagModel {
 
 #[derive(Debug, Error)]
 pub enum TagModelEntityError {
-    #[error("tag model name incompatible with entity: {0}")]
+    #[error("Tag model name incompatible with entity: {0}")]
     Name(#[source] NameError),
-    #[error("tag model description incompatible entity: {0}")]
+    #[error("Tag model description incompatible entity: {0}")]
     Description(#[source] DescriptionError),
 }

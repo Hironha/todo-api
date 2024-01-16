@@ -23,11 +23,11 @@ pub(super) async fn delete_todo(
 ) -> impl IntoResponse {
     let req = DeleteRequest { id: path.id };
 
-    tracing::info!("delete todo request {req:?}");
+    tracing::info!("Delete todo request {req:?}");
 
     let controller = DeleteController::new(state.todo_repository);
     if let Err(err) = controller.run(req).await {
-        tracing::error!("delete todo error: {err}");
+        tracing::error!("Delete todo error: {err:?}");
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {
@@ -41,23 +41,22 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
             ParseError::EmptyId | ParseError::InvalidId => "id",
         };
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("DTD-001", "invalid input").with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(delete_err) = error.downcast_ref::<DeleteTodoError>() {
         return match delete_err {
             DeleteTodoError::NotFound => {
-                let api_error = ApiError::new("DTD-002", delete_err.to_string());
+                let api_error = ApiError::new("NotFound", delete_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            DeleteTodoError::Repository(..) => {
-                let api_error = ApiError::internal("DTD-003");
+            DeleteTodoError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("DTD-004", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

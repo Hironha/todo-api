@@ -15,7 +15,7 @@ pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoRespons
     let output = match controller.run().await {
         Ok(output) => output,
         Err(err) => {
-            tracing::error!("list tags error: {err:?}");
+            tracing::error!("List tags error: {err:?}");
             let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
@@ -27,13 +27,12 @@ pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoRespons
 fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<ValidationError>) {
     if let Some(list_err) = error.downcast_ref::<ListTagError>() {
         return match list_err {
-            ListTagError::Repository(..) => {
-                let api_error = ApiError::internal("LTG-001");
+            ListTagError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("LTG-002", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

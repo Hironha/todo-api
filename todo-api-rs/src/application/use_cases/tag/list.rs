@@ -17,7 +17,7 @@ impl<T: TagRepository> ListTagsUseCase<T> {
             .list_all()
             .await
             .map_err(|err| match err {
-                ListAllError::Internal(err) => ListTagError::Repository(err),
+                ListAllError::Internal(err) => ListTagError::Internal(err),
             })
     }
 }

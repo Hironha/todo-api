@@ -31,7 +31,7 @@ impl<T: TodoRepository> CreateTodoUseCase<T> {
             .await
             .map_err(|err| match err {
                 CreateError::DuplicatedTitle => CreateTodoError::DuplicatedTitle(input.title),
-                CreateError::Internal(err) => CreateTodoError::Repository(err),
+                CreateError::Internal(err) => CreateTodoError::Internal(err),
             })
     }
 }

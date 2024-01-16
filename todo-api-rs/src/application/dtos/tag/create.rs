@@ -12,8 +12,8 @@ pub struct CreateTagInput {
 
 #[derive(Debug, Error)]
 pub enum CreateTagError {
-    #[error("tag with name {0} already exists")]
+    #[error("Tag with name {0} already exists")]
     DuplicatedName(Name),
     #[error(transparent)]
-    Repository(Box<dyn error::Error>),
+    Internal(Box<dyn error::Error>),
 }

@@ -63,14 +63,14 @@ impl Description {
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum NameError {
-    #[error("tag name cannot be empty")]
+    #[error("Tag name cannot be empty")]
     Empty,
-    #[error("tag name cannot have more than 64 characters")]
+    #[error("Tag name cannot have more than 64 characters")]
     Length,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum DescriptionError {
-    #[error("tag description cannot have more than 64 characters")]
+    #[error("Tag description cannot have more than 64 characters")]
     Length,
 }

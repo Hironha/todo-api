@@ -30,13 +30,13 @@ pub(super) async fn list_todo(
         title: query.title,
     };
 
-    tracing::info!("list todos request: {req:?}");
+    tracing::info!("List todos request: {req:?}");
 
     let controller = ListController::new(state.todo_repository);
     let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
-            tracing::error!("list todos error: {err}");
+            tracing::error!("List todos error: {err:?}");
             let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
@@ -53,19 +53,18 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
             ParseError::Title(_) => "title",
         };
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("LTD-001", "invalid input").with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(list_err) = error.downcast_ref::<ListTodoError>() {
         return match list_err {
-            ListTodoError::Repository(..) => {
-                let api_error = ApiError::internal("LTD-002");
+            ListTodoError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("LTD-003", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

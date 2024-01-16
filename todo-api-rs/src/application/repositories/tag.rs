@@ -16,7 +16,7 @@ pub trait TagRepository {
 
 #[derive(Debug, Error)]
 pub enum CreateError {
-    #[error("tag name already exists")]
+    #[error("Tag name already exists")]
     DuplicatedName,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
@@ -24,7 +24,7 @@ pub enum CreateError {
 
 #[derive(Debug, Error)]
 pub enum DeleteError {
-    #[error("tag could not be found")]
+    #[error("Tag could not be found")]
     NotFound,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
@@ -32,7 +32,7 @@ pub enum DeleteError {
 
 #[derive(Debug, Error)]
 pub enum ExistsManyError {
-    #[error("following tags were not found: {0:?}")]
+    #[error("Following tags were not found: {0:?}")]
     NotFound(Vec<Id>),
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
@@ -40,7 +40,7 @@ pub enum ExistsManyError {
 
 #[derive(Debug, Error)]
 pub enum FindError {
-    #[error("tag could not be found")]
+    #[error("Tag could not be found")]
     NotFound,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
@@ -54,9 +54,9 @@ pub enum ListAllError {
 
 #[derive(Debug, Error)]
 pub enum UpdateError {
-    #[error("tag could not be found")]
+    #[error("Tag could not be found")]
     NotFound,
-    #[error("tag name already exists")]
+    #[error("Tag name already exists")]
     DuplicatedName,
     #[error(transparent)]
     Internal(Box<dyn error::Error>),

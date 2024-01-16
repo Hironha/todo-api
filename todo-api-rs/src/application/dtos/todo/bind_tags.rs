@@ -12,10 +12,10 @@ pub struct BindTodoTagsInput {
 
 #[derive(Debug, Error)]
 pub enum BindTodoTagsError {
-    #[error("todo could not be found")]
+    #[error("Todo could not be found")]
     TodoNotFound,
-    #[error("following tags could not be found: {0:?}")]
+    #[error("Following tags could not be found: {0:?}")]
     TagNotFound(Vec<Id>),
     #[error(transparent)]
-    Repository(Box<dyn error::Error>),
+    Internal(Box<dyn error::Error>),
 }

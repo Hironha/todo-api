@@ -73,8 +73,8 @@ impl TodoStatus {
 
 #[derive(Debug, Error)]
 pub enum TodoModelEntityError {
-    #[error("todo model title incompatible with entity: {0}")]
+    #[error("Todo model title incompatible with entity: {0}")]
     Title(#[source] TitleError),
-    #[error("todo model description incompatible with entity: {0}")]
+    #[error("Todo model description incompatible with entity: {0}")]
     Description(#[source] DescriptionError),
 }

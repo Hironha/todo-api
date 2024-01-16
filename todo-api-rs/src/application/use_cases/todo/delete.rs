@@ -18,7 +18,7 @@ impl<T: TodoRepository> DeleteTodoUseCase<T> {
             .await
             .map_err(|err| match err {
                 DeleteError::NotFound => DeleteTodoError::NotFound,
-                DeleteError::Internal(err) => DeleteTodoError::Repository(err),
+                DeleteError::Internal(err) => DeleteTodoError::Internal(err),
             })
     }
 }

@@ -32,13 +32,13 @@ pub(super) async fn create_todo(
         status: body.status,
     };
 
-    tracing::info!("create todo request: {req:?}");
+    tracing::info!("Create todo request: {req:?}");
 
     let controller = CreateController::new(state.todo_repository);
     let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
-            tracing::error!("create todo error: {err}");
+            tracing::error!("Create todo error: {err:?}");
             let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
@@ -56,32 +56,31 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
     if let Some(parse_err) = error.downcast_ref::<ParseError>() {
         let field = get_parse_error_field(parse_err);
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("CTD-001", "invalid input").with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(create_err) = error.downcast_ref::<CreateTodoError>() {
         return match create_err {
             CreateTodoError::DuplicatedTitle(..) => {
-                let api_error = ApiError::new("CTD-002", create_err.to_string());
+                let api_error = ApiError::new("DuplicatedTitle", create_err.to_string());
                 (StatusCode::CONFLICT, api_error)
             }
-            CreateTodoError::Repository(..) => {
-                let api_error = ApiError::internal("CTD-003");
+            CreateTodoError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("CTD-004", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }
 
 fn get_parse_error_field(err: &ParseError) -> &str {
     match err {
-        ParseError::EmptyTitle | ParseError::InvalidTitle(_) => "title",
+        ParseError::InvalidTitle(_) => "title",
         ParseError::InvalidDescription(_) => "description",
         ParseError::InvalidTodoAt => "todoAt",
-        ParseError::EmptyStatus | ParseError::InvalidStatus(_) => "status",
+        ParseError::InvalidStatus(_) => "status",
     }
 }

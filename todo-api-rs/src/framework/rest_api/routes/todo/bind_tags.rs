@@ -33,11 +33,11 @@ pub(super) async fn bind_todo_tags(
         todo_id: path.id,
     };
 
-    tracing::info!("bind todo tags request: {req:?}");
+    tracing::info!("Bind todo tags request: {req:?}");
 
     let controller = BindTagsController::new(state.todo_repository, state.tag_repository);
     if let Err(err) = controller.run(req).await {
-        tracing::error!("bind todo tags error: {err}");
+        tracing::error!("Bind todo tags error: {err:?}");
         let (status, error) = config_error_response(err);
         return (status, Json(error)).into_response();
     }
@@ -52,27 +52,26 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
             ParseError::InvalidTag(_) => "tagsId",
         };
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("BTD-001", "invalid input").with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(bind_err) = error.downcast_ref::<BindTodoTagsError>() {
         return match bind_err {
             BindTodoTagsError::TodoNotFound => {
-                let api_error = ApiError::new("BTD-002", bind_err.to_string());
+                let api_error = ApiError::new("TodoNotFound", bind_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
             BindTodoTagsError::TagNotFound(_) => {
-                let api_error = ApiError::new("BTD-003", bind_err.to_string());
+                let api_error = ApiError::new("TagNotFound", bind_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            BindTodoTagsError::Repository(..) => {
-                let api_error = ApiError::internal("BTD-004");
+            BindTodoTagsError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("BTD-005", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

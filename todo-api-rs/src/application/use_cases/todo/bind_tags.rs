@@ -22,7 +22,7 @@ impl<T: TodoRepository, S: TagRepository> BindTodoTagsUseCase<T, S> {
                 .exists(input.todo_id)
                 .await
                 .map_err(|err| match err {
-                    ExistsError::Internal(err) => BindTodoTagsError::Repository(err),
+                    ExistsError::Internal(err) => BindTodoTagsError::Internal(err),
                 })?;
 
         if !todo_exists {
@@ -34,14 +34,14 @@ impl<T: TodoRepository, S: TagRepository> BindTodoTagsUseCase<T, S> {
             .await
             .map_err(|err| match err {
                 ExistsManyError::NotFound(tags_id) => BindTodoTagsError::TagNotFound(tags_id),
-                ExistsManyError::Internal(err) => BindTodoTagsError::Repository(err),
+                ExistsManyError::Internal(err) => BindTodoTagsError::Internal(err),
             })?;
 
         self.todo_repository
             .bind_tags(input.todo_id, input.tags_id)
             .await
             .map_err(|err| match err {
-                BindTagsError::Internal(err) => BindTodoTagsError::Repository(err),
+                BindTagsError::Internal(err) => BindTodoTagsError::Internal(err),
             })
     }
 }

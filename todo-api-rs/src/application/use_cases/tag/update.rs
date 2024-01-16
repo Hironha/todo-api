@@ -19,7 +19,7 @@ impl<T: TagRepository> UpdateTagUseCase<T> {
             .await
             .map_err(|err| match err {
                 FindError::NotFound => UpdateTagError::NotFound,
-                FindError::Internal(err) => UpdateTagError::Repository(err),
+                FindError::Internal(err) => UpdateTagError::Internal(err),
             })?;
 
         let updated_tag_entity = TagEntity {
@@ -34,7 +34,7 @@ impl<T: TagRepository> UpdateTagUseCase<T> {
             .map_err(|err| match err {
                 UpdateError::NotFound => UpdateTagError::NotFound,
                 UpdateError::DuplicatedName => UpdateTagError::DuplicatedName(input.name),
-                UpdateError::Internal(err) => UpdateTagError::Repository(err),
+                UpdateError::Internal(err) => UpdateTagError::Internal(err),
             })
     }
 }

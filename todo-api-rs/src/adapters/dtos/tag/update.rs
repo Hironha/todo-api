@@ -21,7 +21,7 @@ impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
 
         let name = self
             .name
-            .ok_or(ParseError::EmptyName)
+            .ok_or(ParseError::InvalidName(NameError::Empty))
             .and_then(|name| Name::new(name).map_err(ParseError::InvalidName))?;
 
         let description = self
@@ -40,14 +40,12 @@ impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
-    #[error("id is required")]
+    #[error("Tag id is required")]
     EmptyId,
-    #[error("invalid id format")]
+    #[error("Invalid tag id format")]
     InvalidId,
-    #[error("name is required")]
-    EmptyName,
-    #[error("invalid name: {0}")]
+    #[error(transparent)]
     InvalidName(NameError),
-    #[error("invalid description: {0}")]
+    #[error(transparent)]
     InvalidDescription(DescriptionError),
 }

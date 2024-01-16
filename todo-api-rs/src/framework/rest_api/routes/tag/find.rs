@@ -21,7 +21,7 @@ pub(super) async fn find_tag(
     State(state): State<TagState>,
     Path(path): Path<FindPathParams>,
 ) -> impl IntoResponse {
-    tracing::info!("find tag path: {path:?}");
+    tracing::info!("Find tag path: {path:?}");
 
     let input = FindRequest { id: path.id };
     let controller = FindController::new(state.tag_repository);
@@ -29,7 +29,7 @@ pub(super) async fn find_tag(
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
-            tracing::error!("find tag error: {err:?}");
+            tracing::error!("Find tag error: {err:?}");
             let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
@@ -44,23 +44,22 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
             ParseError::EmptyId | ParseError::InvalidId => "id",
         };
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("FTG-001", error.to_string()).with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(find_err) = error.downcast_ref::<FindTagError>() {
         return match find_err {
             FindTagError::NotFound => {
-                let api_error = ApiError::new("FTG-002", find_err.to_string());
+                let api_error = ApiError::new("NotFound", find_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            FindTagError::Repository(..) => {
-                let api_error = ApiError::internal("FTG-003");
+            FindTagError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("FTG-004", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

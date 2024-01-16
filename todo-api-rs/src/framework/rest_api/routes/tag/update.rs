@@ -34,14 +34,14 @@ pub(super) async fn update_tag(
         description: body.description,
     };
 
-    tracing::info!("update tag input: {input:?}");
+    tracing::info!("Update tag input: {input:?}");
 
     let controller = UpdateController::new(state.tag_repository);
 
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
-            tracing::error!("update tag error: {err:?}");
+            tracing::error!("Update tag error: {err:?}");
             let (status, error) = config_error_response(err);
             return (status, Json(error)).into_response();
         }
@@ -54,31 +54,30 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
     if let Some(parse_err) = error.downcast_ref::<ParseError>() {
         let field = match parse_err {
             ParseError::EmptyId | ParseError::InvalidId => "id",
-            ParseError::EmptyName | ParseError::InvalidName(_) => "name",
+            ParseError::InvalidName(_) => "name",
             ParseError::InvalidDescription(_) => "description",
         };
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("UTG-001", error.to_string()).with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(update_err) = error.downcast_ref::<UpdateTagError>() {
         return match update_err {
             UpdateTagError::NotFound => {
-                let api_error = ApiError::new("UTG-002", update_err.to_string());
+                let api_error = ApiError::new("NotFound", update_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
             UpdateTagError::DuplicatedName(..) => {
-                let api_error = ApiError::new("UTG-003", update_err.to_string());
+                let api_error = ApiError::new("DuplicatedName", update_err.to_string());
                 (StatusCode::CONFLICT, api_error)
             }
-            UpdateTagError::Repository(..) => {
-                let api_error = ApiError::internal("UTG-004");
+            UpdateTagError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("UTG-005", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

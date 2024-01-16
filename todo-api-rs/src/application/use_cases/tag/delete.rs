@@ -18,7 +18,7 @@ impl<T: TagRepository> DeleteTagUseCase<T> {
             .await
             .map_err(|err| match err {
                 DeleteError::NotFound => DeleteTagError::NotFound,
-                DeleteError::Internal(err) => DeleteTagError::Repository(err),
+                DeleteError::Internal(err) => DeleteTagError::Internal(err),
             })
     }
 }

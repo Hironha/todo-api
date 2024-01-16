@@ -21,13 +21,13 @@ pub(super) async fn delete_tag(
     State(state): State<TagState>,
     Path(path): Path<DeletePathParams>,
 ) -> impl IntoResponse {
-    tracing::info!("delete tag path: {path:?}");
+    tracing::info!("Delete tag path: {path:?}");
 
     let input = DeleteRequest { id: path.id };
     let controller = DeleteController::new(state.tag_repository);
 
     if let Err(err) = controller.run(input).await {
-        tracing::error!("delete tag error: {err:?}");
+        tracing::error!("Delete tag error: {err:?}");
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()
     } else {
@@ -41,23 +41,22 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
             ParseError::EmptyId | ParseError::InvalidId => "id",
         };
         let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("DTG-001", error.to_string()).with_details(details);
+        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
     if let Some(delete_err) = error.downcast_ref::<DeleteTagError>() {
         return match delete_err {
             DeleteTagError::NotFound => {
-                let api_error = ApiError::new("DTG-002", delete_err.to_string());
+                let api_error = ApiError::new("NotFound", delete_err.to_string());
                 (StatusCode::NOT_FOUND, api_error)
             }
-            DeleteTagError::Repository(..) => {
-                let api_error = ApiError::internal("DTG-003");
+            DeleteTagError::Internal(..) => {
+                let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }
         };
     }
 
-    let default_err = ApiError::new("DTG-004", error.to_string());
-    (StatusCode::INTERNAL_SERVER_ERROR, default_err)
+    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
 }

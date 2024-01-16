@@ -19,7 +19,7 @@ impl<T: TagRepository> FindTagUseCase<T> {
             .await
             .map_err(|err| match err {
                 FindError::NotFound => FindTagError::NotFound,
-                FindError::Internal(err) => FindTagError::Repository(err),
+                FindError::Internal(err) => FindTagError::Internal(err),
             })
     }
 }

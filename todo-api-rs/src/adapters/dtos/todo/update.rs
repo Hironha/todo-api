@@ -27,7 +27,7 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
 
         let title = self
             .title
-            .ok_or(ParseError::EmptyTitle)
+            .ok_or(ParseError::InvalidTitle(TitleError::Empty))
             .and_then(|t| Title::new(t).map_err(ParseError::InvalidTitle))?;
 
         let description = self
@@ -38,7 +38,7 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
 
         let status = self
             .status
-            .ok_or(ParseError::EmptyStatus)
+            .ok_or(ParseError::InvalidStatus(ParseTodoStatusError))
             .and_then(|status| {
                 TodoStatus::parse_str(status.as_str()).map_err(ParseError::InvalidStatus)
             })?;
@@ -61,20 +61,16 @@ impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
-    #[error("id is required")]
+    #[error("Todo id is required")]
     EmptyId,
-    #[error("invalid id format")]
+    #[error("Invalid id format")]
     InvalidId,
-    #[error("title is required")]
-    EmptyTitle,
-    #[error("invalid title: {0}")]
+    #[error(transparent)]
     InvalidTitle(TitleError),
-    #[error("invalid description: {0}")]
+    #[error(transparent)]
     InvalidDescription(DescriptionError),
-    #[error("invalid todo at: should be an UTC date on YYYY-MM-DD format")]
+    #[error("Invalid todo at: should be an UTC date on YYYY-MM-DD format")]
     InvalidTodoAt,
-    #[error("status is required")]
-    EmptyStatus,
-    #[error("invalid status: {0}")]
+    #[error(transparent)]
     InvalidStatus(ParseTodoStatusError),
 }

@@ -23,7 +23,7 @@ impl<T: TodoRepository> ListTodosUseCase<T> {
             .list(payload)
             .await
             .map_err(|err| match err {
-                ListError::Internal(err) => ListTodoError::Repository(err),
+                ListError::Internal(err) => ListTodoError::Internal(err),
             })?;
 
         Ok(TodosList {

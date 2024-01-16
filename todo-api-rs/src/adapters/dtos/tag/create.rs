@@ -14,7 +14,7 @@ impl Parse<CreateTagInput, ParseError> for CreateRequest {
     fn parse(self) -> Result<CreateTagInput, ParseError> {
         let name = self
             .name
-            .ok_or(ParseError::EmptyName)
+            .ok_or(ParseError::InvalidName(NameError::Empty))
             .and_then(|name| Name::new(name).map_err(ParseError::InvalidName))?;
 
         let description = self
@@ -29,10 +29,8 @@ impl Parse<CreateTagInput, ParseError> for CreateRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
-    #[error("name is required")]
-    EmptyName,
-    #[error("invalid name: {0}")]
+    #[error(transparent)]
     InvalidName(NameError),
-    #[error("invalid description: {0}")]
+    #[error(transparent)]
     InvalidDescription(DescriptionError),
 }

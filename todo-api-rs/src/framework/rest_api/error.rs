@@ -17,17 +17,17 @@ impl ValidationError {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ApiError<D: Serialize> {
-    pub code: String,
-    pub message: String,
+    code: String,
+    message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub details: Option<D>,
+    details: Option<D>,
 }
 
 impl<D: Serialize> ApiError<D> {
-    pub fn internal(code: impl Into<String>) -> Self {
+    pub fn internal() -> Self {
         Self {
-            code: code.into(),
-            message: String::from("internal server error"),
+            code: String::from("Internal"),
+            message: String::from("Internal server error"),
             details: None,
         }
     }

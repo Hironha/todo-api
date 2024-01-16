@@ -5,5 +5,5 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum ListTagError {
     #[error(transparent)]
-    Repository(Box<dyn error::Error>),
+    Internal(Box<dyn error::Error>),
 }

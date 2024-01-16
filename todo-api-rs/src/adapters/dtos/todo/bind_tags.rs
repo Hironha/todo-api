@@ -31,10 +31,10 @@ impl Parse<BindTodoTagsInput, ParseError> for BindTagsRequest {
 
 #[derive(Debug, PartialEq, Eq, Error)]
 pub enum ParseError {
-    #[error("todo id is required")]
+    #[error("Todo id is required")]
     EmptyTodo,
-    #[error("invalid todo id format")]
+    #[error("Invalid todo id format")]
     InvalidTodo,
-    #[error("invalid tag id format")]
+    #[error("Invalid tag id format")]
     InvalidTag(String),
 }

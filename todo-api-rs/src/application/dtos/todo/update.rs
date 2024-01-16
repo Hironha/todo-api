@@ -16,10 +16,10 @@ pub struct UpdateTodoInput {
 
 #[derive(Debug, Error)]
 pub enum UpdateTodoError {
-    #[error("todo could not be found")]
+    #[error("Todo could not be found")]
     NotFound,
-    #[error("todo with title {0} already exists")]
+    #[error("Todo with title {0} already exists")]
     DuplicatedTitle(Title),
     #[error(transparent)]
-    Repository(Box<dyn error::Error>),
+    Internal(Box<dyn error::Error>),
 }

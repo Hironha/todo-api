@@ -28,7 +28,7 @@ impl<T: TagRepository> CreateTagUseCase<T> {
             .await
             .map_err(|err| match err {
                 CreateError::DuplicatedName => CreateTagError::DuplicatedName(input.name),
-                CreateError::Internal(err) => CreateTagError::Repository(err),
+                CreateError::Internal(err) => CreateTagError::Internal(err),
             })
     }
 }

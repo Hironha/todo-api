@@ -19,7 +19,7 @@ impl<T: TodoRepository> FindTodoUseCase<T> {
             .await
             .map_err(|err| match err {
                 FindError::NotFound => FindTodoError::NotFound,
-                FindError::Internal(err) => FindTodoError::Repository(err),
+                FindError::Internal(err) => FindTodoError::Internal(err),
             })
     }
 }
