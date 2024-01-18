@@ -39,8 +39,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed running migrations");
 
     let app = Router::new()
-        .merge(todo::create_todo_router(pool.clone()))
-        .merge(tag::create_tag_router(pool))
+        .merge(todo::create_router(pool.clone()))
+        .merge(tag::create_router(pool))
         .layer(CorsLayer::very_permissive())
         .layer(create_tracing_layer());
 

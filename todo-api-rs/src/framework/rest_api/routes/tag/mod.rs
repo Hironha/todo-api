@@ -22,7 +22,7 @@ pub struct TagState {
     tag_repository: PgTagRepository,
 }
 
-pub fn create_tag_router(pool: Pool<Postgres>) -> Router {
+pub fn create_router(pool: Pool<Postgres>) -> Router {
     let state = TagState {
         tag_repository: PgTagRepository::new(pool),
     };

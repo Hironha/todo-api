@@ -20,7 +20,7 @@ use find::find_todo;
 use list::list_todo;
 use update::update_todo;
 
-pub fn create_todo_router(pool: Pool<Postgres>) -> Router {
+pub fn create_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
         todo_repository: PgTodoRepository::new(pool.clone()),
         tag_repository: PgTagRepository::new(pool),
