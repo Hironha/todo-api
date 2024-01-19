@@ -7,7 +7,7 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::find::FindController;
+use crate::adapters::controllers::todo::TodoController;
 use crate::adapters::dtos::todo::find::{FindRequest, ParseError};
 use crate::application::dtos::todo::find::FindTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
@@ -25,8 +25,8 @@ pub(super) async fn find_todo(
 
     tracing::info!("Find todo request: {req:?}");
 
-    let controller = FindController::new(state.todo_repository);
-    let output = match controller.run(req).await {
+    let controller = TodoController::new(state.todo_repository, state.tag_repository);
+    let output = match controller.find(req).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("Find todo error: {err:?}");

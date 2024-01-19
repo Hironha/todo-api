@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-use crate::adapters::dtos::Parse;
 use crate::domain::types::Id;
 
 #[derive(Debug)]
@@ -8,8 +7,8 @@ pub struct FindRequest {
     pub id: Option<String>,
 }
 
-impl Parse<Id, ParseError> for FindRequest {
-    fn parse(self) -> Result<Id, ParseError> {
+impl FindRequest {
+    pub fn parse(self) -> Result<Id, ParseError> {
         self.id
             .filter(|id| !id.is_empty())
             .ok_or(ParseError::EmptyId)
@@ -27,7 +26,6 @@ pub enum ParseError {
 
 #[cfg(test)]
 mod test {
-    use super::Parse;
 
     #[test]
     fn parse_success() {

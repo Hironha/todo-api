@@ -1,15 +1,14 @@
 use thiserror::Error;
 
-use crate::adapters::dtos::Parse;
 use crate::domain::types::Id;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct FindRequest {
     pub id: Option<String>,
 }
 
-impl Parse<Id, ParseError> for FindRequest {
-    fn parse(self) -> Result<Id, ParseError> {
+impl FindRequest {
+    pub fn parse(self) -> Result<Id, ParseError> {
         self.id
             .filter(|id| !id.is_empty())
             .ok_or(ParseError::EmptyId)

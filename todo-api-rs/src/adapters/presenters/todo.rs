@@ -23,23 +23,23 @@ pub struct TodoPresenter {
     pub updated_at: String,
 }
 
-impl From<TodoEntity> for TodoPresenter {
-    fn from(todo: TodoEntity) -> Self {
-        let tag_presenters = todo
+impl TodoPresenter {
+    pub fn from_entity(entity: TodoEntity) -> Self {
+        let tag_presenters = entity
             .tags
             .into_iter()
             .map(TagPresenter::from)
             .collect::<Vec<TagPresenter>>();
 
         Self {
-            id: todo.id.to_string(),
-            title: todo.title.into_inner(),
-            description: todo.description.map(|d| d.into_inner()),
-            status: todo.status.to_string(),
-            todo_at: todo.todo_at.map(|at| at.to_ymd()),
+            id: entity.id.to_string(),
+            title: entity.title.into_inner(),
+            description: entity.description.map(|d| d.into_inner()),
+            status: entity.status.to_string(),
+            todo_at: entity.todo_at.map(|at| at.to_ymd()),
             tags: tag_presenters,
-            created_at: todo.created_at.to_rfc3339(),
-            updated_at: todo.updated_at.to_rfc3339(),
+            created_at: entity.created_at.to_rfc3339(),
+            updated_at: entity.updated_at.to_rfc3339(),
         }
     }
 }

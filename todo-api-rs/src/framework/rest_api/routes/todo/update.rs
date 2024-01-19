@@ -7,7 +7,7 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::update::UpdateController;
+use crate::adapters::controllers::todo::TodoController;
 use crate::adapters::dtos::todo::update::{ParseError, UpdateRequest};
 use crate::application::dtos::todo::update::UpdateTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
@@ -41,8 +41,8 @@ pub(super) async fn update_todo(
 
     tracing::info!("Update todo request: {req:?}");
 
-    let controller = UpdateController::new(state.todo_repository);
-    if let Err(err) = controller.run(req).await {
+    let controller = TodoController::new(state.todo_repository, state.tag_repository);
+    if let Err(err) = controller.update(req).await {
         tracing::error!("Update todo error: {err:?}");
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()

@@ -7,7 +7,7 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TagState;
-use crate::adapters::controllers::tag::create::CreateController;
+use crate::adapters::controllers::tag::TagController;
 use crate::adapters::dtos::tag::create::{CreateRequest, ParseError};
 use crate::application::dtos::tag::create::CreateTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
@@ -29,8 +29,8 @@ pub(super) async fn create_tag(
         description: body.description,
     };
 
-    let controller = CreateController::new(state.tag_repository);
-    let output = match controller.run(input).await {
+    let controller = TagController::new(state.tag_repository);
+    let output = match controller.create(input).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("Create tag error: {err:?}");

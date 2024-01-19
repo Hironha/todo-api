@@ -7,7 +7,7 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TagState;
-use crate::adapters::controllers::tag::find::FindController;
+use crate::adapters::controllers::tag::TagController;
 use crate::adapters::dtos::tag::find::{FindRequest, ParseError};
 use crate::application::dtos::tag::find::FindTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
@@ -24,9 +24,9 @@ pub(super) async fn find_tag(
     tracing::info!("Find tag path: {path:?}");
 
     let input = FindRequest { id: path.id };
-    let controller = FindController::new(state.tag_repository);
+    let controller = TagController::new(state.tag_repository);
 
-    let output = match controller.run(input).await {
+    let output = match controller.find(input).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("Find tag error: {err:?}");

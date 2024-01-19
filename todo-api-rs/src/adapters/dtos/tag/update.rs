@@ -1,19 +1,18 @@
 use thiserror::Error;
 
-use crate::adapters::dtos::Parse;
 use crate::application::dtos::tag::update::UpdateTagInput;
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
 use crate::domain::types::Id;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct UpdateRequest {
     pub id: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
 }
 
-impl Parse<UpdateTagInput, ParseError> for UpdateRequest {
-    fn parse(self) -> Result<UpdateTagInput, ParseError> {
+impl UpdateRequest {
+    pub fn parse(self) -> Result<UpdateTagInput, ParseError> {
         let id = self
             .id
             .ok_or(ParseError::EmptyId)

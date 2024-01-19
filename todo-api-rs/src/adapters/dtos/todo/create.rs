@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::create::CreateTodoInput;
 use crate::domain::entities::todo::{
     Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
@@ -15,8 +14,8 @@ pub struct CreateRequest {
     pub status: Option<String>,
 }
 
-impl Parse<CreateTodoInput, ParseError> for CreateRequest {
-    fn parse(self) -> Result<CreateTodoInput, ParseError> {
+impl CreateRequest {
+    pub fn parse(self) -> Result<CreateTodoInput, ParseError> {
         let title = self
             .title
             .ok_or(ParseError::Title(TitleError::Empty))

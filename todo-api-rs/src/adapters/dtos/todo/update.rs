@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::update::UpdateTodoInput;
 use crate::domain::entities::todo::{
     Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
@@ -16,8 +15,8 @@ pub struct UpdateRequest {
     pub status: Option<String>,
 }
 
-impl Parse<UpdateTodoInput, ParseError> for UpdateRequest {
-    fn parse(self) -> Result<UpdateTodoInput, ParseError> {
+impl UpdateRequest {
+    pub fn parse(self) -> Result<UpdateTodoInput, ParseError> {
         let id = self
             .id
             .filter(|id| !id.is_empty())

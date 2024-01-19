@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-use crate::adapters::dtos::Parse;
 use crate::application::dtos::todo::bind_tags::BindTodoTagsInput;
 use crate::domain::types::Id;
 
@@ -10,8 +9,8 @@ pub struct BindTagsRequest {
     pub tags_id: Option<Vec<String>>,
 }
 
-impl Parse<BindTodoTagsInput, ParseError> for BindTagsRequest {
-    fn parse(self) -> Result<BindTodoTagsInput, ParseError> {
+impl BindTagsRequest {
+    pub fn parse(self) -> Result<BindTodoTagsInput, ParseError> {
         let todo_id = self
             .todo_id
             .filter(|id| !id.is_empty())

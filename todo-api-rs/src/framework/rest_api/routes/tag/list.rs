@@ -6,13 +6,13 @@ use axum::response::IntoResponse;
 use axum::Json;
 
 use super::TagState;
-use crate::adapters::controllers::tag::list::ListController;
+use crate::adapters::controllers::tag::TagController;
 use crate::application::dtos::tag::list::ListTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoResponse {
-    let controller = ListController::new(state.tag_repository);
-    let output = match controller.run().await {
+    let controller = TagController::new(state.tag_repository);
+    let output = match controller.list().await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("List tags error: {err:?}");

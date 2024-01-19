@@ -7,7 +7,7 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::list::ListController;
+use crate::adapters::controllers::todo::TodoController;
 use crate::adapters::dtos::todo::list::{ListRequest, ParseError};
 use crate::application::dtos::todo::list::ListTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
@@ -32,8 +32,8 @@ pub(super) async fn list_todo(
 
     tracing::info!("List todos request: {req:?}");
 
-    let controller = ListController::new(state.todo_repository);
-    let output = match controller.run(req).await {
+    let controller = TodoController::new(state.todo_repository, state.tag_repository);
+    let output = match controller.list(req).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("List todos error: {err:?}");

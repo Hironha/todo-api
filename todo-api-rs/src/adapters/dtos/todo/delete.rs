@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-use crate::adapters::dtos::Parse;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
@@ -8,8 +7,8 @@ pub struct DeleteRequest {
     pub id: Option<String>,
 }
 
-impl Parse<Id, ParseError> for DeleteRequest {
-    fn parse(self) -> Result<Id, ParseError> {
+impl DeleteRequest {
+    pub fn parse(self) -> Result<Id, ParseError> {
         self.id
             .filter(|id| !id.is_empty())
             .ok_or(ParseError::EmptyId)

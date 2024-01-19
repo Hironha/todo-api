@@ -3,11 +3,11 @@ use crate::application::repositories::tag::{ListAllError, TagRepository};
 use crate::domain::entities::tag::TagEntity;
 
 #[derive(Debug)]
-pub struct ListTagsUseCase<T: TagRepository> {
+pub struct ListAllTagsUseCase<T: TagRepository> {
     tag_repository: T,
 }
 
-impl<T: TagRepository> ListTagsUseCase<T> {
+impl<T: TagRepository> ListAllTagsUseCase<T> {
     pub fn new(tag_repository: T) -> Self {
         Self { tag_repository }
     }
