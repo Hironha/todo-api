@@ -21,7 +21,7 @@ pub struct ListAllTagsView {
 pub struct JsonTagPresenter;
 
 impl JsonTagPresenter {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }
