@@ -1,7 +1,7 @@
 mod create;
 mod delete;
 mod find;
-mod list;
+mod list_all;
 mod update;
 
 use axum::extract::FromRef;
@@ -12,7 +12,7 @@ use sqlx::{Pool, Postgres};
 use create::create_tag;
 use delete::delete_tag;
 use find::find_tag;
-use list::list_tags;
+use list_all::list_tags;
 use update::update_tag;
 
 use crate::framework::storage::repositories::tag::PgTagRepository;

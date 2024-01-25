@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::domain::entities::tag::TagEntity;
 
 #[derive(Clone, Debug, Serialize)]
-pub struct TagPresenter {
+pub struct TagView {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
@@ -13,7 +13,7 @@ pub struct TagPresenter {
     pub updated_at: String,
 }
 
-impl From<TagEntity> for TagPresenter {
+impl From<TagEntity> for TagView {
     fn from(tag: TagEntity) -> Self {
         Self {
             id: tag.id.to_string(),

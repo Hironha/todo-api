@@ -5,13 +5,13 @@ use crate::domain::entities::tag::{Description, DescriptionError, Name, NameErro
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug, Default)]
-pub struct UpdateRequest {
+pub struct UpdateTagRequest {
     pub id: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
 }
 
-impl UpdateRequest {
+impl UpdateTagRequest {
     pub fn parse(self) -> Result<UpdateTagInput, ParseError> {
         let id = self
             .id

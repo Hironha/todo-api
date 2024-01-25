@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::domain::entities::todo::TodoEntity;
 
-use super::tag::TagPresenter;
+use crate::adapters::views::tag::TagView;
 
 /// Presentable format of `TodoEntity`
 #[derive(Clone, Debug, Serialize)]
@@ -14,7 +14,7 @@ pub struct TodoPresenter {
     /// `Date` in UTC YYYY-MM-DD format
     #[serde(rename(serialize = "todoAt"))]
     pub todo_at: Option<String>,
-    pub tags: Vec<TagPresenter>,
+    pub tags: Vec<TagView>,
     /// `Date` in `RFC-3339` format
     #[serde(rename(serialize = "createdAt"))]
     pub created_at: String,
@@ -28,8 +28,8 @@ impl TodoPresenter {
         let tag_presenters = entity
             .tags
             .into_iter()
-            .map(TagPresenter::from)
-            .collect::<Vec<TagPresenter>>();
+            .map(TagView::from)
+            .collect::<Vec<TagView>>();
 
         Self {
             id: entity.id.to_string(),

@@ -6,13 +6,15 @@ use axum::response::IntoResponse;
 use axum::Json;
 
 use super::TagState;
-use crate::adapters::controllers::tag::TagController;
-use crate::application::dtos::tag::list::ListTagError;
+use crate::adapters::controllers::tag::list_all::ListAllTagsController;
+use crate::adapters::presenters::json::tag::JsonTagPresenter;
+use crate::application::dtos::tag::list_all::ListAllTagsError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoResponse {
-    let controller = TagController::new(state.tag_repository);
-    let output = match controller.list().await {
+    let presenter = JsonTagPresenter::new();
+    let controller = ListAllTagsController::new(state.tag_repository, presenter);
+    let output = match controller.run().await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("List tags error: {err:?}");
@@ -25,9 +27,9 @@ pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoRespons
 }
 
 fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<ValidationError>) {
-    if let Some(list_err) = error.downcast_ref::<ListTagError>() {
+    if let Some(list_err) = error.downcast_ref::<ListAllTagsError>() {
         return match list_err {
-            ListTagError::Internal(..) => {
+            ListAllTagsError::Internal(..) => {
                 let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }

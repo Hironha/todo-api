@@ -1,6 +1,5 @@
-use crate::application::dtos::tag::list::ListTagError;
+use crate::application::dtos::tag::list_all::{ListAllTagsError, ListAllTagsOutput};
 use crate::application::repositories::tag::{ListAllError, TagRepository};
-use crate::domain::entities::tag::TagEntity;
 
 #[derive(Debug)]
 pub struct ListAllTagsUseCase<T: TagRepository> {
@@ -12,12 +11,18 @@ impl<T: TagRepository> ListAllTagsUseCase<T> {
         Self { tag_repository }
     }
 
-    pub async fn exec(&self) -> Result<Vec<TagEntity>, ListTagError> {
-        self.tag_repository
+    pub async fn exec(&self) -> Result<ListAllTagsOutput, ListAllTagsError> {
+        let entities = self
+            .tag_repository
             .list_all()
             .await
             .map_err(|err| match err {
-                ListAllError::Internal(err) => ListTagError::Internal(err),
-            })
+                ListAllError::Internal(err) => ListAllTagsError::Internal(err),
+            })?;
+
+        Ok(ListAllTagsOutput {
+            count: entities.len(),
+            items: entities,
+        })
     }
 }

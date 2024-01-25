@@ -7,8 +7,9 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TagState;
-use crate::adapters::controllers::tag::TagController;
-use crate::adapters::dtos::tag::delete::{DeleteRequest, ParseError};
+use crate::adapters::controllers::tag::delete::DeleteTagController;
+use crate::adapters::dtos::tag::delete::{DeleteTagRequest, ParseError};
+use crate::adapters::presenters::json::tag::JsonTagPresenter;
 use crate::application::dtos::tag::delete::DeleteTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -23,10 +24,11 @@ pub(super) async fn delete_tag(
 ) -> impl IntoResponse {
     tracing::info!("Delete tag path: {path:?}");
 
-    let input = DeleteRequest { id: path.id };
-    let controller = TagController::new(state.tag_repository);
+    let input = DeleteTagRequest { id: path.id };
+    let presenter = JsonTagPresenter::new();
+    let controller = DeleteTagController::new(state.tag_repository, presenter);
 
-    if let Err(err) = controller.delete(input).await {
+    if let Err(err) = controller.run(input).await {
         tracing::error!("Delete tag error: {err:?}");
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()

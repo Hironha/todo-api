@@ -4,12 +4,12 @@ use crate::application::dtos::tag::create::CreateTagInput;
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
 
 #[derive(Clone, Debug, Default)]
-pub struct CreateRequest {
+pub struct CreateTagRequest {
     pub name: Option<String>,
     pub description: Option<String>,
 }
 
-impl CreateRequest {
+impl CreateTagRequest {
     pub fn parse(self) -> Result<CreateTagInput, ParseError> {
         let name = self
             .name

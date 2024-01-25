@@ -7,8 +7,9 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TagState;
-use crate::adapters::controllers::tag::TagController;
-use crate::adapters::dtos::tag::update::{ParseError, UpdateRequest};
+use crate::adapters::controllers::tag::update::UpdateTagController;
+use crate::adapters::dtos::tag::update::{ParseError, UpdateTagRequest};
+use crate::adapters::presenters::json::tag::JsonTagPresenter;
 use crate::application::dtos::tag::update::UpdateTagError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -28,7 +29,7 @@ pub(super) async fn update_tag(
     Path(path): Path<UpdatePathParams>,
     Json(body): Json<UpdateBody>,
 ) -> impl IntoResponse {
-    let input = UpdateRequest {
+    let input = UpdateTagRequest {
         id: path.id,
         name: body.name,
         description: body.description,
@@ -36,9 +37,10 @@ pub(super) async fn update_tag(
 
     tracing::info!("Update tag input: {input:?}");
 
-    let controller = TagController::new(state.tag_repository);
+    let presenter = JsonTagPresenter::new();
+    let controller = UpdateTagController::new(state.tag_repository, presenter);
 
-    let output = match controller.update(input).await {
+    let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("Update tag error: {err:?}");
