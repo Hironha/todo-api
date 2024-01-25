@@ -1,8 +1,7 @@
 use serde::Serialize;
 
+use crate::adapters::presenters::json::tag::TagView;
 use crate::domain::entities::todo::TodoEntity;
-
-use crate::adapters::views::tag::TagView;
 
 /// Presentable format of `TodoEntity`
 #[derive(Clone, Debug, Serialize)]

@@ -7,9 +7,10 @@ use crate::adapters::controllers::tag::delete::DeleteTagPresenter;
 use crate::adapters::controllers::tag::find::FindTagPresenter;
 use crate::adapters::controllers::tag::list_all::ListAllTagsPresenter;
 use crate::adapters::controllers::tag::update::UpdateTagPresenter;
-use crate::adapters::views::tag::TagView;
 use crate::application::dtos::tag::list_all::ListAllTagsOutput;
 use crate::domain::entities::tag::TagEntity;
+
+use super::TagView;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ListAllTagsView {
