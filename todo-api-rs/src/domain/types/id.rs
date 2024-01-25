@@ -21,7 +21,7 @@ impl Id {
 
 impl fmt::Display for Id {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.0.to_string().as_str())
+        self.0.fmt(f)
     }
 }
 
