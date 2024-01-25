@@ -23,7 +23,7 @@ where
     T: TagRepository,
     P: DeleteTagPresenter,
 {
-    pub fn new(repository: T, presenter: P) -> Self {
+    pub const fn new(repository: T, presenter: P) -> Self {
         Self {
             repository,
             presenter,
