@@ -47,6 +47,12 @@ impl DateTime {
     pub fn to_rfc3339(self) -> String {
         self.0.format(&Rfc3339).unwrap()
     }
+
+    pub fn parse_str(input: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        OffsetDateTime::parse(input, &Rfc3339)
+            .map(Self::from)
+            .map_err(Box::from)
+    }
 }
 
 impl From<OffsetDateTime> for DateTime {

@@ -1,8 +1,9 @@
+use serde::Deserialize;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::types::uuid::Uuid;
 use sqlx::FromRow;
 
-#[derive(Clone, Debug, FromRow)]
+#[derive(Clone, Debug, FromRow, Deserialize)]
 pub struct TodoTag {
     pub todo_id: Uuid,
     pub tag_id: Uuid,

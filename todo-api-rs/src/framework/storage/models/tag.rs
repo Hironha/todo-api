@@ -1,12 +1,12 @@
-use thiserror::Error;
-
+use serde::Deserialize;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::types::uuid::Uuid;
 use sqlx::FromRow;
+use thiserror::Error;
 
 use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
 
-#[derive(Clone, Debug, FromRow)]
+#[derive(Clone, Debug, FromRow, Deserialize)]
 pub struct TagModel {
     pub id: Uuid,
     pub name: String,

@@ -1,8 +1,8 @@
-use thiserror::Error;
-
+use serde::Deserialize;
 use sqlx::types::time::{Date as TimeDate, OffsetDateTime};
 use sqlx::types::Uuid;
 use sqlx::{FromRow, Type};
+use thiserror::Error;
 
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::{
@@ -10,7 +10,7 @@ use crate::domain::entities::todo::{
 };
 use crate::domain::types::Date;
 
-#[derive(Clone, Debug, FromRow)]
+#[derive(Clone, Debug, FromRow, Deserialize)]
 pub struct TodoModel {
     pub id: Uuid,
     pub title: String,
@@ -43,7 +43,7 @@ impl TodoModel {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Type)]
+#[derive(Clone, Debug, PartialEq, Eq, Type, Deserialize)]
 #[sqlx(type_name = "todo_status", rename_all = "snake_case")]
 pub enum TodoStatus {
     Todo,
@@ -62,7 +62,7 @@ impl From<TodoEntityStatus> for TodoStatus {
 }
 
 impl TodoStatus {
-    fn into_entity(self) -> TodoEntityStatus {
+    pub fn into_entity(self) -> TodoEntityStatus {
         match self {
             Self::Todo => TodoEntityStatus::Todo,
             Self::InProgress => TodoEntityStatus::InProgress,

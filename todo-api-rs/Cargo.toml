@@ -12,14 +12,14 @@ lto = true
 
 [dependencies]
 # service framework
-axum = { version = "0.7.2", features = ["macros"] }
+axum = { version = "0.7", features = ["macros"] }
 
 # async runtime
-tokio = { version = "1.32.0", features = ["full"] }
+tokio = { version = "1.35", features = ["full"] }
 
 # serialization/deserialization
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.107"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["raw_value"] }
 
 # database
 sqlx = { version = "0.7.1", features = [
@@ -31,14 +31,19 @@ sqlx = { version = "0.7.1", features = [
 ] }
 
 # tracing aka logging
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # middlewares
 tower-http = { version = "0.5", features = ["trace", "cors"] }
 
 # utils
-dotenvy = "0.15.7"
-time = { version = "0.3", features = ["macros", "parsing"] }
-uuid = { version = "1.4.0", features = ["v4", "fast-rng", "macro-diagnostics"] }
-thiserror = "1.0.51"
+dotenvy = "0.15"
+time = { version = "0.3", features = ["macros", "parsing", "serde"] }
+uuid = { version = "1.7", features = [
+  "v4",
+  "fast-rng",
+  "macro-diagnostics",
+  "serde",
+] }
+thiserror = "1.0"

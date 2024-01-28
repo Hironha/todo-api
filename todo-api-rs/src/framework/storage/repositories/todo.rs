@@ -1,16 +1,17 @@
+use std::error::Error;
+
 use sqlx::types::uuid::Uuid;
-use sqlx::{Error as SqlxError, FromRow, PgPool, Postgres, QueryBuilder, Row};
+use sqlx::{Error as SqlxError, PgPool, Postgres, QueryBuilder};
 
 use crate::application::repositories::todo::{
     BindTagsError, CreateError, DeleteError, ExistsError, FindError, ListError, ListPayload,
     PaginatedList, TodoRepository, UpdateError,
 };
 
-use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::{DateTime, Id};
-use crate::framework::storage::models::tag::TagModel;
 use crate::framework::storage::models::todo::{TodoModel, TodoStatus as TodoModelStatus};
+use crate::framework::storage::views::TodoWithTagsView;
 
 #[derive(Clone)]
 pub struct PgTodoRepository {
@@ -21,43 +22,36 @@ impl PgTodoRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-}
 
-impl PgTodoRepository {
-    async fn find_related_tags(&self, todo_uuid: Uuid) -> Result<Vec<TagModel>, SqlxError> {
-        let find_related_tags_q = r#"
-            SELECT tag.*
-            FROM tag
-            INNER JOIN todo_tag ON todo_tag.tag_id = tag.id
-            WHERE todo_tag.todo_id = $1
-        "#;
-
-        sqlx::query_as::<_, TagModel>(find_related_tags_q)
-            .bind(todo_uuid)
-            .fetch_all(&self.pool)
-            .await
-    }
-
-    async fn find_many_related_tags(
-        &self,
-        todo_uuids: &[Uuid],
-    ) -> Result<Vec<(Uuid, TagModel)>, SqlxError> {
-        let find_many_related_tags_q = r#"
-            SELECT todo_id, tag.*
-            FROM todo_tag
-            INNER JOIN tag ON tag.id = todo_tag.tag_id
-            WHERE todo_tag.todo_id = ANY($1) 
-        "#;
-
-        let related_tags = sqlx::query(find_many_related_tags_q)
-            .bind(todo_uuids)
-            .fetch_all(&self.pool)
-            .await?;
-
-        related_tags
-            .into_iter()
-            .map(|row| Ok((row.try_get("todo_id")?, TagModel::from_row(&row)?)))
-            .collect::<Result<Vec<(Uuid, TagModel)>, SqlxError>>()
+    fn todo_with_tags_cte_query(&self) -> &'static str {
+        r#"
+        WITH todo_with_tags as (
+            SELECT
+                todo.id,
+                todo.title,
+                todo.description,
+                todo.status,
+                todo.todo_at,
+                todo.created_at,
+                todo.updated_at,
+                CASE
+                    WHEN COUNT(tag.id) > 0 THEN
+                        jsonb_agg(jsonb_build_object(
+                            'id', tag.id,
+                            'name', tag.name,
+                            'description', tag.description,
+                            'created_at', tag.created_at,
+                            'updated_at', tag.updated_at
+                        ))
+                    ELSE
+                        '[]'::jsonb
+                END as tags
+            FROM todo
+            LEFT JOIN todo_tag ON todo.id = todo_tag.todo_id
+            LEFT JOIN tag ON todo_tag.tag_id = tag.id
+            GROUP BY todo.id
+        )
+        "#
     }
 }
 
@@ -154,39 +148,35 @@ impl TodoRepository for PgTodoRepository {
     }
 
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError> {
-        let todo_uuid = todo_id.uuid();
-        let find_todo_q = "SELECT todo.* FROM todo WHERE id = $1";
-        let todo_model = sqlx::query_as::<_, TodoModel>(find_todo_q)
-            .bind(todo_uuid)
+        let mut find_q = String::from(self.todo_with_tags_cte_query());
+        find_q.push_str(
+            r#"
+            SELECT * FROM todo_with_tags as t
+            WHERE t.id = $1
+        "#,
+        );
+
+        let todo_with_tags = sqlx::query_as::<_, TodoWithTagsView>(find_q.as_str())
+            .bind(todo_id.uuid())
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| match e {
+            .map_err(|err| match err {
                 SqlxError::RowNotFound => FindError::NotFound,
-                _ => FindError::Internal(e.into()),
+                any => FindError::Internal(any.into()),
             })?;
 
-        let related_tag_entities = self
-            .find_related_tags(todo_uuid)
-            .await
-            .map_err(|e| FindError::Internal(e.into()))?
-            .into_iter()
-            .map(|model| {
-                model
-                    .try_into_entity()
-                    .map_err(|e| FindError::Internal(e.into()))
-            })
-            .collect::<Result<Vec<TagEntity>, FindError>>()?;
-
-        todo_model
-            .try_into_entity(related_tag_entities)
-            .map_err(|e| FindError::Internal(e.into()))
+        todo_with_tags
+            .try_into_entity()
+            .map_err(FindError::Internal)
     }
 
     async fn list(&self, payload: ListPayload) -> Result<PaginatedList, ListError> {
-        let base_count_q = "SELECT COUNT(*) FROM todo";
-        let base_list_q = "SELECT todo.* FROM todo";
-        let mut count_q = QueryBuilder::<Postgres>::new(base_count_q);
+        let base_list_q = self.todo_with_tags_cte_query();
+        let mut count_q = QueryBuilder::<Postgres>::new(base_list_q);
+        count_q.push(r#" SELECT COUNT(*) FROM todo_with_tags as t "#);
+
         let mut list_q = QueryBuilder::<Postgres>::new(base_list_q);
+        list_q.push(r#" SELECT * FROM todo_with_tags "#);
 
         let title_filter = payload.title.as_ref().map(|t| format!("%{}%", t.as_str()));
         if let Some(constraint) = title_filter.as_deref() {
@@ -204,53 +194,21 @@ impl TodoRepository for PgTodoRepository {
         let page: i64 = u32::from(payload.page).into();
         let offset = (page - 1) * limit;
 
-        let todo_models = list_q
+        let todos_with_tags = list_q
             .push(" ORDER BY created_at DESC LIMIT ")
             .push_bind(limit)
             .push(" OFFSET ")
             .push_bind(offset)
-            .build_query_as::<TodoModel>()
+            .build_query_as::<TodoWithTagsView>()
             .fetch_all(&self.pool)
             .await
             .map_err(|e| ListError::Internal(e.into()))?;
 
-        let todo_uuids = todo_models
-            .iter()
-            .map(|todo| todo.id)
-            .collect::<Vec<Uuid>>();
-
-        let related_tag_models = self
-            .find_many_related_tags(&todo_uuids)
-            .await
-            .map_err(|e| ListError::Internal(e.into()))?;
-
-        let related_tag_entities = related_tag_models
+        let todo_entities = todos_with_tags
             .into_iter()
-            .map(|(todo_uuid, tag_model)| {
-                tag_model
-                    .try_into_entity()
-                    .map(|entity| (todo_uuid, entity))
-                    .map_err(|e| ListError::Internal(e.into()))
-            })
-            .collect::<Result<Vec<(Uuid, TagEntity)>, ListError>>()?;
-
-        let mut todo_entities = todo_models
-            .into_iter()
-            .map(|model| {
-                model
-                    .try_into_entity(Vec::new())
-                    .map_err(|e| ListError::Internal(e.into()))
-            })
-            .collect::<Result<Vec<TodoEntity>, ListError>>()?;
-
-        for (todo_uuid, tag) in related_tag_entities.into_iter() {
-            for todo in todo_entities.iter_mut() {
-                if todo.id.uuid() == todo_uuid {
-                    todo.tags.push(tag);
-                    break;
-                }
-            }
-        }
+            .map(TodoWithTagsView::try_into_entity)
+            .collect::<Result<Vec<TodoEntity>, Box<dyn Error>>>()
+            .map_err(ListError::Internal)?;
 
         Ok(PaginatedList {
             count: count as u64,
