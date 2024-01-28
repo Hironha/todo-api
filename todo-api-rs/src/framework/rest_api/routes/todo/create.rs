@@ -7,8 +7,9 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::TodoController;
-use crate::adapters::dtos::todo::create::{CreateRequest, ParseError};
+use crate::adapters::controllers::todo::create::CreateTodoController;
+use crate::adapters::dtos::todo::create::{CreateTodoRequest, ParseError};
+use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::create::CreateTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -25,7 +26,7 @@ pub(super) async fn create_todo(
     State(state): State<TodoState>,
     Json(body): Json<CreateBody>,
 ) -> impl IntoResponse {
-    let req = CreateRequest {
+    let req = CreateTodoRequest {
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
@@ -34,8 +35,9 @@ pub(super) async fn create_todo(
 
     tracing::info!("Create todo request: {req:?}");
 
-    let controller = TodoController::new(state.todo_repository, state.tag_repository);
-    let output = match controller.create(req).await {
+    let presenter = JsonTodoPresenter::new();
+    let controller = CreateTodoController::new(state.todo_repository, presenter);
+    let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("Create todo error: {err:?}");

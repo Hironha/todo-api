@@ -5,7 +5,7 @@ use crate::domain::entities::todo::TodoEntity;
 
 /// Presentable format of `TodoEntity`
 #[derive(Clone, Debug, Serialize)]
-pub struct TodoPresenter {
+pub struct TodoView {
     pub id: String,
     pub title: String,
     pub description: Option<String>,
@@ -22,13 +22,9 @@ pub struct TodoPresenter {
     pub updated_at: String,
 }
 
-impl TodoPresenter {
-    pub fn from_entity(entity: TodoEntity) -> Self {
-        let tag_presenters = entity
-            .tags
-            .into_iter()
-            .map(TagView::from)
-            .collect::<Vec<TagView>>();
+impl From<TodoEntity> for TodoView {
+    fn from(entity: TodoEntity) -> Self {
+        let tag_views: Vec<TagView> = entity.tags.into_iter().map(TagView::from).collect();
 
         Self {
             id: entity.id.to_string(),
@@ -36,7 +32,7 @@ impl TodoPresenter {
             description: entity.description.map(|d| d.into_inner()),
             status: entity.status.to_string(),
             todo_at: entity.todo_at.map(|at| at.to_ymd()),
-            tags: tag_presenters,
+            tags: tag_views,
             created_at: entity.created_at.to_rfc3339(),
             updated_at: entity.updated_at.to_rfc3339(),
         }

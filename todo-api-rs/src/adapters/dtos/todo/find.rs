@@ -3,11 +3,11 @@ use thiserror::Error;
 use crate::domain::types::Id;
 
 #[derive(Debug)]
-pub struct FindRequest {
+pub struct FindTodoRequest {
     pub id: Option<String>,
 }
 
-impl FindRequest {
+impl FindTodoRequest {
     pub fn parse(self) -> Result<Id, ParseError> {
         self.id
             .filter(|id| !id.is_empty())
@@ -29,7 +29,7 @@ mod test {
 
     #[test]
     fn parse_success() {
-        let input_schema = super::FindRequest {
+        let input_schema = super::FindTodoRequest {
             id: Some(super::Id::new().to_string()),
         };
 
@@ -38,13 +38,13 @@ mod test {
 
     #[test]
     fn parse_fail() {
-        let none_id_schema = super::FindRequest { id: None };
+        let none_id_schema = super::FindTodoRequest { id: None };
         let none_id_input = none_id_schema.parse();
 
         assert!(none_id_input.is_err());
         assert_eq!(none_id_input.unwrap_err(), super::ParseError::EmptyId);
 
-        let invalid_id_schema = super::FindRequest {
+        let invalid_id_schema = super::FindTodoRequest {
             id: Some("invalid-id".to_string()),
         };
         let invalid_id_input = invalid_id_schema.parse();

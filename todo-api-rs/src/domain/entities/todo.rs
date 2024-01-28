@@ -6,7 +6,7 @@ use crate::domain::types::{Date, DateTime, Id};
 
 use super::tag::TagEntity;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TodoEntity {
     pub id: Id,
     pub title: Title,

@@ -7,8 +7,9 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::TodoController;
-use crate::adapters::dtos::todo::list::{ListRequest, ParseError};
+use crate::adapters::controllers::todo::list::ListTodosController;
+use crate::adapters::dtos::todo::list::{ListTodosRequest, ParseError};
+use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::list::ListTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -24,7 +25,7 @@ pub(super) async fn list_todo(
     State(state): State<TodoState>,
     Query(query): Query<QueryParams>,
 ) -> impl IntoResponse {
-    let req = ListRequest {
+    let req = ListTodosRequest {
         page: query.page,
         per_page: query.per_page,
         title: query.title,
@@ -32,8 +33,9 @@ pub(super) async fn list_todo(
 
     tracing::info!("List todos request: {req:?}");
 
-    let controller = TodoController::new(state.todo_repository, state.tag_repository);
-    let output = match controller.list(req).await {
+    let presenter = JsonTodoPresenter::new();
+    let controller = ListTodosController::new(state.todo_repository, presenter);
+    let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("List todos error: {err:?}");

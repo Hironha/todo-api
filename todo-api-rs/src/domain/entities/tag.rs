@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::domain::types::{DateTime, Id};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TagEntity {
     pub id: Id,
     pub name: Name,

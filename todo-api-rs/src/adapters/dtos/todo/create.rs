@@ -7,14 +7,14 @@ use crate::domain::entities::todo::{
 use crate::domain::types::Date;
 
 #[derive(Clone, Debug)]
-pub struct CreateRequest {
+pub struct CreateTodoRequest {
     pub title: Option<String>,
     pub description: Option<String>,
     pub todo_at: Option<String>,
     pub status: Option<String>,
 }
 
-impl CreateRequest {
+impl CreateTodoRequest {
     pub fn parse(self) -> Result<CreateTodoInput, ParseError> {
         let title = self
             .title

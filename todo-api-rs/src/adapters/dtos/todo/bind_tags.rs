@@ -4,12 +4,12 @@ use crate::application::dtos::todo::bind_tags::BindTodoTagsInput;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
-pub struct BindTagsRequest {
+pub struct BindTodoTagsRequest {
     pub todo_id: Option<String>,
     pub tags_id: Option<Vec<String>>,
 }
 
-impl BindTagsRequest {
+impl BindTodoTagsRequest {
     pub fn parse(self) -> Result<BindTodoTagsInput, ParseError> {
         let todo_id = self
             .todo_id

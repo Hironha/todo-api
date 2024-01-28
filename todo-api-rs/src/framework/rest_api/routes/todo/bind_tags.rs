@@ -7,8 +7,9 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::TodoController;
-use crate::adapters::dtos::todo::bind_tags::{BindTagsRequest, ParseError};
+use crate::adapters::controllers::todo::bind_tags::BindTodoTagsController;
+use crate::adapters::dtos::todo::bind_tags::{BindTodoTagsRequest, ParseError};
+use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::bind_tags::BindTodoTagsError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -28,15 +29,17 @@ pub(super) async fn bind_todo_tags(
     Path(path): Path<BindTagsPathParams>,
     Json(body): Json<BindTagsBody>,
 ) -> impl IntoResponse {
-    let req = BindTagsRequest {
+    let req = BindTodoTagsRequest {
         tags_id: body.tags_id,
         todo_id: path.id,
     };
 
     tracing::info!("Bind todo tags request: {req:?}");
 
-    let controller = TodoController::new(state.todo_repository, state.tag_repository);
-    if let Err(err) = controller.bind_tags(req).await {
+    let presenter = JsonTodoPresenter::new();
+    let controller =
+        BindTodoTagsController::new(state.todo_repository, state.tag_repository, presenter);
+    if let Err(err) = controller.run(req).await {
         tracing::error!("Bind todo tags error: {err:?}");
         let (status, error) = config_error_response(err);
         return (status, Json(error)).into_response();

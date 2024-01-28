@@ -7,8 +7,9 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::TodoController;
-use crate::adapters::dtos::todo::delete::{DeleteRequest, ParseError};
+use crate::adapters::controllers::todo::delete::DeleteTodoController;
+use crate::adapters::dtos::todo::delete::{DeleteTodoRequest, ParseError};
+use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::delete::DeleteTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -21,12 +22,13 @@ pub(super) async fn delete_todo(
     State(state): State<TodoState>,
     Path(path): Path<DeletePathParams>,
 ) -> impl IntoResponse {
-    let req = DeleteRequest { id: path.id };
+    let req = DeleteTodoRequest { id: path.id };
 
     tracing::info!("Delete todo request {req:?}");
 
-    let controller = TodoController::new(state.todo_repository, state.tag_repository);
-    if let Err(err) = controller.delete(req).await {
+    let presenter = JsonTodoPresenter::new();
+    let controller = DeleteTodoController::new(state.todo_repository, presenter);
+    if let Err(err) = controller.run(req).await {
         tracing::error!("Delete todo error: {err:?}");
         let (status_code, message) = config_error_response(err);
         (status_code, Json(message)).into_response()

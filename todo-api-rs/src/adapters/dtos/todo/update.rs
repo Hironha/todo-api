@@ -7,7 +7,7 @@ use crate::domain::entities::todo::{
 use crate::domain::types::{Date, Id};
 
 #[derive(Clone, Debug)]
-pub struct UpdateRequest {
+pub struct UpdateTodoRequest {
     pub id: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
@@ -15,7 +15,7 @@ pub struct UpdateRequest {
     pub status: Option<String>,
 }
 
-impl UpdateRequest {
+impl UpdateTodoRequest {
     pub fn parse(self) -> Result<UpdateTodoInput, ParseError> {
         let id = self
             .id

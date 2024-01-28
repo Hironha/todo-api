@@ -3,11 +3,11 @@ use thiserror::Error;
 use crate::domain::types::Id;
 
 #[derive(Clone, Debug)]
-pub struct DeleteRequest {
+pub struct DeleteTodoRequest {
     pub id: Option<String>,
 }
 
-impl DeleteRequest {
+impl DeleteTodoRequest {
     pub fn parse(self) -> Result<Id, ParseError> {
         self.id
             .filter(|id| !id.is_empty())

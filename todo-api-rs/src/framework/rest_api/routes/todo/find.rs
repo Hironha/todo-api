@@ -7,8 +7,9 @@ use axum::Json;
 use serde::Deserialize;
 
 use super::TodoState;
-use crate::adapters::controllers::todo::TodoController;
-use crate::adapters::dtos::todo::find::{FindRequest, ParseError};
+use crate::adapters::controllers::todo::find::FindTodoController;
+use crate::adapters::dtos::todo::find::{FindTodoRequest, ParseError};
+use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::find::FindTodoError;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
@@ -21,12 +22,13 @@ pub(super) async fn find_todo(
     State(state): State<TodoState>,
     Path(path): Path<FindPathParams>,
 ) -> impl IntoResponse {
-    let req = FindRequest { id: path.id };
+    let req = FindTodoRequest { id: path.id };
 
     tracing::info!("Find todo request: {req:?}");
 
-    let controller = TodoController::new(state.todo_repository, state.tag_repository);
-    let output = match controller.find(req).await {
+    let presenter = JsonTodoPresenter::new();
+    let controller = FindTodoController::new(state.todo_repository, presenter);
+    let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
             tracing::error!("Find todo error: {err:?}");
