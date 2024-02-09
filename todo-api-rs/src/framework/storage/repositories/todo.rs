@@ -10,7 +10,7 @@ use crate::application::repositories::todo::{
 
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::{DateTime, Id};
-use crate::framework::storage::models::todo::{TodoModel, TodoStatus as TodoModelStatus};
+use crate::framework::storage::models::todo::{Status as TodoModelStatus, TodoModel};
 use crate::framework::storage::views::TodoWithTagsView;
 
 #[derive(Clone)]
@@ -117,7 +117,7 @@ impl TodoRepository for PgTodoRepository {
 
         todo_model
             .try_into_entity(Vec::new())
-            .map_err(|e| CreateError::Internal(e.into()))
+            .map_err(CreateError::Internal)
     }
 
     async fn delete(&mut self, todo_id: Id) -> Result<(), DeleteError> {

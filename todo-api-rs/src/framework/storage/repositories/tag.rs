@@ -43,9 +43,7 @@ impl TagRepository for PgTagRepository {
                 _ => CreateError::Internal(err.into()),
             })?;
 
-        tag_model
-            .try_into_entity()
-            .map_err(|e| CreateError::Internal(e.into()))
+        tag_model.try_into_entity().map_err(CreateError::Internal)
     }
 
     async fn delete(&self, tag_id: Id) -> Result<(), DeleteError> {
@@ -63,10 +61,7 @@ impl TagRepository for PgTagRepository {
     }
 
     async fn exists_many(&self, tag_ids: &[Id]) -> Result<(), ExistsManyError> {
-        let tag_uuids = tag_ids
-            .iter()
-            .map(|id| id.uuid())
-            .collect::<Vec<Uuid>>();
+        let tag_uuids = tag_ids.iter().map(|id| id.uuid()).collect::<Vec<Uuid>>();
 
         let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";
         let selected_tag_uuids = sqlx::query_scalar::<_, Uuid>(select_any_q)
@@ -104,9 +99,7 @@ impl TagRepository for PgTagRepository {
                 _ => FindError::Internal(err.into()),
             })?;
 
-        tag_model
-            .try_into_entity()
-            .map_err(|e| FindError::Internal(e.into()))
+        tag_model.try_into_entity().map_err(FindError::Internal)
     }
 
     async fn list_all(&self) -> Result<Vec<TagEntity>, ListAllError> {
@@ -122,11 +115,7 @@ impl TagRepository for PgTagRepository {
 
         tag_models
             .into_iter()
-            .map(|model| {
-                model
-                    .try_into_entity()
-                    .map_err(|e| ListAllError::Internal(e.into()))
-            })
+            .map(|model| model.try_into_entity().map_err(ListAllError::Internal))
             .collect::<Result<Vec<TagEntity>, ListAllError>>()
     }
 
@@ -153,8 +142,6 @@ impl TagRepository for PgTagRepository {
                 _ => UpdateError::Internal(err.into()),
             })?;
 
-        tag_model
-            .try_into_entity()
-            .map_err(|e| UpdateError::Internal(e.into()))
+        tag_model.try_into_entity().map_err(UpdateError::Internal)
     }
 }

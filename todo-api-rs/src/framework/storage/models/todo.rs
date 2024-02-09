@@ -1,12 +1,13 @@
+use std::error;
+
 use serde::Deserialize;
 use sqlx::types::time::{Date as TimeDate, OffsetDateTime};
 use sqlx::types::Uuid;
 use sqlx::{FromRow, Type};
-use thiserror::Error;
 
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::entities::todo::{
-    Description, DescriptionError, Title, TitleError, TodoEntity, TodoStatus as TodoEntityStatus,
+    Description, Title, TodoEntity, TodoStatus as TodoEntityStatus,
 };
 use crate::domain::types::Date;
 
@@ -16,19 +17,18 @@ pub struct TodoModel {
     pub title: String,
     pub description: Option<String>,
     pub todo_at: Option<TimeDate>,
-    pub status: TodoStatus,
+    pub status: Status,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
 }
 
 impl TodoModel {
-    pub fn try_into_entity(self, tags: Vec<TagEntity>) -> Result<TodoEntity, TodoModelEntityError> {
-        let title = Title::new(self.title).map_err(TodoModelEntityError::Title)?;
-        let description = self
-            .description
-            .map(Description::new)
-            .transpose()
-            .map_err(TodoModelEntityError::Description)?;
+    pub fn try_into_entity(
+        self,
+        tags: Vec<TagEntity>,
+    ) -> Result<TodoEntity, Box<dyn error::Error>> {
+        let title = Title::new(self.title)?;
+        let description = self.description.map(Description::new).transpose()?;
 
         Ok(TodoEntity {
             id: self.id.into(),
@@ -45,23 +45,23 @@ impl TodoModel {
 
 #[derive(Clone, Debug, PartialEq, Eq, Type, Deserialize)]
 #[sqlx(type_name = "todo_status", rename_all = "snake_case")]
-pub enum TodoStatus {
+pub enum Status {
     Todo,
     InProgress,
     Done,
 }
 
-impl From<TodoEntityStatus> for TodoStatus {
+impl From<TodoEntityStatus> for Status {
     fn from(value: TodoEntityStatus) -> Self {
         match value {
-            TodoEntityStatus::Todo => TodoStatus::Todo,
-            TodoEntityStatus::InProgress => TodoStatus::InProgress,
-            TodoEntityStatus::Done => TodoStatus::Done,
+            TodoEntityStatus::Todo => Status::Todo,
+            TodoEntityStatus::InProgress => Status::InProgress,
+            TodoEntityStatus::Done => Status::Done,
         }
     }
 }
 
-impl TodoStatus {
+impl Status {
     pub fn into_entity(self) -> TodoEntityStatus {
         match self {
             Self::Todo => TodoEntityStatus::Todo,
@@ -69,12 +69,4 @@ impl TodoStatus {
             Self::Done => TodoEntityStatus::Done,
         }
     }
-}
-
-#[derive(Debug, Error)]
-pub enum TodoModelEntityError {
-    #[error("Todo model title incompatible with entity: {0}")]
-    Title(#[source] TitleError),
-    #[error("Todo model description incompatible with entity: {0}")]
-    Description(#[source] DescriptionError),
 }
