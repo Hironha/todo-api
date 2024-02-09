@@ -1,3 +1,5 @@
+use std::error;
+
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool};
 
@@ -115,8 +117,9 @@ impl TagRepository for PgTagRepository {
 
         tag_models
             .into_iter()
-            .map(|model| model.try_into_entity().map_err(ListAllError::Internal))
-            .collect::<Result<Vec<TagEntity>, ListAllError>>()
+            .map(|model| model.try_into_entity())
+            .collect::<Result<Vec<TagEntity>, Box<dyn error::Error>>>()
+            .map_err(ListAllError::Internal)
     }
 
     async fn update(&self, tag: TagEntity) -> Result<TagEntity, UpdateError> {
