@@ -4,7 +4,7 @@ use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::{DateTime, Id};
 
 #[derive(Debug)]
-pub struct CreateTagUseCase<T: TagRepository> {
+pub struct CreateTagUseCase<T> {
     tag_repository: T,
 }
 

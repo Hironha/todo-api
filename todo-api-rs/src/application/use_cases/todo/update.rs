@@ -4,7 +4,7 @@ use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::DateTime;
 
 #[derive(Debug)]
-pub struct UpdateTodoUseCase<T: TodoRepository> {
+pub struct UpdateTodoUseCase<T> {
     todo_repository: T,
 }
 

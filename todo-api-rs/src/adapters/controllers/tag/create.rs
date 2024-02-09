@@ -10,11 +10,7 @@ pub trait CreateTagPresenter {
     fn present(&self, result: Result<TagEntity, Box<dyn Error>>) -> Self::View;
 }
 
-pub struct CreateTagController<T, P>
-where
-    T: TagRepository,
-    P: CreateTagPresenter,
-{
+pub struct CreateTagController<T, P> {
     repository: T,
     presenter: P,
 }

@@ -9,11 +9,7 @@ pub trait DeleteTagPresenter {
     fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
 }
 
-pub struct DeleteTagController<T, P>
-where
-    T: TagRepository,
-    P: DeleteTagPresenter,
-{
+pub struct DeleteTagController<T, P> {
     repository: T,
     presenter: P,
 }

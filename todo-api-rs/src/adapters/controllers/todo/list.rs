@@ -10,11 +10,7 @@ pub trait ListTodosPresenter {
     fn present(&self, result: Result<TodosList, Box<dyn Error>>) -> Self::View;
 }
 
-pub struct ListTodosController<T, P>
-where
-    T: TodoRepository,
-    P: ListTodosPresenter,
-{
+pub struct ListTodosController<T, P> {
     repository: T,
     presenter: P,
 }

@@ -1,19 +1,15 @@
 use std::error::Error;
 
+use crate::application::dtos::tag::list_all::ListAllTagsOutput;
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::list_all::ListAllTagsUseCase;
-use crate::application::dtos::tag::list_all::ListAllTagsOutput;
 
 pub trait ListAllTagsPresenter {
     type View;
     fn present(&self, result: Result<ListAllTagsOutput, Box<dyn Error>>) -> Self::View;
 }
 
-pub struct ListAllTagsController<T, P>
-where
-    T: TagRepository,
-    P: ListAllTagsPresenter,
-{
+pub struct ListAllTagsController<T, P> {
     repository: T,
     presenter: P,
 }

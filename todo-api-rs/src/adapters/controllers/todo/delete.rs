@@ -9,11 +9,7 @@ pub trait DeleteTodoPresenter {
     fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
 }
 
-pub struct DeleteTodoController<T, P>
-where
-    T: TodoRepository,
-    P: DeleteTodoPresenter,
-{
+pub struct DeleteTodoController<T, P> {
     repository: T,
     presenter: P,
 }

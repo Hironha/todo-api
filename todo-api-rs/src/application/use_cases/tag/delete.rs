@@ -3,7 +3,7 @@ use crate::application::repositories::tag::{DeleteError, TagRepository};
 use crate::domain::types::Id;
 
 #[derive(Debug)]
-pub struct DeleteTagUseCase<T: TagRepository> {
+pub struct DeleteTagUseCase<T> {
     tag_repository: T,
 }
 

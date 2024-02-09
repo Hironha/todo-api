@@ -4,7 +4,7 @@ use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
 
 #[derive(Debug)]
-pub struct FindTodoUseCase<T: TodoRepository> {
+pub struct FindTodoUseCase<T> {
     todo_repository: T,
 }
 

@@ -9,11 +9,7 @@ pub trait BindTodoTagsPresenter {
     fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
 }
 
-pub struct BindTodoTagsController<T, P>
-where
-    T: TodoRepository,
-    P: BindTodoTagsPresenter,
-{
+pub struct BindTodoTagsController<T, P> {
     todo_repository: T,
     presenter: P,
 }

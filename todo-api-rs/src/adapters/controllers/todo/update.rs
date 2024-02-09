@@ -9,11 +9,7 @@ pub trait UpdateTodoPresenter {
     fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
 }
 
-pub struct UpdateTodoController<T, P>
-where
-    T: TodoRepository,
-    P: UpdateTodoPresenter,
-{
+pub struct UpdateTodoController<T, P> {
     repository: T,
     presenter: P,
 }

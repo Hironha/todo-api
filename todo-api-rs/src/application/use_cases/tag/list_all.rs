@@ -2,7 +2,7 @@ use crate::application::dtos::tag::list_all::{ListAllTagsError, ListAllTagsOutpu
 use crate::application::repositories::tag::{ListAllError, TagRepository};
 
 #[derive(Debug)]
-pub struct ListAllTagsUseCase<T: TagRepository> {
+pub struct ListAllTagsUseCase<T> {
     tag_repository: T,
 }
 

@@ -3,7 +3,7 @@ use crate::application::repositories::tag::{FindError, TagRepository, UpdateErro
 use crate::domain::entities::tag::TagEntity;
 
 #[derive(Debug)]
-pub struct UpdateTagUseCase<T: TagRepository> {
+pub struct UpdateTagUseCase<T> {
     tag_repository: T,
 }
 

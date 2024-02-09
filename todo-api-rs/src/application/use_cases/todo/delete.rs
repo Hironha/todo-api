@@ -3,7 +3,7 @@ use crate::application::repositories::todo::{DeleteError, TodoRepository};
 use crate::domain::types::Id;
 
 #[derive(Debug)]
-pub struct DeleteTodoUseCase<T: TodoRepository> {
+pub struct DeleteTodoUseCase<T> {
     todo_repository: T,
 }
 

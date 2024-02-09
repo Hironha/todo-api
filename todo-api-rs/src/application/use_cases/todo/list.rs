@@ -2,7 +2,7 @@ use crate::application::dtos::todo::list::{ListTodoError, ListTodosInput, TodosL
 use crate::application::repositories::todo::{ListError, ListQuery, TodoRepository};
 
 #[derive(Debug)]
-pub struct ListTodosUseCase<T: TodoRepository> {
+pub struct ListTodosUseCase<T> {
     todo_repository: T,
 }
 

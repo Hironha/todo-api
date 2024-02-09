@@ -4,7 +4,7 @@ use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::{DateTime, Id};
 
 #[derive(Debug)]
-pub struct CreateTodoUseCase<T: TodoRepository> {
+pub struct CreateTodoUseCase<T> {
     todo_repository: T,
 }
 

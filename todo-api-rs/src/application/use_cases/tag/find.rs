@@ -4,7 +4,7 @@ use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
 
 #[derive(Debug)]
-pub struct FindTagUseCase<T: TagRepository> {
+pub struct FindTagUseCase<T> {
     tag_repository: T,
 }
 
