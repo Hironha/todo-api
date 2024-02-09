@@ -1,14 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::todo::create::CreateTodoRequest;
+use crate::adapters::dtos::todo::create::{CreateTodoPresenter, CreateTodoRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::create::CreateTodoUseCase;
-use crate::domain::entities::todo::TodoEntity;
-
-pub trait CreateTodoPresenter {
-    type View;
-    fn present(&self, result: Result<TodoEntity, Box<dyn Error>>) -> Self::View;
-}
 
 pub struct CreateTodoController<T, P> {
     repository: T,

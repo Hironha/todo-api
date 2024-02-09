@@ -1,8 +1,15 @@
+use std::error;
+
 use thiserror::Error;
 
 use crate::application::dtos::tag::update::UpdateTagInput;
-use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
+use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
 use crate::domain::types::Id;
+
+pub trait UpdateTagPresenter {
+    type View;
+    fn present(&self, result: Result<TagEntity, Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct UpdateTagRequest {

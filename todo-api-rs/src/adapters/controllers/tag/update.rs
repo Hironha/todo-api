@@ -1,14 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::tag::update::UpdateTagRequest;
+use crate::adapters::dtos::tag::update::{UpdateTagPresenter, UpdateTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::update::UpdateTagUseCase;
-use crate::domain::entities::tag::TagEntity;
-
-pub trait UpdateTagPresenter {
-    type View;
-    fn present(&self, result: Result<TagEntity, Box<dyn Error>>) -> Self::View;
-}
 
 pub struct UpdateTagController<T, P> {
     repository: T,

@@ -5,16 +5,16 @@ use crate::application::repositories::todo::{
 
 #[derive(Debug)]
 pub struct BindTodoTagsUseCase<T> {
-    todo_repository: T,
+    repository: T,
 }
 
 impl<T: TodoRepository> BindTodoTagsUseCase<T> {
-    pub fn new(todo_repository: T) -> Self {
-        Self { todo_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&mut self, input: BindTodoTagsInput) -> Result<(), BindTodoTagsError> {
-        match self.todo_repository.exists(input.todo_id).await {
+        match self.repository.exists(input.todo_id).await {
             Ok(exists) if !exists => return Err(BindTodoTagsError::TodoNotFound),
             Ok(_) => (),
             Err(err) => {
@@ -24,14 +24,14 @@ impl<T: TodoRepository> BindTodoTagsUseCase<T> {
             }
         };
 
-        if let Err(err) = self.todo_repository.exists_tags(&input.tags_id).await {
+        if let Err(err) = self.repository.exists_tags(&input.tags_id).await {
             return match err {
                 ExistsTagsError::NotFound(tags_id) => Err(BindTodoTagsError::TagNotFound(tags_id)),
                 ExistsTagsError::Internal(err) => Err(BindTodoTagsError::Internal(err)),
             };
         }
 
-        self.todo_repository
+        self.repository
             .bind_tags(input.todo_id, &input.tags_id)
             .await
             .map_err(|err| match err {

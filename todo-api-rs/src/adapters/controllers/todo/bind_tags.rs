@@ -1,16 +1,9 @@
-use std::error::Error;
-
-use crate::adapters::dtos::todo::bind_tags::BindTodoTagsRequest;
+use crate::adapters::dtos::todo::bind_tags::{BindTodoTagsPresenter, BindTodoTagsRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::bind_tags::BindTodoTagsUseCase;
 
-pub trait BindTodoTagsPresenter {
-    type View;
-    fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
-}
-
 pub struct BindTodoTagsController<T, P> {
-    todo_repository: T,
+    repository: T,
     presenter: P,
 }
 
@@ -19,9 +12,9 @@ where
     T: TodoRepository,
     P: BindTodoTagsPresenter,
 {
-    pub const fn new(todo_repository: T, presenter: P) -> Self {
+    pub const fn new(repository: T, presenter: P) -> Self {
         Self {
-            todo_repository,
+            repository,
             presenter,
         }
     }
@@ -32,7 +25,7 @@ where
             Err(err) => return self.presenter.present(Err(err.into())),
         };
 
-        let result = BindTodoTagsUseCase::new(self.todo_repository)
+        let result = BindTodoTagsUseCase::new(self.repository)
             .exec(input)
             .await
             .map_err(Box::from);

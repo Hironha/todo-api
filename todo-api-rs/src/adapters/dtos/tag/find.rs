@@ -1,6 +1,14 @@
+use std::error;
+
 use thiserror::Error;
 
+use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
+
+pub trait FindTagPresenter {
+    type View;
+    fn present(&self, result: Result<TagEntity, Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct FindTagRequest {

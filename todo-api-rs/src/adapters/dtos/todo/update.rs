@@ -1,3 +1,5 @@
+use std::error;
+
 use thiserror::Error;
 
 use crate::application::dtos::todo::update::UpdateTodoInput;
@@ -5,6 +7,11 @@ use crate::domain::entities::todo::{
     Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
 };
 use crate::domain::types::{Date, Id};
+
+pub trait UpdateTodoPresenter {
+    type View;
+    fn present(&self, result: Result<(), Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug)]
 pub struct UpdateTodoRequest {

@@ -1,13 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::tag::delete::DeleteTagRequest;
+use crate::adapters::dtos::tag::delete::{DeleteTagPresenter, DeleteTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::delete::DeleteTagUseCase;
-
-pub trait DeleteTagPresenter {
-    type View;
-    fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
-}
 
 pub struct DeleteTagController<T, P> {
     repository: T,

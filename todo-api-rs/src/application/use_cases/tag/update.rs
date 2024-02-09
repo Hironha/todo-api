@@ -4,17 +4,17 @@ use crate::domain::entities::tag::TagEntity;
 
 #[derive(Debug)]
 pub struct UpdateTagUseCase<T> {
-    tag_repository: T,
+    repository: T,
 }
 
 impl<T: TagRepository> UpdateTagUseCase<T> {
-    pub fn new(tag_repository: T) -> Self {
-        Self { tag_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&self, input: UpdateTagInput) -> Result<TagEntity, UpdateTagError> {
         let tag_entity = self
-            .tag_repository
+            .repository
             .find(input.id)
             .await
             .map_err(|err| match err {
@@ -28,7 +28,7 @@ impl<T: TagRepository> UpdateTagUseCase<T> {
             ..tag_entity
         };
 
-        self.tag_repository
+        self.repository
             .update(updated_tag_entity)
             .await
             .map_err(|err| match err {

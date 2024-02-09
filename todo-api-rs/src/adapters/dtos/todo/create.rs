@@ -1,10 +1,17 @@
+use std::error;
+
 use thiserror::Error;
 
 use crate::application::dtos::todo::create::CreateTodoInput;
 use crate::domain::entities::todo::{
-    Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoStatus,
+    Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoEntity, TodoStatus,
 };
 use crate::domain::types::Date;
+
+pub trait CreateTodoPresenter {
+    type View;
+    fn present(&self, result: Result<TodoEntity, Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug)]
 pub struct CreateTodoRequest {

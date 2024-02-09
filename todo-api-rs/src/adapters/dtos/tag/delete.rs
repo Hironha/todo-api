@@ -1,6 +1,13 @@
+use std::error;
+
 use thiserror::Error;
 
 use crate::domain::types::Id;
+
+pub trait DeleteTagPresenter {
+    type View;
+    fn present(&self, result: Result<(), Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct DeleteTagRequest {

@@ -1,6 +1,14 @@
+use std::error::Error;
+
 use thiserror::Error;
 
+use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::Id;
+
+pub trait FindTodoPresenter {
+    type View;
+    fn present(&self, result: Result<TodoEntity, Box<dyn Error>>) -> Self::View;
+}
 
 #[derive(Debug)]
 pub struct FindTodoRequest {

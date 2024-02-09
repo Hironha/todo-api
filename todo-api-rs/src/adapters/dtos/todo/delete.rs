@@ -1,6 +1,13 @@
+use std::error;
+
 use thiserror::Error;
 
 use crate::domain::types::Id;
+
+pub trait DeleteTodoPresenter {
+    type View;
+    fn present(&self, result: Result<(), Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug)]
 pub struct DeleteTodoRequest {

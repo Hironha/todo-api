@@ -3,12 +3,12 @@ use crate::application::repositories::todo::{ListError, ListQuery, TodoRepositor
 
 #[derive(Debug)]
 pub struct ListTodosUseCase<T> {
-    todo_repository: T,
+    repository: T,
 }
 
 impl<T: TodoRepository> ListTodosUseCase<T> {
-    pub fn new(todo_repository: T) -> Self {
-        Self { todo_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&mut self, input: ListTodosInput) -> Result<TodosList, ListTodoError> {
@@ -19,7 +19,7 @@ impl<T: TodoRepository> ListTodosUseCase<T> {
         };
 
         let list_data = self
-            .todo_repository
+            .repository
             .list(payload)
             .await
             .map_err(|err| match err {

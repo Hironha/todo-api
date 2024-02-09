@@ -5,21 +5,18 @@ use crate::domain::types::Id;
 
 #[derive(Debug)]
 pub struct FindTagUseCase<T> {
-    tag_repository: T,
+    repository: T,
 }
 
 impl<T: TagRepository> FindTagUseCase<T> {
-    pub fn new(tag_repository: T) -> Self {
-        Self { tag_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&self, tag_id: Id) -> Result<TagEntity, FindTagError> {
-        self.tag_repository
-            .find(tag_id)
-            .await
-            .map_err(|err| match err {
-                FindError::NotFound => FindTagError::NotFound,
-                FindError::Internal(err) => FindTagError::Internal(err),
-            })
+        self.repository.find(tag_id).await.map_err(|err| match err {
+            FindError::NotFound => FindTagError::NotFound,
+            FindError::Internal(err) => FindTagError::Internal(err),
+        })
     }
 }

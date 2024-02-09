@@ -4,12 +4,12 @@ use serde::Serialize;
 
 use super::TodoView;
 
-use crate::adapters::controllers::todo::bind_tags::BindTodoTagsPresenter;
-use crate::adapters::controllers::todo::create::CreateTodoPresenter;
-use crate::adapters::controllers::todo::delete::DeleteTodoPresenter;
-use crate::adapters::controllers::todo::find::FindTodoPresenter;
-use crate::adapters::controllers::todo::list::ListTodosPresenter;
-use crate::adapters::controllers::todo::update::UpdateTodoPresenter;
+use crate::adapters::dtos::todo::bind_tags::BindTodoTagsPresenter;
+use crate::adapters::dtos::todo::create::CreateTodoPresenter;
+use crate::adapters::dtos::todo::delete::DeleteTodoPresenter;
+use crate::adapters::dtos::todo::find::FindTodoPresenter;
+use crate::adapters::dtos::todo::list::ListTodosPresenter;
+use crate::adapters::dtos::todo::update::UpdateTodoPresenter;
 use crate::application::dtos::todo::list::TodosList;
 use crate::domain::entities::todo::TodoEntity;
 

@@ -1,14 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::todo::list::ListTodosRequest;
-use crate::application::dtos::todo::list::TodosList;
+use crate::adapters::dtos::todo::list::{ListTodosPresenter, ListTodosRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::list::ListTodosUseCase;
-
-pub trait ListTodosPresenter {
-    type View;
-    fn present(&self, result: Result<TodosList, Box<dyn Error>>) -> Self::View;
-}
 
 pub struct ListTodosController<T, P> {
     repository: T,

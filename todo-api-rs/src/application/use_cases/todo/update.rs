@@ -5,17 +5,17 @@ use crate::domain::types::DateTime;
 
 #[derive(Debug)]
 pub struct UpdateTodoUseCase<T> {
-    todo_repository: T,
+    repository: T,
 }
 
 impl<T: TodoRepository> UpdateTodoUseCase<T> {
-    pub fn new(todo_repository: T) -> Self {
-        Self { todo_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&mut self, input: UpdateTodoInput) -> Result<(), UpdateTodoError> {
         let todo_entity = self
-            .todo_repository
+            .repository
             .find(input.id)
             .await
             .map_err(|err| match err {
@@ -32,7 +32,7 @@ impl<T: TodoRepository> UpdateTodoUseCase<T> {
             ..todo_entity
         };
 
-        self.todo_repository
+        self.repository
             .update(updated_todo_entity)
             .await
             .map_err(|err| match err {

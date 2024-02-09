@@ -1,14 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::tag::create::CreateTagRequest;
+use crate::adapters::dtos::tag::create::{CreateTagPresenter, CreateTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::create::CreateTagUseCase;
-use crate::domain::entities::tag::TagEntity;
-
-pub trait CreateTagPresenter {
-    type View;
-    fn present(&self, result: Result<TagEntity, Box<dyn Error>>) -> Self::View;
-}
 
 pub struct CreateTagController<T, P> {
     repository: T,

@@ -1,14 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::todo::find::FindTodoRequest;
+use crate::adapters::dtos::todo::find::{FindTodoPresenter, FindTodoRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::find::FindTodoUseCase;
-use crate::domain::entities::todo::TodoEntity;
-
-pub trait FindTodoPresenter {
-    type View;
-    fn present(&self, result: Result<TodoEntity, Box<dyn Error>>) -> Self::View;
-}
 
 pub struct FindTodoController<T, P> {
     repository: T,

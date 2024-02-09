@@ -1,9 +1,15 @@
+use std::error;
 use std::num::NonZeroU32;
 
 use thiserror::Error;
 
-use crate::application::dtos::todo::list::ListTodosInput;
+use crate::application::dtos::todo::list::{ListTodosInput, TodosList};
 use crate::domain::entities::todo::{Title, TitleError};
+
+pub trait ListTodosPresenter {
+    type View;
+    fn present(&self, result: Result<TodosList, Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug)]
 pub struct ListTodosRequest {

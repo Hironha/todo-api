@@ -3,22 +3,18 @@ use crate::application::repositories::tag::{ListAllError, TagRepository};
 
 #[derive(Debug)]
 pub struct ListAllTagsUseCase<T> {
-    tag_repository: T,
+    repository: T,
 }
 
 impl<T: TagRepository> ListAllTagsUseCase<T> {
-    pub fn new(tag_repository: T) -> Self {
-        Self { tag_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&self) -> Result<ListAllTagsOutput, ListAllTagsError> {
-        let entities = self
-            .tag_repository
-            .list_all()
-            .await
-            .map_err(|err| match err {
-                ListAllError::Internal(err) => ListAllTagsError::Internal(err),
-            })?;
+        let entities = self.repository.list_all().await.map_err(|err| match err {
+            ListAllError::Internal(err) => ListAllTagsError::Internal(err),
+        })?;
 
         Ok(ListAllTagsOutput {
             count: entities.len(),

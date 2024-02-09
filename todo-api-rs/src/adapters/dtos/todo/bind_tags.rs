@@ -1,7 +1,14 @@
+use std::error;
+
 use thiserror::Error;
 
 use crate::application::dtos::todo::bind_tags::BindTodoTagsInput;
 use crate::domain::types::Id;
+
+pub trait BindTodoTagsPresenter {
+    type View;
+    fn present(&self, result: Result<(), Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug)]
 pub struct BindTodoTagsRequest {

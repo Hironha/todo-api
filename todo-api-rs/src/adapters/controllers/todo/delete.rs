@@ -1,13 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::todo::delete::DeleteTodoRequest;
+use crate::adapters::dtos::todo::delete::{DeleteTodoPresenter, DeleteTodoRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::delete::DeleteTodoUseCase;
-
-pub trait DeleteTodoPresenter {
-    type View;
-    fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
-}
 
 pub struct DeleteTodoController<T, P> {
     repository: T,

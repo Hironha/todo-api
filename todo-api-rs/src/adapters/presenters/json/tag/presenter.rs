@@ -2,11 +2,11 @@ use std::error::Error;
 
 use serde::Serialize;
 
-use crate::adapters::controllers::tag::create::CreateTagPresenter;
-use crate::adapters::controllers::tag::delete::DeleteTagPresenter;
-use crate::adapters::controllers::tag::find::FindTagPresenter;
-use crate::adapters::controllers::tag::list_all::ListAllTagsPresenter;
-use crate::adapters::controllers::tag::update::UpdateTagPresenter;
+use crate::adapters::dtos::tag::create::CreateTagPresenter;
+use crate::adapters::dtos::tag::delete::DeleteTagPresenter;
+use crate::adapters::dtos::tag::find::FindTagPresenter;
+use crate::adapters::dtos::tag::list_all::ListAllTagsPresenter;
+use crate::adapters::dtos::tag::update::UpdateTagPresenter;
 use crate::application::dtos::tag::list_all::ListAllTagsOutput;
 use crate::domain::entities::tag::TagEntity;
 

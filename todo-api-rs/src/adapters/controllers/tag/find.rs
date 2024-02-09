@@ -1,14 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::tag::find::FindTagRequest;
+use crate::adapters::dtos::tag::find::{FindTagPresenter, FindTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::find::FindTagUseCase;
-use crate::domain::entities::tag::TagEntity;
-
-pub trait FindTagPresenter {
-    type View;
-    fn present(&self, result: Result<TagEntity, Box<dyn Error>>) -> Self::View;
-}
 
 pub struct FindTagController<T, P> {
     repository: T,

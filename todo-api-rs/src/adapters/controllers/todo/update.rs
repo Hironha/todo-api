@@ -1,13 +1,6 @@
-use std::error::Error;
-
-use crate::adapters::dtos::todo::update::UpdateTodoRequest;
+use crate::adapters::dtos::todo::update::{UpdateTodoPresenter, UpdateTodoRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::update::UpdateTodoUseCase;
-
-pub trait UpdateTodoPresenter {
-    type View;
-    fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View;
-}
 
 pub struct UpdateTodoController<T, P> {
     repository: T,

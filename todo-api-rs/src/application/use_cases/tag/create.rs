@@ -5,12 +5,12 @@ use crate::domain::types::{DateTime, Id};
 
 #[derive(Debug)]
 pub struct CreateTagUseCase<T> {
-    tag_repository: T,
+    repository: T,
 }
 
 impl<T: TagRepository> CreateTagUseCase<T> {
-    pub fn new(tag_repository: T) -> Self {
-        Self { tag_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&self, input: CreateTagInput) -> Result<TagEntity, CreateTagError> {
@@ -23,7 +23,7 @@ impl<T: TagRepository> CreateTagUseCase<T> {
             updated_at: current_dt,
         };
 
-        self.tag_repository
+        self.repository
             .create(tag_entity)
             .await
             .map_err(|err| match err {

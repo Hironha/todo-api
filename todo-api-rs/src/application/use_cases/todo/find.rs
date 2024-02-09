@@ -5,16 +5,16 @@ use crate::domain::types::Id;
 
 #[derive(Debug)]
 pub struct FindTodoUseCase<T> {
-    todo_repository: T,
+    repository: T,
 }
 
 impl<T: TodoRepository> FindTodoUseCase<T> {
-    pub fn new(todo_repository: T) -> Self {
-        Self { todo_repository }
+    pub fn new(repository: T) -> Self {
+        Self { repository }
     }
 
     pub async fn exec(&mut self, todo_id: Id) -> Result<TodoEntity, FindTodoError> {
-        self.todo_repository
+        self.repository
             .find(todo_id)
             .await
             .map_err(|err| match err {

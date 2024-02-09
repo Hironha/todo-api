@@ -1,7 +1,14 @@
+use std::error;
+
 use thiserror::Error;
 
 use crate::application::dtos::tag::create::CreateTagInput;
-use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError};
+use crate::domain::entities::tag::{Description, DescriptionError, Name, NameError, TagEntity};
+
+pub trait CreateTagPresenter {
+    type View;
+    fn present(&self, result: Result<TagEntity, Box<dyn error::Error>>) -> Self::View;
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct CreateTagRequest {
