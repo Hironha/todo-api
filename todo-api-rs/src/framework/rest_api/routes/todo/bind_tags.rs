@@ -37,8 +37,7 @@ pub(super) async fn bind_todo_tags(
     tracing::info!("Bind todo tags request: {req:?}");
 
     let presenter = JsonTodoPresenter::new();
-    let controller =
-        BindTodoTagsController::new(state.todo_repository, state.tag_repository, presenter);
+    let controller = BindTodoTagsController::new(state.todo_repository, presenter);
     if let Err(err) = controller.run(req).await {
         tracing::error!("Bind todo tags error: {err:?}");
         let (status, error) = config_error_response(err);

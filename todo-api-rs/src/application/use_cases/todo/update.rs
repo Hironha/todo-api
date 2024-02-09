@@ -13,7 +13,7 @@ impl<T: TodoRepository> UpdateTodoUseCase<T> {
         Self { todo_repository }
     }
 
-    pub async fn exec(&self, input: UpdateTodoInput) -> Result<(), UpdateTodoError> {
+    pub async fn exec(&mut self, input: UpdateTodoInput) -> Result<(), UpdateTodoError> {
         let todo_entity = self
             .todo_repository
             .find(input.id)

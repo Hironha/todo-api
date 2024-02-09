@@ -1,5 +1,5 @@
 use crate::application::dtos::todo::list::{ListTodoError, ListTodosInput, TodosList};
-use crate::application::repositories::todo::{ListError, ListPayload, TodoRepository};
+use crate::application::repositories::todo::{ListError, ListQuery, TodoRepository};
 
 #[derive(Debug)]
 pub struct ListTodosUseCase<T: TodoRepository> {
@@ -11,8 +11,8 @@ impl<T: TodoRepository> ListTodosUseCase<T> {
         Self { todo_repository }
     }
 
-    pub async fn exec(&self, input: ListTodosInput) -> Result<TodosList, ListTodoError> {
-        let payload = ListPayload {
+    pub async fn exec(&mut self, input: ListTodosInput) -> Result<TodosList, ListTodoError> {
+        let payload = ListQuery {
             page: input.page,
             per_page: input.per_page,
             title: input.title,

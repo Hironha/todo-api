@@ -1,22 +1,19 @@
 use crate::application::dtos::todo::bind_tags::{BindTodoTagsError, BindTodoTagsInput};
-use crate::application::repositories::tag::{ExistsManyError, TagRepository};
-use crate::application::repositories::todo::{BindTagsError, ExistsError, TodoRepository};
+use crate::application::repositories::todo::{
+    BindTagsError, ExistsError, ExistsTagsError, TodoRepository,
+};
 
 #[derive(Debug)]
-pub struct BindTodoTagsUseCase<T: TodoRepository, S: TagRepository> {
+pub struct BindTodoTagsUseCase<T: TodoRepository> {
     todo_repository: T,
-    tag_repository: S,
 }
 
-impl<T: TodoRepository, S: TagRepository> BindTodoTagsUseCase<T, S> {
-    pub fn new(todo_repository: T, tag_repository: S) -> Self {
-        Self {
-            todo_repository,
-            tag_repository,
-        }
+impl<T: TodoRepository> BindTodoTagsUseCase<T> {
+    pub fn new(todo_repository: T) -> Self {
+        Self { todo_repository }
     }
 
-    pub async fn exec(&self, input: BindTodoTagsInput) -> Result<(), BindTodoTagsError> {
+    pub async fn exec(&mut self, input: BindTodoTagsInput) -> Result<(), BindTodoTagsError> {
         let todo_exists =
             self.todo_repository
                 .exists(input.todo_id)
@@ -29,16 +26,16 @@ impl<T: TodoRepository, S: TagRepository> BindTodoTagsUseCase<T, S> {
             return Err(BindTodoTagsError::TodoNotFound);
         }
 
-        self.tag_repository
-            .exists_many(&input.tags_id)
+        self.todo_repository
+            .exists_tags(&input.tags_id)
             .await
             .map_err(|err| match err {
-                ExistsManyError::NotFound(tags_id) => BindTodoTagsError::TagNotFound(tags_id),
-                ExistsManyError::Internal(err) => BindTodoTagsError::Internal(err),
+                ExistsTagsError::NotFound(tags_id) => BindTodoTagsError::TagNotFound(tags_id),
+                ExistsTagsError::Internal(err) => BindTodoTagsError::Internal(err),
             })?;
 
         self.todo_repository
-            .bind_tags(input.todo_id, input.tags_id)
+            .bind_tags(input.todo_id, &input.tags_id)
             .await
             .map_err(|err| match err {
                 BindTagsError::Internal(err) => BindTodoTagsError::Internal(err),

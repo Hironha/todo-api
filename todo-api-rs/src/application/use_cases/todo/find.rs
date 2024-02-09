@@ -13,7 +13,7 @@ impl<T: TodoRepository> FindTodoUseCase<T> {
         Self { todo_repository }
     }
 
-    pub async fn exec(&self, todo_id: Id) -> Result<TodoEntity, FindTodoError> {
+    pub async fn exec(&mut self, todo_id: Id) -> Result<TodoEntity, FindTodoError> {
         self.todo_repository
             .find(todo_id)
             .await

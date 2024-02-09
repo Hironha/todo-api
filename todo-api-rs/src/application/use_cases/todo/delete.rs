@@ -12,7 +12,7 @@ impl<T: TodoRepository> DeleteTodoUseCase<T> {
         Self { todo_repository }
     }
 
-    pub async fn exec(&self, todo_id: Id) -> Result<(), DeleteTodoError> {
+    pub async fn exec(&mut self, todo_id: Id) -> Result<(), DeleteTodoError> {
         self.todo_repository
             .delete(todo_id)
             .await

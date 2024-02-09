@@ -10,7 +10,6 @@ use axum::routing::{get, patch, post};
 use axum::Router;
 use sqlx::{Pool, Postgres};
 
-use crate::framework::storage::repositories::tag::PgTagRepository;
 use crate::framework::storage::repositories::todo::PgTodoRepository;
 
 use bind_tags::bind_todo_tags;
@@ -23,7 +22,6 @@ use update::update_todo;
 pub fn create_router(pool: Pool<Postgres>) -> Router {
     let state = TodoState {
         todo_repository: PgTodoRepository::new(pool.clone()),
-        tag_repository: PgTagRepository::new(pool),
     };
 
     Router::new()
@@ -39,5 +37,4 @@ pub fn create_router(pool: Pool<Postgres>) -> Router {
 #[derive(FromRef, Clone)]
 struct TodoState {
     todo_repository: PgTodoRepository,
-    tag_repository: PgTagRepository,
 }

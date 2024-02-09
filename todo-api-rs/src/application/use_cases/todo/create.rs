@@ -13,7 +13,7 @@ impl<T: TodoRepository> CreateTodoUseCase<T> {
         Self { todo_repository }
     }
 
-    pub async fn exec(&self, input: CreateTodoInput) -> Result<TodoEntity, CreateTodoError> {
+    pub async fn exec(&mut self, input: CreateTodoInput) -> Result<TodoEntity, CreateTodoError> {
         let current_dt = DateTime::now();
         let todo_entity = TodoEntity {
             id: Id::new(),
