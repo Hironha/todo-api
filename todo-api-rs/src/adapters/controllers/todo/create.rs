@@ -2,6 +2,7 @@ use crate::adapters::dtos::todo::create::{CreateTodoPresenter, CreateTodoRequest
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::create::CreateTodoUseCase;
 
+#[derive(Debug)]
 pub struct CreateTodoController<T, P> {
     repository: T,
     presenter: P,

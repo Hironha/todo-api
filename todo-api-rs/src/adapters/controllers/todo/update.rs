@@ -2,6 +2,7 @@ use crate::adapters::dtos::todo::update::{UpdateTodoPresenter, UpdateTodoRequest
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::update::UpdateTodoUseCase;
 
+#[derive(Debug)]
 pub struct UpdateTodoController<T, P> {
     repository: T,
     presenter: P,

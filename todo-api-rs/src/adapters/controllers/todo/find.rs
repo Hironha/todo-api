@@ -2,6 +2,7 @@ use crate::adapters::dtos::todo::find::{FindTodoPresenter, FindTodoRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::find::FindTodoUseCase;
 
+#[derive(Debug)]
 pub struct FindTodoController<T, P> {
     repository: T,
     presenter: P,

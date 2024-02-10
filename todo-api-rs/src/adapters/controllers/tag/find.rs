@@ -2,6 +2,7 @@ use crate::adapters::dtos::tag::find::{FindTagPresenter, FindTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::find::FindTagUseCase;
 
+#[derive(Debug)]
 pub struct FindTagController<T, P> {
     repository: T,
     presenter: P,

@@ -2,6 +2,7 @@ use crate::adapters::dtos::tag::create::{CreateTagPresenter, CreateTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::create::CreateTagUseCase;
 
+#[derive(Debug)]
 pub struct CreateTagController<T, P> {
     repository: T,
     presenter: P,

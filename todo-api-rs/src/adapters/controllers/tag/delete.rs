@@ -2,6 +2,7 @@ use crate::adapters::dtos::tag::delete::{DeleteTagPresenter, DeleteTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::delete::DeleteTagUseCase;
 
+#[derive(Debug)]
 pub struct DeleteTagController<T, P> {
     repository: T,
     presenter: P,

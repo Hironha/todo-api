@@ -2,6 +2,7 @@ use crate::adapters::dtos::tag::list_all::ListAllTagsPresenter;
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::list_all::ListAllTagsUseCase;
 
+#[derive(Debug)]
 pub struct ListAllTagsController<T, P> {
     repository: T,
     presenter: P,

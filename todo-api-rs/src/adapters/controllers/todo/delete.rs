@@ -2,6 +2,7 @@ use crate::adapters::dtos::todo::delete::{DeleteTodoPresenter, DeleteTodoRequest
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::delete::DeleteTodoUseCase;
 
+#[derive(Debug)]
 pub struct DeleteTodoController<T, P> {
     repository: T,
     presenter: P,

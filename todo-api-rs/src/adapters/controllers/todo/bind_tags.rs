@@ -2,6 +2,7 @@ use crate::adapters::dtos::todo::bind_tags::{BindTodoTagsPresenter, BindTodoTags
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::bind_tags::BindTodoTagsUseCase;
 
+#[derive(Debug)]
 pub struct BindTodoTagsController<T, P> {
     repository: T,
     presenter: P,

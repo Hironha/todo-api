@@ -2,6 +2,7 @@ use crate::adapters::dtos::tag::update::{UpdateTagPresenter, UpdateTagRequest};
 use crate::application::repositories::tag::TagRepository;
 use crate::application::use_cases::tag::update::UpdateTagUseCase;
 
+#[derive(Debug)]
 pub struct UpdateTagController<T, P> {
     repository: T,
     presenter: P,

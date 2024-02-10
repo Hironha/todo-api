@@ -2,6 +2,7 @@ use crate::adapters::dtos::todo::list::{ListTodosPresenter, ListTodosRequest};
 use crate::application::repositories::todo::TodoRepository;
 use crate::application::use_cases::todo::list::ListTodosUseCase;
 
+#[derive(Debug)]
 pub struct ListTodosController<T, P> {
     repository: T,
     presenter: P,
