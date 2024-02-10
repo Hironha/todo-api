@@ -9,11 +9,13 @@ use super::TagState;
 use crate::adapters::controllers::tag::list_all::ListAllTagsController;
 use crate::adapters::presenters::json::tag::JsonTagPresenter;
 use crate::application::dtos::tag::list_all::ListAllTagsError;
+use crate::application::use_cases::tag::list_all::ListAllTagsUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 pub(super) async fn list_tags(State(state): State<TagState>) -> impl IntoResponse {
     let presenter = JsonTagPresenter::new();
-    let controller = ListAllTagsController::new(state.tag_repository, presenter);
+    let interactor = ListAllTagsUseCase::new(state.tag_repository);
+    let controller = ListAllTagsController::new(interactor, presenter);
     let output = match controller.run().await {
         Ok(output) => output,
         Err(err) => {

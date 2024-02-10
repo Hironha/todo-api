@@ -1,7 +1,6 @@
-use crate::application::dtos::tag::find::FindTagError;
+use crate::application::dtos::tag::find::{FindTagError, FindTagInput, FindTagOutput};
 use crate::application::repositories::tag::{FindError, TagRepository};
-use crate::domain::entities::tag::TagEntity;
-use crate::domain::types::Id;
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct FindTagUseCase<T> {
@@ -12,9 +11,11 @@ impl<T: TagRepository> FindTagUseCase<T> {
     pub fn new(repository: T) -> Self {
         Self { repository }
     }
+}
 
-    pub async fn exec(&self, tag_id: Id) -> Result<TagEntity, FindTagError> {
-        self.repository.find(tag_id).await.map_err(|err| match err {
+impl<T: TagRepository> UseCase<FindTagInput, FindTagOutput> for FindTagUseCase<T> {
+    async fn exec(self, input: FindTagInput) -> FindTagOutput {
+        self.repository.find(input).await.map_err(|err| match err {
             FindError::NotFound => FindTagError::NotFound,
             FindError::Internal(err) => FindTagError::Internal(err),
         })

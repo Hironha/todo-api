@@ -11,6 +11,7 @@ use crate::adapters::controllers::todo::find::FindTodoController;
 use crate::adapters::dtos::todo::find::{FindTodoRequest, ParseError};
 use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::find::FindTodoError;
+use crate::application::use_cases::todo::find::FindTodoUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -27,7 +28,8 @@ pub(super) async fn find_todo(
     tracing::info!("Find todo request: {req:?}");
 
     let presenter = JsonTodoPresenter::new();
-    let controller = FindTodoController::new(state.todo_repository, presenter);
+    let interactor = FindTodoUseCase::new(state.todo_repository);
+    let controller = FindTodoController::new(interactor, presenter);
     let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {

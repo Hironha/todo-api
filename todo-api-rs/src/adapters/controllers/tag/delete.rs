@@ -1,21 +1,21 @@
 use crate::adapters::dtos::tag::delete::{DeleteTagPresenter, DeleteTagRequest};
-use crate::application::repositories::tag::TagRepository;
-use crate::application::use_cases::tag::delete::DeleteTagUseCase;
+use crate::application::dtos::tag::delete::{DeleteTagInput, DeleteTagOutput};
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct DeleteTagController<T, P> {
-    repository: T,
+    interactor: T,
     presenter: P,
 }
 
 impl<T, P> DeleteTagController<T, P>
 where
-    T: TagRepository,
+    T: UseCase<DeleteTagInput, DeleteTagOutput>,
     P: DeleteTagPresenter,
 {
-    pub const fn new(repository: T, presenter: P) -> Self {
+    pub const fn new(interactor: T, presenter: P) -> Self {
         Self {
-            repository,
+            interactor,
             presenter,
         }
     }
@@ -26,11 +26,7 @@ where
             Err(err) => return self.presenter.present(Err(err.into())),
         };
 
-        let result = DeleteTagUseCase::new(self.repository)
-            .exec(tag_id)
-            .await
-            .map_err(Box::from);
-
+        let result = self.interactor.exec(tag_id).await.map_err(Box::from);
         self.presenter.present(result)
     }
 }

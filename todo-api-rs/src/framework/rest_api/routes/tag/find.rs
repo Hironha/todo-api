@@ -11,6 +11,7 @@ use crate::adapters::controllers::tag::find::FindTagController;
 use crate::adapters::dtos::tag::find::{FindTagRequest, ParseError};
 use crate::adapters::presenters::json::tag::JsonTagPresenter;
 use crate::application::dtos::tag::find::FindTagError;
+use crate::application::use_cases::tag::find::FindTagUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -26,7 +27,8 @@ pub(super) async fn find_tag(
 
     let input = FindTagRequest { id: path.id };
     let presenter = JsonTagPresenter::new();
-    let controller = FindTagController::new(state.tag_repository, presenter);
+    let interactor = FindTagUseCase::new(state.tag_repository);
+    let controller = FindTagController::new(interactor, presenter);
 
     let output = match controller.run(input).await {
         Ok(output) => output,

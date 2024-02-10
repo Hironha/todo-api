@@ -11,6 +11,7 @@ use crate::adapters::controllers::todo::update::UpdateTodoController;
 use crate::adapters::dtos::todo::update::{ParseError, UpdateTodoRequest};
 use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::update::UpdateTodoError;
+use crate::application::use_cases::todo::update::UpdateTodoUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -43,7 +44,8 @@ pub(super) async fn update_todo(
     tracing::info!("Update todo request: {req:?}");
 
     let presenter = JsonTodoPresenter::new();
-    let controller = UpdateTodoController::new(state.todo_repository, presenter);
+    let interactor = UpdateTodoUseCase::new(state.todo_repository);
+    let controller = UpdateTodoController::new(interactor, presenter);
     if let Err(err) = controller.run(req).await {
         tracing::error!("Update todo error: {err:?}");
         let (status_code, message) = config_error_response(err);

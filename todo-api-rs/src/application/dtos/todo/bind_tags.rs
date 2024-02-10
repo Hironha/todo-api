@@ -10,6 +10,8 @@ pub struct BindTodoTagsInput {
     pub tags_id: Vec<Id>,
 }
 
+pub type BindTodoTagsOutput = Result<(), BindTodoTagsError>;
+
 #[derive(Debug, Error)]
 pub enum BindTodoTagsError {
     #[error("Todo could not be found")]

@@ -6,12 +6,12 @@ use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
 
 pub trait TagRepository {
-    async fn create(&self, tag: TagEntity) -> Result<TagEntity, CreateError>;
-    async fn delete(&self, tag_id: Id) -> Result<(), DeleteError>;
+    async fn create(&mut self, tag: TagEntity) -> Result<TagEntity, CreateError>;
+    async fn delete(&mut self, tag_id: Id) -> Result<(), DeleteError>;
     async fn exists_many(&self, tag_ids: &[Id]) -> Result<(), ExistsManyError>;
     async fn find(&self, tag_id: Id) -> Result<TagEntity, FindError>;
     async fn list_all(&self) -> Result<Vec<TagEntity>, ListAllError>;
-    async fn update(&self, tag: TagEntity) -> Result<TagEntity, UpdateError>;
+    async fn update(&mut self, tag: TagEntity) -> Result<(), UpdateError>;
 }
 
 #[derive(Debug, Error)]

@@ -10,11 +10,11 @@ pub trait TodoRepository {
     async fn bind_tags(&mut self, todo_id: Id, tag_ids: &[Id]) -> Result<(), BindTagsError>;
     async fn create(&mut self, todo: TodoEntity) -> Result<TodoEntity, CreateError>;
     async fn delete(&mut self, todo_id: Id) -> Result<(), DeleteError>;
-    async fn exists(&mut self, todo_id: Id) -> Result<bool, ExistsError>;
-    async fn find(&mut self, todo_id: Id) -> Result<TodoEntity, FindError>;
-    async fn list(&mut self, query: ListQuery) -> Result<PaginatedList, ListError>;
+    async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError>;
+    async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError>;
+    async fn list(&self, query: ListQuery) -> Result<PaginatedList, ListError>;
     async fn update(&mut self, todo: TodoEntity) -> Result<(), UpdateError>;
-    async fn exists_tags(&mut self, tag_ids: &[Id]) -> Result<(), ExistsTagsError>;
+    async fn exists_tags(&self, tag_ids: &[Id]) -> Result<(), ExistsTagsError>;
 }
 
 #[derive(Clone, Debug)]

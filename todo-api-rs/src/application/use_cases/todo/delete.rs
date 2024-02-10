@@ -1,6 +1,6 @@
-use crate::application::dtos::todo::delete::DeleteTodoError;
+use crate::application::dtos::todo::delete::{DeleteTodoError, DeleteTodoInput, DeleteTodoOutput};
 use crate::application::repositories::todo::{DeleteError, TodoRepository};
-use crate::domain::types::Id;
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct DeleteTodoUseCase<T> {
@@ -11,10 +11,12 @@ impl<T: TodoRepository> DeleteTodoUseCase<T> {
     pub fn new(repository: T) -> Self {
         Self { repository }
     }
+}
 
-    pub async fn exec(&mut self, todo_id: Id) -> Result<(), DeleteTodoError> {
+impl<T: TodoRepository> UseCase<DeleteTodoInput, DeleteTodoOutput> for DeleteTodoUseCase<T> {
+    async fn exec(mut self, input: DeleteTodoInput) -> DeleteTodoOutput {
         self.repository
-            .delete(todo_id)
+            .delete(input)
             .await
             .map_err(|err| match err {
                 DeleteError::NotFound => DeleteTodoError::NotFound,

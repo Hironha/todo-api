@@ -12,6 +12,8 @@ pub struct UpdateTagInput {
     pub description: Option<Description>,
 }
 
+pub type UpdateTagOutput = Result<(), UpdateTagError>;
+
 #[derive(Debug, Error)]
 pub enum UpdateTagError {
     #[error("Tag could not be found")]

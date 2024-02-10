@@ -1,21 +1,21 @@
 use crate::adapters::dtos::todo::find::{FindTodoPresenter, FindTodoRequest};
-use crate::application::repositories::todo::TodoRepository;
-use crate::application::use_cases::todo::find::FindTodoUseCase;
+use crate::application::dtos::todo::find::{FindTodoInput, FindTodoOutput};
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct FindTodoController<T, P> {
-    repository: T,
+    interactor: T,
     presenter: P,
 }
 
 impl<T, P> FindTodoController<T, P>
 where
-    T: TodoRepository,
+    T: UseCase<FindTodoInput, FindTodoOutput>,
     P: FindTodoPresenter,
 {
-    pub const fn new(repository: T, presenter: P) -> Self {
+    pub const fn new(interactor: T, presenter: P) -> Self {
         Self {
-            repository,
+            interactor,
             presenter,
         }
     }
@@ -26,11 +26,7 @@ where
             Err(err) => return self.presenter.present(Err(err.into())),
         };
 
-        let result = FindTodoUseCase::new(self.repository)
-            .exec(todo_id)
-            .await
-            .map_err(Box::from);
-
+        let result = self.interactor.exec(todo_id).await.map_err(Box::from);
         self.presenter.present(result)
     }
 }

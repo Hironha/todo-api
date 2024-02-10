@@ -14,6 +14,8 @@ pub struct UpdateTodoInput {
     pub todo_at: Option<Date>,
 }
 
+pub type UpdateTodoOutput = Result<(), UpdateTodoError>;
+
 #[derive(Debug, Error)]
 pub enum UpdateTodoError {
     #[error("Todo could not be found")]

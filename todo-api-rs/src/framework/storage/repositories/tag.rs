@@ -22,7 +22,7 @@ impl PgTagRepository {
 }
 
 impl TagRepository for PgTagRepository {
-    async fn create(&self, tag: TagEntity) -> Result<TagEntity, CreateError> {
+    async fn create(&mut self, tag: TagEntity) -> Result<TagEntity, CreateError> {
         let create_q = r#"
             INSERT INTO tag (id, name, description, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5)
@@ -48,7 +48,7 @@ impl TagRepository for PgTagRepository {
         tag_model.try_into_entity().map_err(CreateError::Internal)
     }
 
-    async fn delete(&self, tag_id: Id) -> Result<(), DeleteError> {
+    async fn delete(&mut self, tag_id: Id) -> Result<(), DeleteError> {
         let delete_q = "DELETE FROM tag WHERE id = $1 RETURNING id";
         sqlx::query(delete_q)
             .bind(tag_id.uuid())
@@ -122,15 +122,14 @@ impl TagRepository for PgTagRepository {
             .map_err(ListAllError::Internal)
     }
 
-    async fn update(&self, tag: TagEntity) -> Result<TagEntity, UpdateError> {
+    async fn update(&mut self, tag: TagEntity) -> Result<(), UpdateError> {
         let update_q = r#"
             UPDATE tag
             SET name = $1, description = $2, updated_at = $3
             WHERE id = $4
-            RETURNING tag.*
         "#;
 
-        let tag_model = sqlx::query_as::<_, TagModel>(update_q)
+        sqlx::query_scalar(update_q)
             .bind(tag.name.into_inner())
             .bind(tag.description.map(|d| d.into_inner()))
             .bind(tag.updated_at.date_time())
@@ -145,6 +144,6 @@ impl TagRepository for PgTagRepository {
                 _ => UpdateError::Internal(err.into()),
             })?;
 
-        tag_model.try_into_entity().map_err(UpdateError::Internal)
+        Ok(())
     }
 }

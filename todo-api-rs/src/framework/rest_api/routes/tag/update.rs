@@ -11,6 +11,7 @@ use crate::adapters::controllers::tag::update::UpdateTagController;
 use crate::adapters::dtos::tag::update::{ParseError, UpdateTagRequest};
 use crate::adapters::presenters::json::tag::JsonTagPresenter;
 use crate::application::dtos::tag::update::UpdateTagError;
+use crate::application::use_cases::tag::update::UpdateTagUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -38,18 +39,16 @@ pub(super) async fn update_tag(
     tracing::info!("Update tag input: {input:?}");
 
     let presenter = JsonTagPresenter::new();
-    let controller = UpdateTagController::new(state.tag_repository, presenter);
+    let interactor = UpdateTagUseCase::new(state.tag_repository);
+    let controller = UpdateTagController::new(interactor, presenter);
 
-    let output = match controller.run(input).await {
-        Ok(output) => output,
-        Err(err) => {
-            tracing::error!("Update tag error: {err:?}");
-            let (status, error) = config_error_response(err);
-            return (status, Json(error)).into_response();
-        }
-    };
+    if let Err(err) = controller.run(input).await {
+        tracing::error!("Update tag error: {err:?}");
+        let (status, error) = config_error_response(err);
+        return (status, Json(error)).into_response();
+    }
 
-    (StatusCode::OK, Json(output)).into_response()
+    (StatusCode::OK).into_response()
 }
 
 fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<ValidationError>) {

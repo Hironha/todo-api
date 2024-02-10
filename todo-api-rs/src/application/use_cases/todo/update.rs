@@ -1,7 +1,8 @@
-use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput};
+use crate::application::dtos::todo::update::{UpdateTodoError, UpdateTodoInput, UpdateTodoOutput};
 use crate::application::repositories::todo::{FindError, TodoRepository, UpdateError};
 use crate::domain::entities::todo::TodoEntity;
 use crate::domain::types::DateTime;
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct UpdateTodoUseCase<T> {
@@ -12,8 +13,10 @@ impl<T: TodoRepository> UpdateTodoUseCase<T> {
     pub fn new(repository: T) -> Self {
         Self { repository }
     }
+}
 
-    pub async fn exec(&mut self, input: UpdateTodoInput) -> Result<(), UpdateTodoError> {
+impl<T: TodoRepository> UseCase<UpdateTodoInput, UpdateTodoOutput> for UpdateTodoUseCase<T> {
+    async fn exec(mut self, input: UpdateTodoInput) -> UpdateTodoOutput {
         let todo_entity = self
             .repository
             .find(input.id)

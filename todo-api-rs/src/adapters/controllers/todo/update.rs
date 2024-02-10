@@ -1,21 +1,21 @@
 use crate::adapters::dtos::todo::update::{UpdateTodoPresenter, UpdateTodoRequest};
-use crate::application::repositories::todo::TodoRepository;
-use crate::application::use_cases::todo::update::UpdateTodoUseCase;
+use crate::application::dtos::todo::update::{UpdateTodoInput, UpdateTodoOutput};
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct UpdateTodoController<T, P> {
-    repository: T,
+    interactor: T,
     presenter: P,
 }
 
 impl<T, P> UpdateTodoController<T, P>
 where
-    T: TodoRepository,
+    T: UseCase<UpdateTodoInput, UpdateTodoOutput>,
     P: UpdateTodoPresenter,
 {
-    pub const fn new(repository: T, presenter: P) -> Self {
+    pub const fn new(interactor: T, presenter: P) -> Self {
         Self {
-            repository,
+            interactor,
             presenter,
         }
     }
@@ -26,11 +26,7 @@ where
             Err(err) => return self.presenter.present(Err(err.into())),
         };
 
-        let result = UpdateTodoUseCase::new(self.repository)
-            .exec(input)
-            .await
-            .map_err(Box::from);
-
+        let result = self.interactor.exec(input).await.map_err(Box::from);
         self.presenter.present(result)
     }
 }

@@ -1,7 +1,10 @@
-use crate::application::dtos::todo::bind_tags::{BindTodoTagsError, BindTodoTagsInput};
+use crate::application::dtos::todo::bind_tags::{
+    BindTodoTagsError, BindTodoTagsInput, BindTodoTagsOutput,
+};
 use crate::application::repositories::todo::{
     BindTagsError, ExistsError, ExistsTagsError, TodoRepository,
 };
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct BindTodoTagsUseCase<T> {
@@ -12,8 +15,10 @@ impl<T: TodoRepository> BindTodoTagsUseCase<T> {
     pub fn new(repository: T) -> Self {
         Self { repository }
     }
+}
 
-    pub async fn exec(&mut self, input: BindTodoTagsInput) -> Result<(), BindTodoTagsError> {
+impl<T: TodoRepository> UseCase<BindTodoTagsInput, BindTodoTagsOutput> for BindTodoTagsUseCase<T> {
+    async fn exec(mut self, input: BindTodoTagsInput) -> BindTodoTagsOutput {
         match self.repository.exists(input.todo_id).await {
             Ok(exists) if !exists => return Err(BindTodoTagsError::TodoNotFound),
             Ok(_) => (),

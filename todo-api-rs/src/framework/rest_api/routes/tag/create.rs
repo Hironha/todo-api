@@ -11,6 +11,7 @@ use crate::adapters::controllers::tag::create::CreateTagController;
 use crate::adapters::dtos::tag::create::{CreateTagRequest, ParseError};
 use crate::adapters::presenters::json::tag::JsonTagPresenter;
 use crate::application::dtos::tag::create::CreateTagError;
+use crate::application::use_cases::tag::create::CreateTagUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -31,7 +32,8 @@ pub(super) async fn create_tag(
     };
 
     let presenter = JsonTagPresenter::new();
-    let controller = CreateTagController::new(state.tag_repository, presenter);
+    let interactor = CreateTagUseCase::new(state.tag_repository);
+    let controller = CreateTagController::new(interactor, presenter);
     let output = match controller.run(input).await {
         Ok(output) => output,
         Err(err) => {

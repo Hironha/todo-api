@@ -134,7 +134,7 @@ impl TodoRepository for PgTodoRepository {
         Ok(())
     }
 
-    async fn exists(&mut self, todo_id: Id) -> Result<bool, ExistsError> {
+    async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError> {
         let todo_exists_q = "SELECT EXISTS(SELECT 1 FROM todo WHERE id = $1)";
         sqlx::query_scalar::<_, bool>(todo_exists_q)
             .bind(todo_id.uuid())
@@ -143,7 +143,7 @@ impl TodoRepository for PgTodoRepository {
             .map_err(|e| ExistsError::Internal(e.into()))
     }
 
-    async fn find(&mut self, todo_id: Id) -> Result<TodoEntity, FindError> {
+    async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError> {
         let mut find_q = String::from(self.todo_with_tags_cte_query());
         find_q.push_str(r#" SELECT * FROM todo_with_tags as t WHERE t.id = $1"#);
 
@@ -161,7 +161,7 @@ impl TodoRepository for PgTodoRepository {
             .map_err(FindError::Internal)
     }
 
-    async fn list(&mut self, query: ListQuery) -> Result<PaginatedList, ListError> {
+    async fn list(&self, query: ListQuery) -> Result<PaginatedList, ListError> {
         let base_list_q = self.todo_with_tags_cte_query();
         let mut count_q = QueryBuilder::<Postgres>::new(base_list_q);
         count_q.push(r#" SELECT COUNT(*) FROM todo_with_tags as t "#);
@@ -234,7 +234,7 @@ impl TodoRepository for PgTodoRepository {
         Ok(())
     }
 
-    async fn exists_tags(&mut self, tag_ids: &[Id]) -> Result<(), ExistsTagsError> {
+    async fn exists_tags(&self, tag_ids: &[Id]) -> Result<(), ExistsTagsError> {
         let tag_uuids = tag_ids.iter().map(|id| id.uuid()).collect::<Vec<Uuid>>();
 
         let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";

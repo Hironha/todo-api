@@ -11,6 +11,7 @@ use crate::adapters::controllers::todo::create::CreateTodoController;
 use crate::adapters::dtos::todo::create::{CreateTodoRequest, ParseError};
 use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::create::CreateTodoError;
+use crate::application::use_cases::todo::create::CreateTodoUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -36,7 +37,8 @@ pub(super) async fn create_todo(
     tracing::info!("Create todo request: {req:?}");
 
     let presenter = JsonTodoPresenter::new();
-    let controller = CreateTodoController::new(state.todo_repository, presenter);
+    let interactor = CreateTodoUseCase::new(state.todo_repository);
+    let controller = CreateTodoController::new(interactor, presenter);
     let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {

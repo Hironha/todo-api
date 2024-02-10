@@ -11,6 +11,7 @@ use crate::adapters::controllers::tag::delete::DeleteTagController;
 use crate::adapters::dtos::tag::delete::{DeleteTagRequest, ParseError};
 use crate::adapters::presenters::json::tag::JsonTagPresenter;
 use crate::application::dtos::tag::delete::DeleteTagError;
+use crate::application::use_cases::tag::delete::DeleteTagUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -23,10 +24,11 @@ pub(super) async fn delete_tag(
     Path(path): Path<DeletePathParams>,
 ) -> impl IntoResponse {
     tracing::info!("Delete tag path: {path:?}");
-
+    
     let input = DeleteTagRequest { id: path.id };
     let presenter = JsonTagPresenter::new();
-    let controller = DeleteTagController::new(state.tag_repository, presenter);
+    let interactor = DeleteTagUseCase::new(state.tag_repository);
+    let controller = DeleteTagController::new(interactor, presenter);
 
     if let Err(err) = controller.run(input).await {
         tracing::error!("Delete tag error: {err:?}");

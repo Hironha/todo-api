@@ -4,8 +4,10 @@ use thiserror::Error;
 
 use crate::domain::entities::tag::TagEntity;
 
+pub type ListAllTagsOutput = Result<AllTagsList, ListAllTagsError>;
+
 #[derive(Clone, Debug)]
-pub struct ListAllTagsOutput {
+pub struct AllTagsList {
     pub items: Vec<TagEntity>,
     pub count: usize,
 }

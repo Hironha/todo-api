@@ -7,7 +7,7 @@ use crate::adapters::dtos::tag::delete::DeleteTagPresenter;
 use crate::adapters::dtos::tag::find::FindTagPresenter;
 use crate::adapters::dtos::tag::list_all::ListAllTagsPresenter;
 use crate::adapters::dtos::tag::update::UpdateTagPresenter;
-use crate::application::dtos::tag::list_all::ListAllTagsOutput;
+use crate::application::dtos::tag::list_all::AllTagsList;
 use crate::domain::entities::tag::TagEntity;
 
 use super::TagView;
@@ -54,7 +54,7 @@ impl FindTagPresenter for JsonTagPresenter {
 impl ListAllTagsPresenter for JsonTagPresenter {
     type View = Result<ListAllTagsView, Box<dyn Error>>;
 
-    fn present(&self, result: Result<ListAllTagsOutput, Box<dyn Error>>) -> Self::View {
+    fn present(&self, result: Result<AllTagsList, Box<dyn Error>>) -> Self::View {
         let output = result?;
         let views: Vec<TagView> = output.items.into_iter().map(TagView::from).collect();
 
@@ -66,9 +66,9 @@ impl ListAllTagsPresenter for JsonTagPresenter {
 }
 
 impl UpdateTagPresenter for JsonTagPresenter {
-    type View = Result<TagView, Box<dyn Error>>;
+    type View = Result<(), Box<dyn Error>>;
 
-    fn present(&self, result: Result<TagEntity, Box<dyn Error>>) -> Self::View {
-        result.map(TagView::from)
+    fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View {
+        result
     }
 }

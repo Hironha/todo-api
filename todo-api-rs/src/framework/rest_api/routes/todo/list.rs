@@ -10,7 +10,8 @@ use super::TodoState;
 use crate::adapters::controllers::todo::list::ListTodosController;
 use crate::adapters::dtos::todo::list::{ListTodosRequest, ParseError};
 use crate::adapters::presenters::json::todo::JsonTodoPresenter;
-use crate::application::dtos::todo::list::ListTodoError;
+use crate::application::dtos::todo::list::ListTodosError;
+use crate::application::use_cases::todo::list::ListTodosUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -34,7 +35,8 @@ pub(super) async fn list_todo(
     tracing::info!("List todos request: {req:?}");
 
     let presenter = JsonTodoPresenter::new();
-    let controller = ListTodosController::new(state.todo_repository, presenter);
+    let interactor = ListTodosUseCase::new(state.todo_repository);
+    let controller = ListTodosController::new(interactor, presenter);
     let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
@@ -59,9 +61,9 @@ fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<Validat
         return (StatusCode::BAD_REQUEST, api_error);
     }
 
-    if let Some(list_err) = error.downcast_ref::<ListTodoError>() {
+    if let Some(list_err) = error.downcast_ref::<ListTodosError>() {
         return match list_err {
-            ListTodoError::Internal(..) => {
+            ListTodosError::Internal(..) => {
                 let api_error = ApiError::internal();
                 (StatusCode::INTERNAL_SERVER_ERROR, api_error)
             }

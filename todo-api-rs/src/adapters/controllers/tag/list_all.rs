@@ -1,31 +1,27 @@
 use crate::adapters::dtos::tag::list_all::ListAllTagsPresenter;
-use crate::application::repositories::tag::TagRepository;
-use crate::application::use_cases::tag::list_all::ListAllTagsUseCase;
+use crate::application::dtos::tag::list_all::ListAllTagsOutput;
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct ListAllTagsController<T, P> {
-    repository: T,
+    interactor: T,
     presenter: P,
 }
 
 impl<T, P> ListAllTagsController<T, P>
 where
-    T: TagRepository,
+    T: UseCase<(), ListAllTagsOutput>,
     P: ListAllTagsPresenter,
 {
-    pub const fn new(repository: T, presenter: P) -> Self {
+    pub const fn new(interactor: T, presenter: P) -> Self {
         Self {
-            repository,
+            interactor,
             presenter,
         }
     }
 
     pub async fn run(self) -> <P as ListAllTagsPresenter>::View {
-        let result = ListAllTagsUseCase::new(self.repository)
-            .exec()
-            .await
-            .map_err(Box::from);
-
+        let result = self.interactor.exec(()).await.map_err(Box::from);
         self.presenter.present(result)
     }
 }

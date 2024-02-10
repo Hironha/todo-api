@@ -12,6 +12,8 @@ pub struct ListTodosInput {
     pub title: Option<Title>,
 }
 
+pub type ListTodosOutput = Result<TodosList, ListTodosError>;
+
 #[derive(Clone, Debug)]
 pub struct TodosList {
     pub count: u64,
@@ -21,7 +23,7 @@ pub struct TodosList {
 }
 
 #[derive(Debug, Error)]
-pub enum ListTodoError {
+pub enum ListTodosError {
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }

@@ -11,6 +11,7 @@ use crate::adapters::controllers::todo::delete::DeleteTodoController;
 use crate::adapters::dtos::todo::delete::{DeleteTodoRequest, ParseError};
 use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::delete::DeleteTodoError;
+use crate::application::use_cases::todo::delete::DeleteTodoUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -27,7 +28,8 @@ pub(super) async fn delete_todo(
     tracing::info!("Delete todo request {req:?}");
 
     let presenter = JsonTodoPresenter::new();
-    let controller = DeleteTodoController::new(state.todo_repository, presenter);
+    let interactor = DeleteTodoUseCase::new(state.todo_repository);
+    let controller = DeleteTodoController::new(interactor, presenter);
     if let Err(err) = controller.run(req).await {
         tracing::error!("Delete todo error: {err:?}");
         let (status_code, message) = config_error_response(err);

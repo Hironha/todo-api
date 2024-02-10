@@ -11,6 +11,7 @@ use crate::adapters::controllers::todo::bind_tags::BindTodoTagsController;
 use crate::adapters::dtos::todo::bind_tags::{BindTodoTagsRequest, ParseError};
 use crate::adapters::presenters::json::todo::JsonTodoPresenter;
 use crate::application::dtos::todo::bind_tags::BindTodoTagsError;
+use crate::application::use_cases::todo::bind_tags::BindTodoTagsUseCase;
 use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -37,7 +38,8 @@ pub(super) async fn bind_todo_tags(
     tracing::info!("Bind todo tags request: {req:?}");
 
     let presenter = JsonTodoPresenter::new();
-    let controller = BindTodoTagsController::new(state.todo_repository, presenter);
+    let interactor = BindTodoTagsUseCase::new(state.todo_repository);
+    let controller = BindTodoTagsController::new(interactor, presenter);
     if let Err(err) = controller.run(req).await {
         tracing::error!("Bind todo tags error: {err:?}");
         let (status, error) = config_error_response(err);

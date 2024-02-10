@@ -1,21 +1,21 @@
 use crate::adapters::dtos::todo::create::{CreateTodoPresenter, CreateTodoRequest};
-use crate::application::repositories::todo::TodoRepository;
-use crate::application::use_cases::todo::create::CreateTodoUseCase;
+use crate::application::dtos::todo::create::{CreateTodoInput, CreateTodoOutput};
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct CreateTodoController<T, P> {
-    repository: T,
+    interactor: T,
     presenter: P,
 }
 
 impl<T, P> CreateTodoController<T, P>
 where
-    T: TodoRepository,
+    T: UseCase<CreateTodoInput, CreateTodoOutput>,
     P: CreateTodoPresenter,
 {
-    pub const fn new(repository: T, presenter: P) -> Self {
+    pub const fn new(interactor: T, presenter: P) -> Self {
         Self {
-            repository,
+            interactor,
             presenter,
         }
     }
@@ -26,11 +26,7 @@ where
             Err(err) => return self.presenter.present(Err(err.into())),
         };
 
-        let result = CreateTodoUseCase::new(self.repository)
-            .exec(input)
-            .await
-            .map_err(Box::from);
-
+        let result = self.interactor.exec(input).await.map_err(Box::from);
         self.presenter.present(result)
     }
 }

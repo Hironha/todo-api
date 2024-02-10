@@ -1,5 +1,8 @@
-use crate::application::dtos::todo::list::{ListTodoError, ListTodosInput, TodosList};
+use crate::application::dtos::todo::list::{
+    ListTodosError, ListTodosInput, ListTodosOutput, TodosList,
+};
 use crate::application::repositories::todo::{ListError, ListQuery, TodoRepository};
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct ListTodosUseCase<T> {
@@ -10,8 +13,10 @@ impl<T: TodoRepository> ListTodosUseCase<T> {
     pub fn new(repository: T) -> Self {
         Self { repository }
     }
+}
 
-    pub async fn exec(&mut self, input: ListTodosInput) -> Result<TodosList, ListTodoError> {
+impl<T: TodoRepository> UseCase<ListTodosInput, ListTodosOutput> for ListTodosUseCase<T> {
+    async fn exec(self, input: ListTodosInput) -> ListTodosOutput {
         let payload = ListQuery {
             page: input.page,
             per_page: input.per_page,
@@ -23,7 +28,7 @@ impl<T: TodoRepository> ListTodosUseCase<T> {
             .list(payload)
             .await
             .map_err(|err| match err {
-                ListError::Internal(err) => ListTodoError::Internal(err),
+                ListError::Internal(err) => ListTodosError::Internal(err),
             })?;
 
         Ok(TodosList {

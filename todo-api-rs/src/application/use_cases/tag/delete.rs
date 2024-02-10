@@ -1,6 +1,6 @@
-use crate::application::dtos::tag::delete::DeleteTagError;
+use crate::application::dtos::tag::delete::{DeleteTagError, DeleteTagInput, DeleteTagOutput};
 use crate::application::repositories::tag::{DeleteError, TagRepository};
-use crate::domain::types::Id;
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct DeleteTagUseCase<T> {
@@ -11,10 +11,12 @@ impl<T: TagRepository> DeleteTagUseCase<T> {
     pub fn new(repository: T) -> Self {
         Self { repository }
     }
+}
 
-    pub async fn exec(&self, tag_id: Id) -> Result<(), DeleteTagError> {
+impl<T: TagRepository> UseCase<DeleteTagInput, DeleteTagOutput> for DeleteTagUseCase<T> {
+    async fn exec(mut self, input: DeleteTagInput) -> DeleteTagOutput {
         self.repository
-            .delete(tag_id)
+            .delete(input)
             .await
             .map_err(|err| match err {
                 DeleteError::NotFound => DeleteTagError::NotFound,

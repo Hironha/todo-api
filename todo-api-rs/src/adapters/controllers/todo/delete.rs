@@ -1,21 +1,21 @@
 use crate::adapters::dtos::todo::delete::{DeleteTodoPresenter, DeleteTodoRequest};
-use crate::application::repositories::todo::TodoRepository;
-use crate::application::use_cases::todo::delete::DeleteTodoUseCase;
+use crate::application::dtos::todo::delete::{DeleteTodoInput, DeleteTodoOutput};
+use crate::domain::use_case::UseCase;
 
 #[derive(Debug)]
 pub struct DeleteTodoController<T, P> {
-    repository: T,
+    interactor: T,
     presenter: P,
 }
 
 impl<T, P> DeleteTodoController<T, P>
 where
-    T: TodoRepository,
+    T: UseCase<DeleteTodoInput, DeleteTodoOutput>,
     P: DeleteTodoPresenter,
 {
-    pub const fn new(repository: T, presenter: P) -> Self {
+    pub const fn new(interactor: T, presenter: P) -> Self {
         Self {
-            repository,
+            interactor,
             presenter,
         }
     }
@@ -26,11 +26,7 @@ where
             Err(err) => return self.presenter.present(Err(err.into())),
         };
 
-        let result = DeleteTodoUseCase::new(self.repository)
-            .exec(todo_id)
-            .await
-            .map_err(Box::from);
-
+        let result = self.interactor.exec(todo_id).await.map_err(Box::from);
         self.presenter.present(result)
     }
 }
