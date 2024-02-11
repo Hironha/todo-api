@@ -3,8 +3,8 @@ use std::num::NonZeroU32;
 
 use thiserror::Error;
 
-use crate::domain::entities::todo::{Title, TodoEntity};
-use crate::domain::types::Id;
+use crate::domain::entities::todo::{Description, Title, TodoEntity, TodoStatus};
+use crate::domain::types::{Date, Id};
 
 pub trait TodoRepository {
     async fn bind_tags(&mut self, todo_id: Id, tag_ids: &[Id]) -> Result<(), BindTagsError>;
@@ -13,8 +13,17 @@ pub trait TodoRepository {
     async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError>;
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError>;
     async fn list(&self, query: ListQuery) -> Result<PaginatedList, ListError>;
-    async fn update(&mut self, todo: TodoEntity) -> Result<(), UpdateError>;
+    async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError>;
     async fn exists_tags(&self, tag_ids: &[Id]) -> Result<(), ExistsTagsError>;
+}
+
+#[derive(Clone, Debug)]
+pub struct UpdateQuery {
+    pub id: Id,
+    pub title: Title,
+    pub description: Option<Description>,
+    pub status: TodoStatus,
+    pub todo_at: Option<Date>,
 }
 
 #[derive(Clone, Debug)]

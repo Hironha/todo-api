@@ -2,7 +2,7 @@ use std::error;
 
 use thiserror::Error;
 
-use crate::domain::entities::tag::TagEntity;
+use crate::domain::entities::tag::{Description, Name, TagEntity};
 use crate::domain::types::Id;
 
 pub trait TagRepository {
@@ -11,7 +11,14 @@ pub trait TagRepository {
     async fn exists_many(&self, tag_ids: &[Id]) -> Result<(), ExistsManyError>;
     async fn find(&self, tag_id: Id) -> Result<TagEntity, FindError>;
     async fn list_all(&self) -> Result<Vec<TagEntity>, ListAllError>;
-    async fn update(&mut self, tag: TagEntity) -> Result<(), UpdateError>;
+    async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError>;
+}
+
+#[derive(Clone, Debug)]
+pub struct UpdateQuery {
+    pub id: Id,
+    pub name: Name,
+    pub description: Option<Description>,
 }
 
 #[derive(Debug, Error)]

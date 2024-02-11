@@ -2,9 +2,11 @@ use std::error;
 
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool};
+use time::OffsetDateTime;
 
 use crate::application::repositories::tag::{
     CreateError, DeleteError, ExistsManyError, FindError, ListAllError, TagRepository, UpdateError,
+    UpdateQuery,
 };
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
@@ -122,7 +124,7 @@ impl TagRepository for PgTagRepository {
             .map_err(ListAllError::Internal)
     }
 
-    async fn update(&mut self, tag: TagEntity) -> Result<(), UpdateError> {
+    async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError> {
         let update_q = r#"
             UPDATE tag
             SET name = $1, description = $2, updated_at = $3
@@ -130,10 +132,10 @@ impl TagRepository for PgTagRepository {
         "#;
 
         sqlx::query_scalar(update_q)
-            .bind(tag.name.into_inner())
-            .bind(tag.description.map(|d| d.into_inner()))
-            .bind(tag.updated_at.date_time())
-            .bind(tag.id.uuid())
+            .bind(query.name.into_inner())
+            .bind(query.description.map(|d| d.into_inner()))
+            .bind(OffsetDateTime::now_utc())
+            .bind(query.id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {

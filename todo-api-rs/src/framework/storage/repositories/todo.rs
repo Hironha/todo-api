@@ -1,11 +1,12 @@
 use std::error::Error;
 
+use sqlx::types::time::OffsetDateTime;
 use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool, Postgres, QueryBuilder};
 
 use crate::application::repositories::todo::{
     BindTagsError, CreateError, DeleteError, ExistsError, ExistsTagsError, FindError, ListError,
-    ListQuery, PaginatedList, TodoRepository, UpdateError,
+    ListQuery, PaginatedList, TodoRepository, UpdateError, UpdateQuery,
 };
 
 use crate::domain::entities::todo::TodoEntity;
@@ -207,7 +208,7 @@ impl TodoRepository for PgTodoRepository {
         })
     }
 
-    async fn update(&mut self, todo: TodoEntity) -> Result<(), UpdateError> {
+    async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError> {
         let update_q = r#"
             UPDATE todo
             SET title = $1, description = $2, todo_at = $3, status = $4, updated_at = $5
@@ -215,12 +216,12 @@ impl TodoRepository for PgTodoRepository {
         "#;
 
         sqlx::query(update_q)
-            .bind(todo.title.into_inner())
-            .bind(todo.description.map(|d| d.into_inner()))
-            .bind(todo.todo_at.map(|at| at.date()))
-            .bind(TodoModelStatus::from(todo.status))
-            .bind(todo.updated_at.date_time())
-            .bind(todo.id.uuid())
+            .bind(query.title.into_inner())
+            .bind(query.description.map(|d| d.into_inner()))
+            .bind(query.todo_at.map(|at| at.date()))
+            .bind(TodoModelStatus::from(query.status))
+            .bind(OffsetDateTime::now_utc())
+            .bind(query.id.uuid())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
