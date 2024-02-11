@@ -8,7 +8,6 @@ use crate::domain::types::Id;
 pub trait TagRepository {
     async fn create(&mut self, tag: TagEntity) -> Result<TagEntity, CreateError>;
     async fn delete(&mut self, tag_id: Id) -> Result<(), DeleteError>;
-    async fn exists_many(&self, tag_ids: &[Id]) -> Result<(), ExistsManyError>;
     async fn find(&self, tag_id: Id) -> Result<TagEntity, FindError>;
     async fn list_all(&self) -> Result<Vec<TagEntity>, ListAllError>;
     async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError>;
@@ -33,14 +32,6 @@ pub enum CreateError {
 pub enum DeleteError {
     #[error("Tag could not be found")]
     NotFound,
-    #[error(transparent)]
-    Internal(Box<dyn error::Error>),
-}
-
-#[derive(Debug, Error)]
-pub enum ExistsManyError {
-    #[error("Following tags were not found: {0:?}")]
-    NotFound(Vec<Id>),
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }

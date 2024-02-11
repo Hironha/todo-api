@@ -1,12 +1,10 @@
 use std::error;
 
-use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool};
 use time::OffsetDateTime;
 
 use crate::application::repositories::tag::{
-    CreateError, DeleteError, ExistsManyError, FindError, ListAllError, TagRepository, UpdateError,
-    UpdateQuery,
+    CreateError, DeleteError, FindError, ListAllError, TagRepository, UpdateError, UpdateQuery,
 };
 use crate::domain::entities::tag::TagEntity;
 use crate::domain::types::Id;
@@ -62,29 +60,6 @@ impl TagRepository for PgTagRepository {
             })?;
 
         Ok(())
-    }
-
-    async fn exists_many(&self, tag_ids: &[Id]) -> Result<(), ExistsManyError> {
-        let tag_uuids = tag_ids.iter().map(|id| id.uuid()).collect::<Vec<Uuid>>();
-
-        let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";
-        let selected_tag_uuids = sqlx::query_scalar::<_, Uuid>(select_any_q)
-            .bind(&tag_uuids)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|e| ExistsManyError::Internal(e.into()))?;
-
-        let not_found_ids = tag_uuids
-            .into_iter()
-            .filter(|uuid| !selected_tag_uuids.contains(uuid))
-            .map(Id::from)
-            .collect::<Vec<Id>>();
-
-        if not_found_ids.is_empty() {
-            Ok(())
-        } else {
-            Err(ExistsManyError::NotFound(not_found_ids))
-        }
     }
 
     async fn find(&self, tag_id: Id) -> Result<TagEntity, FindError> {
