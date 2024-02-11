@@ -6,7 +6,7 @@ use crate::domain::types::{Date, DateTime, Id};
 
 use super::tag::TagEntity;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct TodoEntity {
     pub id: Id,
     pub title: Title,
@@ -17,6 +17,14 @@ pub struct TodoEntity {
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
+
+impl PartialEq for TodoEntity {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for TodoEntity {}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Title(String);

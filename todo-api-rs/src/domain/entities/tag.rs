@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::domain::types::{DateTime, Id};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct TagEntity {
     pub id: Id,
     pub name: Name,
@@ -12,6 +12,14 @@ pub struct TagEntity {
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
+
+impl PartialEq for TagEntity {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for TagEntity {}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Name(String);
