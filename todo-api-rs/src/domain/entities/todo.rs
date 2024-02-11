@@ -4,8 +4,6 @@ use thiserror::Error;
 
 use crate::domain::types::{Date, DateTime, Id};
 
-use super::tag::TagEntity;
-
 #[derive(Clone, Debug)]
 pub struct TodoEntity {
     pub id: Id,
@@ -13,7 +11,6 @@ pub struct TodoEntity {
     pub description: Option<Description>,
     pub status: TodoStatus,
     pub todo_at: Option<Date>,
-    pub tags: Vec<TagEntity>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }

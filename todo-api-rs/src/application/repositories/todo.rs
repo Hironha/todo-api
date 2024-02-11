@@ -7,14 +7,12 @@ use crate::domain::entities::todo::{Description, Title, TodoEntity, TodoStatus};
 use crate::domain::types::{Date, Id};
 
 pub trait TodoRepository {
-    async fn bind_tags(&mut self, todo_id: Id, tag_ids: &[Id]) -> Result<(), BindTagsError>;
     async fn create(&mut self, todo: TodoEntity) -> Result<TodoEntity, CreateError>;
     async fn delete(&mut self, todo_id: Id) -> Result<(), DeleteError>;
     async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError>;
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError>;
     async fn list(&self, query: ListQuery) -> Result<PaginatedList, ListError>;
     async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError>;
-    async fn exists_tags(&self, tag_ids: &[Id]) -> Result<(), ExistsTagsError>;
 }
 
 #[derive(Clone, Debug)]
@@ -37,12 +35,6 @@ pub struct ListQuery {
 pub struct PaginatedList {
     pub count: u64,
     pub items: Vec<TodoEntity>,
-}
-
-#[derive(Debug, Error)]
-pub enum BindTagsError {
-    #[error(transparent)]
-    Internal(Box<dyn error::Error>),
 }
 
 #[derive(Debug, Error)]
@@ -87,14 +79,6 @@ pub enum UpdateError {
     NotFound,
     #[error("Todo title already exists")]
     DuplicatedTitle,
-    #[error(transparent)]
-    Internal(Box<dyn error::Error>),
-}
-
-#[derive(Debug, Error)]
-pub enum ExistsTagsError {
-    #[error("Following tags were not found: {0:?}")]
-    NotFound(Vec<Id>),
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }

@@ -24,7 +24,6 @@ impl<T: TodoRepository> UseCase<CreateTodoInput, CreateTodoOutput> for CreateTod
             description: input.description,
             status: input.status,
             todo_at: input.todo_at,
-            tags: Vec::new(),
             created_at: current_dt,
             updated_at: current_dt,
         };

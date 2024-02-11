@@ -5,14 +5,13 @@ use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool, Postgres, QueryBuilder};
 
 use crate::application::repositories::todo::{
-    BindTagsError, CreateError, DeleteError, ExistsError, ExistsTagsError, FindError, ListError,
-    ListQuery, PaginatedList, TodoRepository, UpdateError, UpdateQuery,
+    CreateError, DeleteError, ExistsError, FindError, ListError, ListQuery, PaginatedList,
+    TodoRepository, UpdateError, UpdateQuery,
 };
 
 use crate::domain::entities::todo::TodoEntity;
-use crate::domain::types::{DateTime, Id};
+use crate::domain::types::Id;
 use crate::framework::storage::models::todo::{Status as TodoModelStatus, TodoModel};
-use crate::framework::storage::views::TodoWithTagsView;
 
 #[derive(Clone)]
 pub struct PgTodoRepository {
@@ -23,75 +22,9 @@ impl PgTodoRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-
-    fn todo_with_tags_cte_query(&self) -> &'static str {
-        r#"
-        WITH todo_with_tags as (
-            SELECT
-                todo.id,
-                todo.title,
-                todo.description,
-                todo.status,
-                todo.todo_at,
-                todo.created_at,
-                todo.updated_at,
-                CASE
-                    WHEN COUNT(tag.id) > 0 THEN
-                        jsonb_agg(jsonb_build_object(
-                            'id', tag.id,
-                            'name', tag.name,
-                            'description', tag.description,
-                            'created_at', tag.created_at,
-                            'updated_at', tag.updated_at
-                        ))
-                    ELSE
-                        '[]'::jsonb
-                END as tags
-            FROM todo
-            LEFT JOIN todo_tag ON todo.id = todo_tag.todo_id
-            LEFT JOIN tag ON todo_tag.tag_id = tag.id
-            GROUP BY todo.id
-        )
-        "#
-    }
 }
 
 impl TodoRepository for PgTodoRepository {
-    async fn bind_tags(&mut self, todo_id: Id, tag_ids: &[Id]) -> Result<(), BindTagsError> {
-        let mut trx = match self.pool.begin().await {
-            Ok(trx) => trx,
-            Err(err) => return Err(BindTagsError::Internal(err.into())),
-        };
-
-        let delete_relations_q = "DELETE FROM todo_tag WHERE todo_id = $1";
-        sqlx::query(delete_relations_q)
-            .bind(todo_id.uuid())
-            .execute(trx.as_mut())
-            .await
-            .map_err(|err| BindTagsError::Internal(err.into()))?;
-
-        let tag_uuids = tag_ids.iter().map(|id| id.uuid()).collect::<Vec<Uuid>>();
-
-        if !tag_uuids.is_empty() {
-            let current_dt = DateTime::now().date_time();
-            let base_bind_tags_q = "INSERT INTO todo_tag (todo_id, tag_id, created_at) ";
-            QueryBuilder::<Postgres>::new(base_bind_tags_q)
-                .push_values(tag_uuids, |mut q, tag_id| {
-                    q.push_bind(todo_id.uuid())
-                        .push_bind(tag_id)
-                        .push_bind(current_dt);
-                })
-                .build()
-                .execute(trx.as_mut())
-                .await
-                .map_err(|err| BindTagsError::Internal(err.into()))?;
-        }
-
-        trx.commit()
-            .await
-            .map_err(|err| BindTagsError::Internal(err.into()))
-    }
-
     async fn create(&mut self, todo: TodoEntity) -> Result<TodoEntity, CreateError> {
         let insert_q = r#"
             INSERT INTO todo (id, title, description, todo_at, status, created_at, updated_at)
@@ -116,9 +49,7 @@ impl TodoRepository for PgTodoRepository {
                 _ => CreateError::Internal(err.into()),
             })?;
 
-        todo_model
-            .try_into_entity(Vec::new())
-            .map_err(CreateError::Internal)
+        todo_model.try_into_entity().map_err(CreateError::Internal)
     }
 
     async fn delete(&mut self, todo_id: Id) -> Result<(), DeleteError> {
@@ -145,10 +76,9 @@ impl TodoRepository for PgTodoRepository {
     }
 
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError> {
-        let mut find_q = String::from(self.todo_with_tags_cte_query());
-        find_q.push_str(r#" SELECT * FROM todo_with_tags as t WHERE t.id = $1"#);
+        const FIND_Q: &str = r#" SELECT * FROM todo as t WHERE t.id = $1"#;
 
-        let todo_with_tags = sqlx::query_as::<_, TodoWithTagsView>(find_q.as_str())
+        let todo_with_tags = sqlx::query_as::<_, TodoModel>(FIND_Q)
             .bind(todo_id.uuid())
             .fetch_one(&self.pool)
             .await
@@ -163,12 +93,8 @@ impl TodoRepository for PgTodoRepository {
     }
 
     async fn list(&self, query: ListQuery) -> Result<PaginatedList, ListError> {
-        let base_list_q = self.todo_with_tags_cte_query();
-        let mut count_q = QueryBuilder::<Postgres>::new(base_list_q);
-        count_q.push(r#" SELECT COUNT(*) FROM todo_with_tags as t "#);
-
-        let mut list_q = QueryBuilder::<Postgres>::new(base_list_q);
-        list_q.push(r#" SELECT * FROM todo_with_tags "#);
+        let mut count_q = QueryBuilder::<Postgres>::new(r#" SELECT COUNT(*) FROM todo as t "#);
+        let mut list_q = QueryBuilder::<Postgres>::new(r#" SELECT * FROM todo "#);
 
         let title_filter = query.title.as_ref().map(|t| format!("%{}%", t.as_str()));
         if let Some(constraint) = title_filter.as_deref() {
@@ -191,14 +117,14 @@ impl TodoRepository for PgTodoRepository {
             .push_bind(limit)
             .push(" OFFSET ")
             .push_bind(offset)
-            .build_query_as::<TodoWithTagsView>()
+            .build_query_as::<TodoModel>()
             .fetch_all(&self.pool)
             .await
             .map_err(|e| ListError::Internal(e.into()))?;
 
         let todo_entities = todos_with_tags
             .into_iter()
-            .map(TodoWithTagsView::try_into_entity)
+            .map(TodoModel::try_into_entity)
             .collect::<Result<Vec<TodoEntity>, Box<dyn Error>>>()
             .map_err(ListError::Internal)?;
 
@@ -233,28 +159,5 @@ impl TodoRepository for PgTodoRepository {
             })?;
 
         Ok(())
-    }
-
-    async fn exists_tags(&self, tag_ids: &[Id]) -> Result<(), ExistsTagsError> {
-        let tag_uuids = tag_ids.iter().map(|id| id.uuid()).collect::<Vec<Uuid>>();
-
-        let select_any_q = "SELECT id FROM tag WHERE id = ANY($1)";
-        let selected_tag_uuids = sqlx::query_scalar::<_, Uuid>(select_any_q)
-            .bind(&tag_uuids)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|err| ExistsTagsError::Internal(err.into()))?;
-
-        let not_found_ids = tag_uuids
-            .into_iter()
-            .filter(|uuid| !selected_tag_uuids.contains(uuid))
-            .map(Id::from)
-            .collect::<Vec<Id>>();
-
-        if not_found_ids.is_empty() {
-            Ok(())
-        } else {
-            Err(ExistsTagsError::NotFound(not_found_ids))
-        }
     }
 }

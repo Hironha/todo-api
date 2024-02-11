@@ -17,7 +17,7 @@ use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, Tr
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
 
-use framework::rest_api::routes::{tag, todo};
+use framework::rest_api::routes::todo;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -39,8 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed running migrations");
 
     let app = Router::new()
-        .merge(todo::create_router(pool.clone()))
-        .merge(tag::create_router(pool))
+        .merge(todo::create_router(pool))
         .layer(CorsLayer::very_permissive())
         .layer(create_tracing_layer());
 

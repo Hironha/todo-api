@@ -4,7 +4,6 @@ use serde::Serialize;
 
 use super::TodoView;
 
-use crate::adapters::dtos::todo::bind_tags::BindTodoTagsPresenter;
 use crate::adapters::dtos::todo::create::CreateTodoPresenter;
 use crate::adapters::dtos::todo::delete::DeleteTodoPresenter;
 use crate::adapters::dtos::todo::find::FindTodoPresenter;
@@ -47,14 +46,6 @@ impl CreateTodoPresenter for JsonTodoPresenter {
 
     fn present(&self, result: Result<TodoEntity, Box<dyn Error>>) -> Self::View {
         result.map(TodoView::from)
-    }
-}
-
-impl BindTodoTagsPresenter for JsonTodoPresenter {
-    type View = Result<(), Box<dyn Error>>;
-
-    fn present(&self, result: Result<(), Box<dyn Error>>) -> Self::View {
-        result
     }
 }
 

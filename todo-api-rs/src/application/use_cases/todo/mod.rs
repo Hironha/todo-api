@@ -1,4 +1,3 @@
-pub mod bind_tags;
 pub mod create;
 pub mod delete;
 pub mod find;

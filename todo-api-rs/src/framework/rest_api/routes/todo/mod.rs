@@ -1,4 +1,3 @@
-mod bind_tags;
 mod create;
 mod delete;
 mod find;
@@ -6,13 +5,12 @@ mod list;
 mod update;
 
 use axum::extract::FromRef;
-use axum::routing::{get, patch, post};
+use axum::routing::{get, post};
 use axum::Router;
 use sqlx::{Pool, Postgres};
 
 use crate::framework::storage::repositories::todo::PgTodoRepository;
 
-use bind_tags::bind_todo_tags;
 use create::create_todo;
 use delete::delete_todo;
 use find::find_todo;
@@ -30,7 +28,6 @@ pub fn create_router(pool: Pool<Postgres>) -> Router {
             "/todos/:id",
             get(find_todo).delete(delete_todo).put(update_todo),
         )
-        .route("/todos/:id/tags", patch(bind_todo_tags))
         .with_state(state)
 }
 
