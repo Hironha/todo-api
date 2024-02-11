@@ -14,22 +14,26 @@ pub struct TodoView {
     pub todo_at: Option<String>,
     /// `Date` in `RFC-3339` format
     #[serde(rename(serialize = "createdAt"))]
-    pub created_at: String,
+    pub created_at: Option<String>,
     /// `Date` in `RFC-3339` format
     #[serde(rename(serialize = "updatedAt"))]
-    pub updated_at: String,
+    pub updated_at: Option<String>,
 }
 
 impl From<TodoEntity> for TodoView {
     fn from(entity: TodoEntity) -> Self {
+        let id = entity.id().to_string();
+        let created_at = entity.created_at().map(|dt| dt.to_rfc3339());
+        let updated_at = entity.updated_at().map(|dt| dt.to_rfc3339());
+
         Self {
-            id: entity.id.to_string(),
+            id,
             title: entity.title.into_inner(),
             description: entity.description.map(|d| d.into_inner()),
             status: entity.status.to_string(),
             todo_at: entity.todo_at.map(|at| at.to_ymd()),
-            created_at: entity.created_at.to_rfc3339(),
-            updated_at: entity.updated_at.to_rfc3339(),
+            created_at,
+            updated_at,
         }
     }
 }

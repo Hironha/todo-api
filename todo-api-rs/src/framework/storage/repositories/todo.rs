@@ -10,7 +10,7 @@ use crate::application::repositories::todo::{
 };
 
 use crate::domain::entities::todo::TodoEntity;
-use crate::domain::types::Id;
+use crate::domain::types::{DateTime, Id};
 use crate::framework::storage::models::todo::{Status as TodoModelStatus, TodoModel};
 
 #[derive(Clone)]
@@ -32,14 +32,15 @@ impl TodoRepository for PgTodoRepository {
             RETURNING todo.*
         "#;
 
+        let now = DateTime::now();
         let todo_model = sqlx::query_as::<_, TodoModel>(insert_q)
-            .bind(todo.id.uuid())
-            .bind(todo.title.into_inner())
-            .bind(todo.description.map(|d| d.into_inner()))
+            .bind(todo.id().uuid())
+            .bind(todo.title.as_str())
+            .bind(todo.description.as_ref().map(|d| d.as_str()))
             .bind(todo.todo_at.map(|at| at.date()))
-            .bind(TodoModelStatus::from(todo.status))
-            .bind(todo.created_at.date_time())
-            .bind(todo.updated_at.date_time())
+            .bind(TodoModelStatus::from(&todo.status))
+            .bind(todo.created_at().unwrap_or(now).date_time())
+            .bind(todo.updated_at().unwrap_or(now).date_time())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {

@@ -6,13 +6,136 @@ use crate::domain::types::{Date, DateTime, Id};
 
 #[derive(Clone, Debug)]
 pub struct TodoEntity {
-    pub id: Id,
+    id: Id,
     pub title: Title,
     pub description: Option<Description>,
     pub status: TodoStatus,
     pub todo_at: Option<Date>,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
+    created_at: Option<DateTime>,
+    updated_at: Option<DateTime>,
+}
+
+impl TodoEntity {
+    pub fn create() -> TodoEntityBuilder<Id, (), ()> {
+        TodoEntityBuilder::<(), (), ()>::new().id(Id::new())
+    }
+
+    pub fn builder() -> TodoEntityBuilder<(), (), ()> {
+        TodoEntityBuilder::<(), (), ()>::new()
+    }
+
+    pub fn id(&self) -> Id {
+        self.id
+    }
+
+    pub fn created_at(&self) -> Option<DateTime> {
+        self.created_at
+    }
+
+    pub fn updated_at(&self) -> Option<DateTime> {
+        self.updated_at
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct TodoEntityBuilder<I, T, S> {
+    id: I,
+    title: T,
+    description: Option<Description>,
+    status: S,
+    todo_at: Option<Date>,
+    created_at: Option<DateTime>,
+    updated_at: Option<DateTime>,
+}
+
+impl<I, T, S> TodoEntityBuilder<I, T, S> {
+    pub fn new() -> TodoEntityBuilder<(), (), ()> {
+        TodoEntityBuilder::<(), (), ()> {
+            id: (),
+            title: (),
+            description: None,
+            status: (),
+            todo_at: None,
+            created_at: None,
+            updated_at: None,
+        }
+    }
+}
+
+impl<T, S> TodoEntityBuilder<(), T, S> {
+    pub fn id(self, id: Id) -> TodoEntityBuilder<Id, T, S> {
+        TodoEntityBuilder::<Id, T, S> {
+            id,
+            title: self.title,
+            description: self.description,
+            status: self.status,
+            todo_at: self.todo_at,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+        }
+    }
+}
+
+impl<I, S> TodoEntityBuilder<I, (), S> {
+    pub fn title(self, title: Title) -> TodoEntityBuilder<I, Title, S> {
+        TodoEntityBuilder::<I, Title, S> {
+            id: self.id,
+            title,
+            description: self.description,
+            status: self.status,
+            todo_at: self.todo_at,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+        }
+    }
+}
+
+impl<I, T> TodoEntityBuilder<I, T, ()> {
+    pub fn status(self, status: TodoStatus) -> TodoEntityBuilder<I, T, TodoStatus> {
+        TodoEntityBuilder::<I, T, TodoStatus> {
+            id: self.id,
+            title: self.title,
+            description: self.description,
+            status,
+            todo_at: self.todo_at,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+        }
+    }
+}
+
+impl TodoEntityBuilder<Id, Title, TodoStatus> {
+    pub fn build(self) -> TodoEntity {
+        TodoEntity {
+            id: self.id,
+            title: self.title,
+            description: self.description,
+            status: self.status,
+            todo_at: self.todo_at,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+        }
+    }
+
+    pub fn description(mut self, description: Option<Description>) -> Self {
+        self.description = description;
+        self
+    }
+
+    pub fn todo_at(mut self, todo_at: Option<Date>) -> Self {
+        self.todo_at = todo_at;
+        self
+    }
+
+    pub fn created_at(mut self, created_at: Option<DateTime>) -> Self {
+        self.created_at = created_at;
+        self
+    }
+
+    pub fn updated_at(mut self, updated_at: Option<DateTime>) -> Self {
+        self.updated_at = updated_at;
+        self
+    }
 }
 
 impl PartialEq for TodoEntity {
@@ -73,6 +196,10 @@ impl Description {
     pub fn into_inner(self) -> String {
         self.0
     }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -122,5 +249,10 @@ pub enum DescriptionError {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
-#[error("Todo status must be one the following values: todo, in_progress or done")]
+#[error(
+    "Todo status must be one the following values: {}, {}, {}",
+    TodoStatus::TODO_STR,
+    TodoStatus::IN_PROGRESS_STR,
+    TodoStatus::DONE_STR
+)]
 pub struct ParseTodoStatusError;

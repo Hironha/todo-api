@@ -26,15 +26,17 @@ impl TodoModel {
         let title = Title::new(self.title)?;
         let description = self.description.map(Description::new).transpose()?;
 
-        Ok(TodoEntity {
-            id: self.id.into(),
-            title,
-            description,
-            status: self.status.into_entity(),
-            todo_at: self.todo_at.map(Date::from),
-            created_at: self.created_at.into(),
-            updated_at: self.updated_at.into(),
-        })
+        let entity = TodoEntity::builder()
+            .id(self.id.into())
+            .title(title)
+            .status(self.status.into_entity())
+            .description(description)
+            .todo_at(self.todo_at.map(Date::from))
+            .created_at(Some(self.created_at.into()))
+            .updated_at(Some(self.updated_at.into()))
+            .build();
+
+        Ok(entity)
     }
 }
 
@@ -48,6 +50,16 @@ pub enum Status {
 
 impl From<TodoEntityStatus> for Status {
     fn from(value: TodoEntityStatus) -> Self {
+        match value {
+            TodoEntityStatus::Todo => Status::Todo,
+            TodoEntityStatus::InProgress => Status::InProgress,
+            TodoEntityStatus::Done => Status::Done,
+        }
+    }
+}
+
+impl From<&TodoEntityStatus> for Status {
+    fn from(value: &TodoEntityStatus) -> Self {
         match value {
             TodoEntityStatus::Todo => Status::Todo,
             TodoEntityStatus::InProgress => Status::InProgress,
