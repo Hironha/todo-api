@@ -49,7 +49,7 @@ pub struct TodoEntityBuilder<I, T, S> {
 }
 
 impl<I, T, S> TodoEntityBuilder<I, T, S> {
-    pub fn new() -> TodoEntityBuilder<(), (), ()> {
+    fn new() -> TodoEntityBuilder<(), (), ()> {
         TodoEntityBuilder::<(), (), ()> {
             id: (),
             title: (),
@@ -59,6 +59,26 @@ impl<I, T, S> TodoEntityBuilder<I, T, S> {
             created_at: None,
             updated_at: None,
         }
+    }
+
+    pub fn description(mut self, description: Option<Description>) -> Self {
+        self.description = description;
+        self
+    }
+
+    pub fn todo_at(mut self, todo_at: Option<Date>) -> Self {
+        self.todo_at = todo_at;
+        self
+    }
+
+    pub fn created_at(mut self, created_at: Option<DateTime>) -> Self {
+        self.created_at = created_at;
+        self
+    }
+
+    pub fn updated_at(mut self, updated_at: Option<DateTime>) -> Self {
+        self.updated_at = updated_at;
+        self
     }
 }
 
@@ -115,26 +135,6 @@ impl TodoEntityBuilder<Id, Title, TodoStatus> {
             created_at: self.created_at,
             updated_at: self.updated_at,
         }
-    }
-
-    pub fn description(mut self, description: Option<Description>) -> Self {
-        self.description = description;
-        self
-    }
-
-    pub fn todo_at(mut self, todo_at: Option<Date>) -> Self {
-        self.todo_at = todo_at;
-        self
-    }
-
-    pub fn created_at(mut self, created_at: Option<DateTime>) -> Self {
-        self.created_at = created_at;
-        self
-    }
-
-    pub fn updated_at(mut self, updated_at: Option<DateTime>) -> Self {
-        self.updated_at = updated_at;
-        self
     }
 }
 
