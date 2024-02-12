@@ -14,6 +14,7 @@ impl Id {
         Uuid::parse_str(input).map(Self).or(Err(()))
     }
 
+    /// Get equivalent [`uuid::Uuid`] struct of [`Id`]
     pub fn uuid(&self) -> Uuid {
         self.0
     }

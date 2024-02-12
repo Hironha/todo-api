@@ -6,7 +6,7 @@ use sqlx::types::Uuid;
 use sqlx::{FromRow, Type};
 
 use crate::domain::entities::todo::{
-    Description, Title, TodoEntity, TodoStatus as TodoEntityStatus,
+    Description, Title, TodoEntity, Status as TodoEntityStatus,
 };
 use crate::domain::types::Date;
 

@@ -2,7 +2,7 @@ use std::error;
 
 use thiserror::Error;
 
-use crate::domain::entities::todo::{Description, Title, TodoEntity, TodoStatus};
+use crate::domain::entities::todo::{Description, Title, TodoEntity, Status};
 use crate::domain::types::Date;
 
 #[derive(Clone, Debug)]
@@ -10,7 +10,7 @@ pub struct CreateTodoInput {
     pub title: Title,
     pub description: Option<Description>,
     pub todo_at: Option<Date>,
-    pub status: TodoStatus,
+    pub status: Status,
 }
 
 pub type CreateTodoOutput = Result<TodoEntity, CreateTodoError>;

@@ -14,9 +14,9 @@ impl<T: TodoRepository> DeleteTodoUseCase<T> {
 }
 
 impl<T: TodoRepository> UseCase<DeleteTodoInput, DeleteTodoOutput> for DeleteTodoUseCase<T> {
-    async fn exec(mut self, input: DeleteTodoInput) -> DeleteTodoOutput {
+    async fn exec(mut self, todo_id: DeleteTodoInput) -> DeleteTodoOutput {
         self.repository
-            .delete(input)
+            .delete(todo_id)
             .await
             .map_err(|err| match err {
                 DeleteError::NotFound => DeleteTodoError::NotFound,

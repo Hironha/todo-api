@@ -3,13 +3,12 @@ use std::num::NonZeroU32;
 
 use thiserror::Error;
 
-use crate::domain::entities::todo::{Description, Title, TodoEntity, TodoStatus};
+use crate::domain::entities::todo::{Description, Title, TodoEntity, Status};
 use crate::domain::types::{Date, Id};
 
 pub trait TodoRepository {
-    async fn create(&mut self, todo: TodoEntity) -> Result<TodoEntity, CreateError>;
+    async fn create(&mut self, todo: TodoEntity) -> Result<(), CreateError>;
     async fn delete(&mut self, todo_id: Id) -> Result<(), DeleteError>;
-    async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError>;
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError>;
     async fn list(&self, query: ListQuery) -> Result<PaginatedList, ListError>;
     async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError>;
@@ -20,7 +19,7 @@ pub struct UpdateQuery {
     pub id: Id,
     pub title: Title,
     pub description: Option<Description>,
-    pub status: TodoStatus,
+    pub status: Status,
     pub todo_at: Option<Date>,
 }
 
@@ -49,12 +48,6 @@ pub enum CreateError {
 pub enum DeleteError {
     #[error("Todo could not be found")]
     NotFound,
-    #[error(transparent)]
-    Internal(Box<dyn error::Error>),
-}
-
-#[derive(Debug, Error)]
-pub enum ExistsError {
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
 }

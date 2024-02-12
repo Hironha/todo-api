@@ -9,13 +9,13 @@ pub struct TodoView {
     pub title: String,
     pub description: Option<String>,
     pub status: String,
-    /// `Date` in UTC YYYY-MM-DD format
+    /// Date in YYYY-MM-DD UTC format
     #[serde(rename(serialize = "todoAt"))]
     pub todo_at: Option<String>,
-    /// `Date` in `RFC-3339` format
+    /// Date time with offset in `RFC-3339` format
     #[serde(rename(serialize = "createdAt"))]
     pub created_at: Option<String>,
-    /// `Date` in `RFC-3339` format
+    /// Date time with offset in `RFC-3339` format
     #[serde(rename(serialize = "updatedAt"))]
     pub updated_at: Option<String>,
 }

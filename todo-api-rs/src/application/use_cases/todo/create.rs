@@ -23,12 +23,13 @@ impl<T: TodoRepository> UseCase<CreateTodoInput, CreateTodoOutput> for CreateTod
             .todo_at(input.todo_at)
             .build();
 
-        self.repository
-            .create(entity)
-            .await
-            .map_err(|err| match err {
+        if let Err(err) = self.repository.create(entity.clone()).await {
+            return Err(match err {
                 CreateError::DuplicatedTitle => CreateTodoError::DuplicatedTitle(input.title),
-                CreateError::Internal(err) => CreateTodoError::Internal(err),
-            })
+                CreateError::Internal(src) => CreateTodoError::Internal(src),
+            });
+        }
+
+        Ok(entity)
     }
 }

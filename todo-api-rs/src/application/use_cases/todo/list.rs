@@ -17,23 +17,19 @@ impl<T: TodoRepository> ListTodosUseCase<T> {
 
 impl<T: TodoRepository> UseCase<ListTodosInput, ListTodosOutput> for ListTodosUseCase<T> {
     async fn exec(self, input: ListTodosInput) -> ListTodosOutput {
-        let payload = ListQuery {
+        let query = ListQuery {
             page: input.page,
             per_page: input.per_page,
             title: input.title,
         };
 
-        let list_data = self
-            .repository
-            .list(payload)
-            .await
-            .map_err(|err| match err {
-                ListError::Internal(err) => ListTodosError::Internal(err),
-            })?;
+        let list = self.repository.list(query).await.map_err(|err| match err {
+            ListError::Internal(err) => ListTodosError::Internal(err),
+        })?;
 
         Ok(TodosList {
-            count: list_data.count,
-            items: list_data.items,
+            count: list.count,
+            items: list.items,
             page: input.page,
             per_page: input.per_page,
         })

@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::application::dtos::todo::create::CreateTodoInput;
 use crate::domain::entities::todo::{
-    Description, DescriptionError, ParseTodoStatusError, Title, TitleError, TodoEntity, TodoStatus,
+    Description, DescriptionError, ParseStatusError, Title, TitleError, TodoEntity, Status,
 };
 use crate::domain::types::Date;
 
@@ -42,9 +42,9 @@ impl CreateTodoRequest {
 
         let status = self
             .status
-            .ok_or(ParseError::Status(ParseTodoStatusError))
+            .ok_or(ParseError::Status(ParseStatusError))
             .and_then(|status| {
-                TodoStatus::parse_str(status.as_str()).map_err(ParseError::Status)
+                Status::parse_str(status.as_str()).map_err(ParseError::Status)
             })?;
 
         Ok(CreateTodoInput {
@@ -62,8 +62,8 @@ pub enum ParseError {
     Title(TitleError),
     #[error(transparent)]
     Description(DescriptionError),
-    #[error("Invalid todo at: should be an UTC date on YYYY-MM-DD format")]
+    #[error("Todo todo at should be an UTC date on YYYY-MM-DD format")]
     TodoAt,
     #[error(transparent)]
-    Status(ParseTodoStatusError),
+    Status(ParseStatusError),
 }

@@ -9,7 +9,7 @@ pub struct TodoEntity {
     id: Id,
     pub title: Title,
     pub description: Option<Description>,
-    pub status: TodoStatus,
+    pub status: Status,
     pub todo_at: Option<Date>,
     created_at: Option<DateTime>,
     updated_at: Option<DateTime>,
@@ -111,8 +111,8 @@ impl<I, S> TodoEntityBuilder<I, (), S> {
 }
 
 impl<I, T> TodoEntityBuilder<I, T, ()> {
-    pub fn status(self, status: TodoStatus) -> TodoEntityBuilder<I, T, TodoStatus> {
-        TodoEntityBuilder::<I, T, TodoStatus> {
+    pub fn status(self, status: Status) -> TodoEntityBuilder<I, T, Status> {
+        TodoEntityBuilder::<I, T, Status> {
             id: self.id,
             title: self.title,
             description: self.description,
@@ -124,7 +124,7 @@ impl<I, T> TodoEntityBuilder<I, T, ()> {
     }
 }
 
-impl TodoEntityBuilder<Id, Title, TodoStatus> {
+impl TodoEntityBuilder<Id, Title, Status> {
     pub fn build(self) -> TodoEntity {
         TodoEntity {
             id: self.id,
@@ -203,28 +203,28 @@ impl Description {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum TodoStatus {
+pub enum Status {
     Todo,
     InProgress,
     Done,
 }
 
-impl TodoStatus {
+impl Status {
     const TODO_STR: &'static str = "todo";
     const IN_PROGRESS_STR: &'static str = "in_progress";
     const DONE_STR: &'static str = "done";
 
-    pub fn parse_str(value: &str) -> Result<Self, ParseTodoStatusError> {
+    pub fn parse_str(value: &str) -> Result<Self, ParseStatusError> {
         match value {
             Self::TODO_STR => Ok(Self::Todo),
             Self::IN_PROGRESS_STR => Ok(Self::InProgress),
             Self::DONE_STR => Ok(Self::Done),
-            _ => Err(ParseTodoStatusError),
+            _ => Err(ParseStatusError),
         }
     }
 }
 
-impl fmt::Display for TodoStatus {
+impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Todo => f.write_str(Self::TODO_STR),
@@ -251,8 +251,8 @@ pub enum DescriptionError {
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 #[error(
     "Todo status must be one the following values: {}, {}, {}",
-    TodoStatus::TODO_STR,
-    TodoStatus::IN_PROGRESS_STR,
-    TodoStatus::DONE_STR
+    Status::TODO_STR,
+    Status::IN_PROGRESS_STR,
+    Status::DONE_STR
 )]
-pub struct ParseTodoStatusError;
+pub struct ParseStatusError;

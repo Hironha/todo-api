@@ -2,7 +2,7 @@ use std::error;
 
 use thiserror::Error;
 
-use crate::domain::entities::todo::{Description, Title, TodoStatus};
+use crate::domain::entities::todo::{Description, Title, Status};
 use crate::domain::types::{Date, Id};
 
 #[derive(Clone, Debug)]
@@ -10,7 +10,7 @@ pub struct UpdateTodoInput {
     pub id: Id,
     pub title: Title,
     pub description: Option<Description>,
-    pub status: TodoStatus,
+    pub status: Status,
     pub todo_at: Option<Date>,
 }
 

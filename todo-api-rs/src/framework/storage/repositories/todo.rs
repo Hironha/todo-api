@@ -5,8 +5,8 @@ use sqlx::types::uuid::Uuid;
 use sqlx::{Error as SqlxError, PgPool, Postgres, QueryBuilder};
 
 use crate::application::repositories::todo::{
-    CreateError, DeleteError, ExistsError, FindError, ListError, ListQuery, PaginatedList,
-    TodoRepository, UpdateError, UpdateQuery,
+    CreateError, DeleteError, FindError, ListError, ListQuery, PaginatedList, TodoRepository,
+    UpdateError, UpdateQuery,
 };
 
 use crate::domain::entities::todo::TodoEntity;
@@ -25,22 +25,21 @@ impl PgTodoRepository {
 }
 
 impl TodoRepository for PgTodoRepository {
-    async fn create(&mut self, todo: TodoEntity) -> Result<TodoEntity, CreateError> {
-        let insert_q = r#"
+    async fn create(&mut self, todo: TodoEntity) -> Result<(), CreateError> {
+        const INSERT_Q: &str = r#"
             INSERT INTO todo (id, title, description, todo_at, status, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING todo.*
         "#;
 
         let now = DateTime::now();
-        let todo_model = sqlx::query_as::<_, TodoModel>(insert_q)
+        sqlx::query(INSERT_Q)
             .bind(todo.id().uuid())
             .bind(todo.title.as_str())
             .bind(todo.description.as_ref().map(|d| d.as_str()))
-            .bind(todo.todo_at.map(|at| at.date()))
+            .bind(todo.todo_at.map(|at| at.time()))
             .bind(TodoModelStatus::from(&todo.status))
-            .bind(todo.created_at().unwrap_or(now).date_time())
-            .bind(todo.updated_at().unwrap_or(now).date_time())
+            .bind(todo.created_at().unwrap_or(now).time())
+            .bind(todo.updated_at().unwrap_or(now).time())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {
@@ -50,12 +49,12 @@ impl TodoRepository for PgTodoRepository {
                 _ => CreateError::Internal(err.into()),
             })?;
 
-        todo_model.try_into_entity().map_err(CreateError::Internal)
+        Ok(())
     }
 
     async fn delete(&mut self, todo_id: Id) -> Result<(), DeleteError> {
-        let delete_q = "DELETE FROM todo WHERE id = $1 RETURNING id";
-        sqlx::query_scalar::<_, Uuid>(delete_q)
+        const DELETE_Q: &str = "DELETE FROM todo WHERE id = $1 RETURNING id";
+        sqlx::query_scalar::<_, Uuid>(DELETE_Q)
             .bind(todo_id.uuid())
             .fetch_one(&self.pool)
             .await
@@ -67,19 +66,10 @@ impl TodoRepository for PgTodoRepository {
         Ok(())
     }
 
-    async fn exists(&self, todo_id: Id) -> Result<bool, ExistsError> {
-        let todo_exists_q = "SELECT EXISTS(SELECT 1 FROM todo WHERE id = $1)";
-        sqlx::query_scalar::<_, bool>(todo_exists_q)
-            .bind(todo_id.uuid())
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| ExistsError::Internal(e.into()))
-    }
-
     async fn find(&self, todo_id: Id) -> Result<TodoEntity, FindError> {
         const FIND_Q: &str = r#" SELECT * FROM todo as t WHERE t.id = $1"#;
 
-        let todo_with_tags = sqlx::query_as::<_, TodoModel>(FIND_Q)
+        let model = sqlx::query_as::<_, TodoModel>(FIND_Q)
             .bind(todo_id.uuid())
             .fetch_one(&self.pool)
             .await
@@ -88,9 +78,7 @@ impl TodoRepository for PgTodoRepository {
                 _ => FindError::Internal(err.into()),
             })?;
 
-        todo_with_tags
-            .try_into_entity()
-            .map_err(FindError::Internal)
+        model.try_into_entity().map_err(FindError::Internal)
     }
 
     async fn list(&self, query: ListQuery) -> Result<PaginatedList, ListError> {
@@ -113,7 +101,7 @@ impl TodoRepository for PgTodoRepository {
         let page: i64 = u32::from(query.page).into();
         let offset = (page - 1) * limit;
 
-        let todos_with_tags = list_q
+        let models = list_q
             .push(" ORDER BY created_at DESC LIMIT ")
             .push_bind(limit)
             .push(" OFFSET ")
@@ -121,9 +109,9 @@ impl TodoRepository for PgTodoRepository {
             .build_query_as::<TodoModel>()
             .fetch_all(&self.pool)
             .await
-            .map_err(|e| ListError::Internal(e.into()))?;
+            .map_err(|err| ListError::Internal(err.into()))?;
 
-        let todo_entities = todos_with_tags
+        let entities = models
             .into_iter()
             .map(TodoModel::try_into_entity)
             .collect::<Result<Vec<TodoEntity>, Box<dyn Error>>>()
@@ -131,21 +119,21 @@ impl TodoRepository for PgTodoRepository {
 
         Ok(PaginatedList {
             count: count as u64,
-            items: todo_entities,
+            items: entities,
         })
     }
 
     async fn update(&mut self, query: UpdateQuery) -> Result<(), UpdateError> {
-        let update_q = r#"
+        const UPDATE_Q: &str = r#"
             UPDATE todo
             SET title = $1, description = $2, todo_at = $3, status = $4, updated_at = $5
             WHERE id = $6
         "#;
 
-        sqlx::query(update_q)
+        sqlx::query(UPDATE_Q)
             .bind(query.title.into_inner())
             .bind(query.description.map(|d| d.into_inner()))
-            .bind(query.todo_at.map(|at| at.date()))
+            .bind(query.todo_at.map(|at| at.time()))
             .bind(TodoModelStatus::from(query.status))
             .bind(OffsetDateTime::now_utc())
             .bind(query.id.uuid())

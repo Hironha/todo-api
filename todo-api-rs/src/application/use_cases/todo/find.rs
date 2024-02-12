@@ -14,10 +14,13 @@ impl<T: TodoRepository> FindTodoUseCase<T> {
 }
 
 impl<T: TodoRepository> UseCase<FindTodoInput, FindTodoOutput> for FindTodoUseCase<T> {
-    async fn exec(self, input: FindTodoInput) -> FindTodoOutput {
-        self.repository.find(input).await.map_err(|err| match err {
-            FindError::NotFound => FindTodoError::NotFound,
-            FindError::Internal(err) => FindTodoError::Internal(err),
-        })
+    async fn exec(self, todo_id: FindTodoInput) -> FindTodoOutput {
+        self.repository
+            .find(todo_id)
+            .await
+            .map_err(|err| match err {
+                FindError::NotFound => FindTodoError::NotFound,
+                FindError::Internal(err) => FindTodoError::Internal(err),
+            })
     }
 }
