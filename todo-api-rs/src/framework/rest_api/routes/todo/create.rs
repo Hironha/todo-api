@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use axum::extract::State;
 use axum::http::{header, StatusCode};
 use axum::response::IntoResponse;
@@ -8,11 +6,9 @@ use serde::Deserialize;
 
 use super::TodoState;
 use crate::adapters::controllers::todo::create::CreateTodoController;
-use crate::adapters::dtos::todo::create::{CreateTodoRequest, ParseError};
+use crate::adapters::dtos::todo::create::CreateRequest;
 use crate::adapters::presenters::json::todo::JsonTodoPresenter;
-use crate::application::dtos::todo::create::CreateTodoError;
 use crate::application::use_cases::todo::create::CreateTodoUseCase;
-use crate::framework::rest_api::error::{ApiError, ValidationError};
 
 #[derive(Clone, Debug, Deserialize)]
 pub(super) struct CreateBody {
@@ -27,7 +23,7 @@ pub(super) async fn create_todo(
     State(state): State<TodoState>,
     Json(body): Json<CreateBody>,
 ) -> impl IntoResponse {
-    let req = CreateTodoRequest {
+    let req = CreateRequest {
         title: body.title,
         description: body.description,
         todo_at: body.todo_at,
@@ -42,9 +38,17 @@ pub(super) async fn create_todo(
     let output = match controller.run(req).await {
         Ok(output) => output,
         Err(err) => {
-            tracing::error!("Create todo error: {err:?}");
-            let (status, error) = config_error_response(err);
-            return (status, Json(error)).into_response();
+            if let Some(src) = err.src() {
+                tracing::error!("Create todo internal error: {src}");
+            } else {
+                tracing::error!("Create todo error: {err:?}");
+            }
+
+            let status = match StatusCode::from_u16(err.status()) {
+                Ok(status) => status,
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            return (status, Json(err.content)).into_response();
         }
     };
 
@@ -54,37 +58,4 @@ pub(super) async fn create_todo(
     }
 
     (StatusCode::CREATED, headers, Json(output)).into_response()
-}
-
-fn config_error_response(error: Box<dyn Error>) -> (StatusCode, ApiError<ValidationError>) {
-    if let Some(parse_err) = error.downcast_ref::<ParseError>() {
-        let field = get_parse_error_field(parse_err);
-        let details = ValidationError::new(field, parse_err.to_string());
-        let api_error = ApiError::new("ParseError", "Invalid input").with_details(details);
-        return (StatusCode::BAD_REQUEST, api_error);
-    }
-
-    if let Some(create_err) = error.downcast_ref::<CreateTodoError>() {
-        return match create_err {
-            CreateTodoError::DuplicatedTitle(..) => {
-                let api_error = ApiError::new("DuplicatedTitle", create_err.to_string());
-                (StatusCode::CONFLICT, api_error)
-            }
-            CreateTodoError::Internal(..) => {
-                let api_error = ApiError::internal();
-                (StatusCode::INTERNAL_SERVER_ERROR, api_error)
-            }
-        };
-    }
-
-    (StatusCode::INTERNAL_SERVER_ERROR, ApiError::internal())
-}
-
-fn get_parse_error_field(err: &ParseError) -> &str {
-    match err {
-        ParseError::Title(_) => "title",
-        ParseError::Description(_) => "description",
-        ParseError::TodoAt => "todoAt",
-        ParseError::Status(_) => "status",
-    }
 }

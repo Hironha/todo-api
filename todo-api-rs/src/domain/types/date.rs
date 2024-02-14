@@ -1,3 +1,4 @@
+use thiserror::Error;
 use time::format_description::well_known::Rfc3339;
 use time::macros::format_description;
 use time::OffsetDateTime;
@@ -17,11 +18,11 @@ impl Date {
         self.time().format(ydm_description).unwrap()
     }
 
-    pub fn parse_str(input: &str) -> Result<Self, ()> {
+    pub fn parse_str(input: &str) -> Result<Self, ParseDateError> {
         let ymd_description = format_description!("[year]-[month]-[day]");
         time::Date::parse(input, ymd_description)
             .map(Self::from)
-            .or(Err(()))
+            .or(Err(ParseDateError::Invalid))
     }
 }
 
@@ -55,4 +56,10 @@ impl From<OffsetDateTime> for DateTime {
     fn from(date_time: OffsetDateTime) -> Self {
         Self(date_time)
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
+pub enum ParseDateError {
+    #[error("Date should be an UTC date on YYYY-MM-DD format")]
+    Invalid,
 }

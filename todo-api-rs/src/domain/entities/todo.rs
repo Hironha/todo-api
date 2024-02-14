@@ -214,12 +214,12 @@ impl Status {
     const IN_PROGRESS_STR: &'static str = "in_progress";
     const DONE_STR: &'static str = "done";
 
-    pub fn parse_str(value: &str) -> Result<Self, ParseStatusError> {
+    pub fn parse_str(value: &str) -> Result<Self, StatusError> {
         match value {
             Self::TODO_STR => Ok(Self::Todo),
             Self::IN_PROGRESS_STR => Ok(Self::InProgress),
             Self::DONE_STR => Ok(Self::Done),
-            _ => Err(ParseStatusError),
+            _ => Err(StatusError),
         }
     }
 }
@@ -255,4 +255,4 @@ pub enum DescriptionError {
     Status::IN_PROGRESS_STR,
     Status::DONE_STR
 )]
-pub struct ParseStatusError;
+pub struct StatusError;
