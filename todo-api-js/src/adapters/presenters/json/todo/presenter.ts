@@ -13,7 +13,7 @@ export type CreateTodoJsonResponse = Result<TodoView, JsonError>;
 export class CreateTodoJsonPresenter implements CreateTodoPresenter<CreateTodoJsonResponse> {
     present(response: CreateTodoResponse): CreateTodoJsonResponse {
         return response.map(createViewFromEntity).mapErr((err) => {
-            switch (err.name) {
+            switch (err.kind) {
                 case "DuplicatedTitle":
                     return JsonError.create(409, err);
                 case "ParseError":
@@ -30,7 +30,7 @@ export type RemoveTodoJsonResponse = Result<void, JsonError>;
 export class RemoveTodoJsonPresenter implements RemoveTodoPresenter<RemoveTodoJsonResponse> {
     present(response: RemoveTodoResponse): RemoveTodoJsonResponse {
         return response.mapErr((err) => {
-            switch (err.name) {
+            switch (err.kind) {
                 case "IdNotFound":
                     return JsonError.create(404, err);
                 case "ParseError":
@@ -47,7 +47,7 @@ export type UpdateTodoJsonResponse = Result<void, JsonError>;
 export class UpdateTodoJsonPresenter implements UpdateTodoPresenter<UpdateTodoJsonResponse> {
     present(response: UpdateTodoResponse): UpdateTodoJsonResponse {
         return response.mapErr((err) => {
-            switch (err.name) {
+            switch (err.kind) {
                 case "IdNotFound":
                     return JsonError.create(404, err);
                 case "DuplicatedTitle":
@@ -66,7 +66,7 @@ export type FindTodoJsonResponse = Result<TodoView, JsonError>;
 export class FindTodoJsonPresenter implements FindTodoPresenter<FindTodoJsonResponse> {
     present(response: FindTodoResponse): FindTodoJsonResponse {
         return response.map(createViewFromEntity).mapErr((err) => {
-            switch (err.name) {
+            switch (err.kind) {
                 case "IdNotFound":
                     return JsonError.create(404, err);
                 case "ParseError":
@@ -97,7 +97,7 @@ export class ListTodosJsonPresenter implements ListTodosPresenter<ListTodosJsonR
                 data: list.data.map(createViewFromEntity),
             }))
             .mapErr((err) => {
-                switch (err.name) {
+                switch (err.kind) {
                     case "ParseError":
                         return JsonError.fromParse(err);
                     default:

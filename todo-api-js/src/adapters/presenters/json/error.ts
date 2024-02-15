@@ -12,18 +12,18 @@ export class JsonError {
     constructor(public readonly status: number, public readonly error: JsonErrorBody) {}
 
     static create(status: number, error: Exception): JsonError {
-        return new JsonError(status, { code: error.name, message: error.message });
+        return new JsonError(status, { code: error.kind, message: error.message });
     }
 
     static fromParse(err: ParseError): JsonError {
         return new JsonError(400, {
-            code: err.name,
+            code: err.kind,
             message: err.message,
             details: err.details,
         });
     }
 
     static fromInternal(err: InternalError): JsonError {
-        return new JsonError(500, { code: err.name, message: err.message });
+        return new JsonError(500, { code: err.kind, message: err.message });
     }
 }

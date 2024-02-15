@@ -44,6 +44,6 @@ export function mapToEntity(model: TodoModel): Result<TodoEntity, InternalError>
 
         return new Ok(entity);
     } catch (e) {
-        return new Err(InternalError.fromUnknown(e));
+        return new Err(new InternalError(e));
     }
 }
