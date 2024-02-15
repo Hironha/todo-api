@@ -6,7 +6,7 @@ use sqlx::types::Uuid;
 use sqlx::{FromRow, Type};
 
 use crate::domain::entities::todo::{
-    Description, Title, TodoEntity, Status as TodoEntityStatus,
+    Description, InitProps, Status as EntityStatus, Title, TodoEntity,
 };
 use crate::domain::types::Date;
 
@@ -26,15 +26,15 @@ impl TodoModel {
         let title = Title::new(self.title)?;
         let description = self.description.map(Description::new).transpose()?;
 
-        let entity = TodoEntity::builder()
-            .id(self.id.into())
-            .title(title)
-            .status(self.status.into_entity())
-            .description(description)
-            .todo_at(self.todo_at.map(Date::from))
-            .created_at(Some(self.created_at.into()))
-            .updated_at(Some(self.updated_at.into()))
-            .build();
+        let entity = TodoEntity::init(InitProps {
+            id: self.id.into(),
+            title,
+            description,
+            status: self.status.into_entity(),
+            todo_at: self.todo_at.map(Date::from),
+            created_at: Some(self.created_at.into()),
+            updated_at: Some(self.updated_at.into()),
+        });
 
         Ok(entity)
     }
@@ -48,32 +48,32 @@ pub enum Status {
     Done,
 }
 
-impl From<TodoEntityStatus> for Status {
-    fn from(value: TodoEntityStatus) -> Self {
+impl From<EntityStatus> for Status {
+    fn from(value: EntityStatus) -> Self {
         match value {
-            TodoEntityStatus::Todo => Status::Todo,
-            TodoEntityStatus::InProgress => Status::InProgress,
-            TodoEntityStatus::Done => Status::Done,
+            EntityStatus::Todo => Status::Todo,
+            EntityStatus::InProgress => Status::InProgress,
+            EntityStatus::Done => Status::Done,
         }
     }
 }
 
-impl From<&TodoEntityStatus> for Status {
-    fn from(value: &TodoEntityStatus) -> Self {
+impl From<&EntityStatus> for Status {
+    fn from(value: &EntityStatus) -> Self {
         match value {
-            TodoEntityStatus::Todo => Status::Todo,
-            TodoEntityStatus::InProgress => Status::InProgress,
-            TodoEntityStatus::Done => Status::Done,
+            EntityStatus::Todo => Status::Todo,
+            EntityStatus::InProgress => Status::InProgress,
+            EntityStatus::Done => Status::Done,
         }
     }
 }
 
 impl Status {
-    pub fn into_entity(self) -> TodoEntityStatus {
+    pub fn into_entity(self) -> EntityStatus {
         match self {
-            Self::Todo => TodoEntityStatus::Todo,
-            Self::InProgress => TodoEntityStatus::InProgress,
-            Self::Done => TodoEntityStatus::Done,
+            Self::Todo => EntityStatus::Todo,
+            Self::InProgress => EntityStatus::InProgress,
+            Self::Done => EntityStatus::Done,
         }
     }
 }

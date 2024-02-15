@@ -16,12 +16,28 @@ pub struct TodoEntity {
 }
 
 impl TodoEntity {
-    pub fn create() -> TodoEntityBuilder<Id, (), ()> {
-        TodoEntityBuilder::<(), (), ()>::new().id(Id::new())
+    pub fn new(props: NewProps) -> Self {
+        Self {
+            id: Id::new(),
+            title: props.title,
+            description: props.description,
+            status: props.status,
+            todo_at: props.todo_at,
+            created_at: None,
+            updated_at: None,
+        }
     }
 
-    pub fn builder() -> TodoEntityBuilder<(), (), ()> {
-        TodoEntityBuilder::<(), (), ()>::new()
+    pub fn init(props: InitProps) -> Self {
+        Self {
+            id: props.id,
+            title: props.title,
+            description: props.description,
+            status: props.status,
+            todo_at: props.todo_at,
+            created_at: props.created_at,
+            updated_at: props.updated_at,
+        }
     }
 
     pub fn id(&self) -> Id {
@@ -38,104 +54,22 @@ impl TodoEntity {
 }
 
 #[derive(Clone, Debug)]
-pub struct TodoEntityBuilder<I, T, S> {
-    id: I,
-    title: T,
-    description: Option<Description>,
-    status: S,
-    todo_at: Option<Date>,
-    created_at: Option<DateTime>,
-    updated_at: Option<DateTime>,
+pub struct NewProps {
+    pub title: Title,
+    pub description: Option<Description>,
+    pub status: Status,
+    pub todo_at: Option<Date>,
 }
 
-impl<I, T, S> TodoEntityBuilder<I, T, S> {
-    fn new() -> TodoEntityBuilder<(), (), ()> {
-        TodoEntityBuilder::<(), (), ()> {
-            id: (),
-            title: (),
-            description: None,
-            status: (),
-            todo_at: None,
-            created_at: None,
-            updated_at: None,
-        }
-    }
-
-    pub fn description(mut self, description: Option<Description>) -> Self {
-        self.description = description;
-        self
-    }
-
-    pub fn todo_at(mut self, todo_at: Option<Date>) -> Self {
-        self.todo_at = todo_at;
-        self
-    }
-
-    pub fn created_at(mut self, created_at: Option<DateTime>) -> Self {
-        self.created_at = created_at;
-        self
-    }
-
-    pub fn updated_at(mut self, updated_at: Option<DateTime>) -> Self {
-        self.updated_at = updated_at;
-        self
-    }
-}
-
-impl<T, S> TodoEntityBuilder<(), T, S> {
-    pub fn id(self, id: Id) -> TodoEntityBuilder<Id, T, S> {
-        TodoEntityBuilder::<Id, T, S> {
-            id,
-            title: self.title,
-            description: self.description,
-            status: self.status,
-            todo_at: self.todo_at,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-        }
-    }
-}
-
-impl<I, S> TodoEntityBuilder<I, (), S> {
-    pub fn title(self, title: Title) -> TodoEntityBuilder<I, Title, S> {
-        TodoEntityBuilder::<I, Title, S> {
-            id: self.id,
-            title,
-            description: self.description,
-            status: self.status,
-            todo_at: self.todo_at,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-        }
-    }
-}
-
-impl<I, T> TodoEntityBuilder<I, T, ()> {
-    pub fn status(self, status: Status) -> TodoEntityBuilder<I, T, Status> {
-        TodoEntityBuilder::<I, T, Status> {
-            id: self.id,
-            title: self.title,
-            description: self.description,
-            status,
-            todo_at: self.todo_at,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-        }
-    }
-}
-
-impl TodoEntityBuilder<Id, Title, Status> {
-    pub fn build(self) -> TodoEntity {
-        TodoEntity {
-            id: self.id,
-            title: self.title,
-            description: self.description,
-            status: self.status,
-            todo_at: self.todo_at,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-        }
-    }
+#[derive(Clone, Debug)]
+pub struct InitProps {
+    pub id: Id,
+    pub title: Title,
+    pub description: Option<Description>,
+    pub status: Status,
+    pub todo_at: Option<Date>,
+    pub created_at: Option<DateTime>,
+    pub updated_at: Option<DateTime>,
 }
 
 impl PartialEq for TodoEntity {
