@@ -1,8 +1,9 @@
 import { type TodoEntity } from "@domain/entities/todo";
+import { type JsonView } from "../view";
 
 // View does not need behaviors or access restriction
 // so it's fine to just be a type
-export type TodoView = {
+export type TodoJsonView = JsonView<{
     id: string;
     title: string;
     description?: string | undefined;
@@ -12,9 +13,9 @@ export type TodoView = {
     createdAt: string;
     /** Date and time in ISO 8601 UTC format */
     updatedAt: string;
-};
+}>;
 
-export function createViewFromEntity(entity: TodoEntity): TodoView {
+export function fromEntity(entity: TodoEntity): TodoJsonView {
     const props = entity.unpack();
     return {
         id: props.id.value,

@@ -1,12 +1,12 @@
 import { type InternalError, type Exception } from "@domain/utils/exception";
-
 import { type ParseError } from "@adapters/dtos/request";
+import { type Json, type JsonView } from "./view";
 
-export type JsonErrorBody = {
+export type JsonErrorBody = JsonView<{
     code: string;
     message: string;
-    details?: unknown;
-};
+    details?: Json;
+}>;
 
 export class JsonError {
     constructor(public readonly status: number, public readonly error: JsonErrorBody) {}

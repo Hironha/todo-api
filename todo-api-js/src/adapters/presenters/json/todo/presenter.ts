@@ -5,14 +5,15 @@ import { type RemoveTodoResponse, type RemoveTodoPresenter } from "@adapters/dto
 import { type UpdateTodoResponse, type UpdateTodoPresenter } from "@adapters/dtos/todo/update";
 import { type FindTodoResponse, type FindTodoPresenter } from "@adapters/dtos/todo/find";
 import { type ListTodosResponse, type ListTodosPresenter } from "@adapters/dtos/todo/list";
-import { type TodoView, createViewFromEntity } from "./view";
+import { type JsonView } from "@adapters/presenters/json/view";
+import { type TodoJsonView, fromEntity } from "./view";
 import { JsonError } from "../error";
 
-export type CreateTodoJsonResponse = Result<TodoView, JsonError>;
+export type CreateTodoJsonResponse = Result<TodoJsonView, JsonError>;
 
 export class CreateTodoJsonPresenter implements CreateTodoPresenter<CreateTodoJsonResponse> {
     present(response: CreateTodoResponse): CreateTodoJsonResponse {
-        return response.map(createViewFromEntity).mapErr((err) => {
+        return response.map(fromEntity).mapErr((err) => {
             switch (err.kind) {
                 case "DuplicatedTitle":
                     return JsonError.create(409, err);
@@ -61,11 +62,11 @@ export class UpdateTodoJsonPresenter implements UpdateTodoPresenter<UpdateTodoJs
     }
 }
 
-export type FindTodoJsonResponse = Result<TodoView, JsonError>;
+export type FindTodoJsonResponse = Result<TodoJsonView, JsonError>;
 
 export class FindTodoJsonPresenter implements FindTodoPresenter<FindTodoJsonResponse> {
     present(response: FindTodoResponse): FindTodoJsonResponse {
-        return response.map(createViewFromEntity).mapErr((err) => {
+        return response.map(fromEntity).mapErr((err) => {
             switch (err.kind) {
                 case "IdNotFound":
                     return JsonError.create(404, err);
@@ -78,12 +79,12 @@ export class FindTodoJsonPresenter implements FindTodoPresenter<FindTodoJsonResp
     }
 }
 
-export type JsonTodosList = {
+export type JsonTodosList = JsonView<{
     count: number;
     page: number;
     limit: number;
-    data: TodoView[];
-};
+    data: TodoJsonView[];
+}>;
 
 export type ListTodosJsonResponse = Result<JsonTodosList, JsonError>;
 
@@ -94,7 +95,7 @@ export class ListTodosJsonPresenter implements ListTodosPresenter<ListTodosJsonR
                 count: list.count,
                 page: list.page,
                 limit: list.limit,
-                data: list.data.map(createViewFromEntity),
+                data: list.data.map(fromEntity),
             }))
             .mapErr((err) => {
                 switch (err.kind) {
