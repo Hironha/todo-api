@@ -60,7 +60,7 @@ pub type CreateResponse = Result<TodoEntity, CreateResponseError>;
 pub enum CreateResponseError {
     #[error(transparent)]
     Input(ParseError),
-    #[error("Todo with title {} already exists", 0.to_string())]
+    #[error("Todo with title {0} already exists")]
     DuplicatedTitle(Title),
     #[error(transparent)]
     Internal(Box<dyn error::Error>),
