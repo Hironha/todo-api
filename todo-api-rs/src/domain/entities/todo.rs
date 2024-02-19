@@ -136,6 +136,12 @@ impl Description {
     }
 }
 
+impl fmt::Display for Description {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Status {
     Todo,
@@ -224,5 +230,55 @@ mod tests {
         let title = Title::new(&src);
         assert_eq!(Ok(src.as_str()), title.as_ref().map(Title::as_str));
         assert_eq!(Ok(src), title.as_ref().map(Title::to_string));
+    }
+
+    #[test]
+    fn description_too_big_fails() {
+        let src = String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus euismod, nisl eu pretium aliquet, nisi dolor molestie libero, vel euismod nisi lorem vel justo. Integer pharetra ornare justo, sed rhoncus odio. Etiam bibendum nisl lacus, vulputate iaculis orci placerat ut. Aenean ullamcorper nisl sit amet ullamcorper euismod. Pellentesque eleifend dictum arcu quis tempus.");
+        let description = Description::new(&src);
+        assert!(src.len() > Description::MAX_LENGTH);
+        assert_eq!(Err(DescriptionError::Length), description);
+    }
+
+    #[test]
+    fn new_description_works() {
+        let src = String::from("This is a description text");
+        let description = Description::new(&src);
+        assert!(description.is_ok());
+        assert_eq!(
+            Ok(src.as_str()),
+            description.as_ref().map(Description::as_str),
+        );
+    }
+
+    #[test]
+    fn description_formats_to_string() {
+        let src = String::from("This is a description text");
+        let description = Description::new(&src);
+        assert_eq!(Ok(src), description.as_ref().map(Description::to_string));
+    }
+
+    #[test]
+    fn parse_status_from_str_works() {
+        let todo = Status::parse_str("todo");
+        assert_eq!(Ok(Status::Todo), todo);
+
+        let in_progress = Status::parse_str("in_progress");
+        assert_eq!(Ok(Status::InProgress), in_progress);
+
+        let done = Status::parse_str("done");
+        assert_eq!(Ok(Status::Done), done);
+
+        let invalid = Status::parse_str("not_status");
+        assert_eq!(Err(StatusError), invalid);
+    }
+
+    #[test]
+    fn status_formats_to_string() {
+        let srcs = ["todo", "in_progress", "done"];
+        for src in srcs {
+            let status = Status::parse_str(src);
+            assert_eq!(Ok(src), status.as_ref().map(Status::to_string).as_deref());
+        }
     }
 }
