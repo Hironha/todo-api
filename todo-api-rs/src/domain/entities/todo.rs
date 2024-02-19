@@ -190,3 +190,39 @@ pub enum DescriptionError {
     Status::DONE_STR
 )]
 pub struct StatusError;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_title_fails() {
+        let empty_title = Title::new("");
+        assert_eq!(empty_title, Err(TitleError::Empty));
+    }
+
+    #[test]
+    fn title_too_big_fails() {
+        let src =
+            "This is a really big title so it should not satisfy title max length constraints";
+        let big_title = Title::new(src);
+        assert!(src.len() > Title::MAX_LENGTH);
+        assert_eq!(big_title, Err(TitleError::Length));
+    }
+
+    #[test]
+    fn new_title_works() {
+        let src = "Title";
+        let title = Title::new(src);
+        assert!(title.is_ok());
+        assert_eq!(Ok(src), title.as_ref().map(Title::as_str))
+    }
+
+    #[test]
+    fn title_formats_to_string() {
+        let src = String::from("Title");
+        let title = Title::new(&src);
+        assert_eq!(Ok(src.as_str()), title.as_ref().map(Title::as_str));
+        assert_eq!(Ok(src), title.as_ref().map(Title::to_string));
+    }
+}

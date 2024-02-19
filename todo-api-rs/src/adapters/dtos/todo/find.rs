@@ -46,7 +46,7 @@ pub enum ParseError {
 mod test {
 
     #[test]
-    fn parse_success() {
+    fn parse_works() {
         let input_schema = super::FindRequest {
             id: Some(super::Id::new().to_string()),
         };
@@ -55,13 +55,14 @@ mod test {
     }
 
     #[test]
-    fn parse_fail() {
-        let none_id_schema = super::FindRequest { id: None };
-        let none_id_input = none_id_schema.parse();
-
+    fn empty_id_parse_fails() {
+        let none_id_input = super::FindRequest { id: None }.parse();
         assert!(none_id_input.is_err());
         assert_eq!(none_id_input.unwrap_err(), super::ParseError::Id);
+    }
 
+    #[test]
+    fn invalid_id_parse_fails() {
         let invalid_id_schema = super::FindRequest {
             id: Some("invalid-id".to_string()),
         };

@@ -79,7 +79,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn format_date_ymd() {
+    fn date_to_ymd_works() {
         use std::str::FromStr;
         use time::Month;
 
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_date_ymd() {
+    fn parse_date_ymd_works() {
         let now = Date::now();
         let ymd = now.to_ymd();
         let parsed = Date::parse_str(&ymd);
