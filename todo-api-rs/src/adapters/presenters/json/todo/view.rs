@@ -14,17 +14,17 @@ pub struct TodoView {
     pub todo_at: Option<String>,
     /// Date time with offset in `RFC-3339` format
     #[serde(rename(serialize = "createdAt"))]
-    pub created_at: Option<String>,
+    pub created_at: String,
     /// Date time with offset in `RFC-3339` format
     #[serde(rename(serialize = "updatedAt"))]
-    pub updated_at: Option<String>,
+    pub updated_at: String,
 }
 
 impl From<TodoEntity> for TodoView {
     fn from(entity: TodoEntity) -> Self {
         let id = entity.id().to_string();
-        let created_at = entity.created_at().map(|dt| dt.to_rfc3339());
-        let updated_at = entity.updated_at().map(|dt| dt.to_rfc3339());
+        let created_at = entity.created_at().to_rfc3339();
+        let updated_at = entity.updated_at().to_rfc3339();
 
         Self {
             id,

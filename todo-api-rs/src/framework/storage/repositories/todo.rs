@@ -8,9 +8,8 @@ use crate::application::repositories::todo::{
     CreateError, DeleteError, FindError, ListError, ListQuery, PaginatedList, TodoRepository,
     UpdateError, UpdateQuery,
 };
-
 use crate::domain::entities::todo::TodoEntity;
-use crate::domain::types::{DateTime, Id};
+use crate::domain::types::Id;
 use crate::framework::storage::models::todo::{Status as TodoModelStatus, TodoModel};
 
 #[derive(Clone)]
@@ -31,15 +30,14 @@ impl TodoRepository for PgTodoRepository {
             VALUES ($1, $2, $3, $4, $5, $6, $7)
         "#;
 
-        let now = DateTime::now();
         sqlx::query(INSERT_Q)
             .bind(todo.id().uuid())
             .bind(todo.title.as_str())
             .bind(todo.description.as_ref().map(|d| d.as_str()))
             .bind(todo.todo_at.map(|at| at.time()))
             .bind(TodoModelStatus::from(&todo.status))
-            .bind(todo.created_at().unwrap_or(now).time())
-            .bind(todo.updated_at().unwrap_or(now).time())
+            .bind(todo.created_at().time())
+            .bind(todo.updated_at().time())
             .fetch_one(&self.pool)
             .await
             .map_err(|err| match err {

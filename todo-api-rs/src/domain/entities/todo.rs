@@ -11,20 +11,21 @@ pub struct TodoEntity {
     pub description: Option<Description>,
     pub status: Status,
     pub todo_at: Option<Date>,
-    created_at: Option<DateTime>,
-    updated_at: Option<DateTime>,
+    created_at: DateTime,
+    updated_at: DateTime,
 }
 
 impl TodoEntity {
     pub fn new(props: NewProps) -> Self {
+        let now = DateTime::now();
         Self {
             id: Id::new(),
             title: props.title,
             description: props.description,
             status: props.status,
             todo_at: props.todo_at,
-            created_at: None,
-            updated_at: None,
+            created_at: now,
+            updated_at: now,
         }
     }
 
@@ -44,11 +45,11 @@ impl TodoEntity {
         self.id
     }
 
-    pub fn created_at(&self) -> Option<DateTime> {
+    pub fn created_at(&self) -> DateTime {
         self.created_at
     }
 
-    pub fn updated_at(&self) -> Option<DateTime> {
+    pub fn updated_at(&self) -> DateTime {
         self.updated_at
     }
 }
@@ -68,8 +69,8 @@ pub struct InitProps {
     pub description: Option<Description>,
     pub status: Status,
     pub todo_at: Option<Date>,
-    pub created_at: Option<DateTime>,
-    pub updated_at: Option<DateTime>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 impl PartialEq for TodoEntity {

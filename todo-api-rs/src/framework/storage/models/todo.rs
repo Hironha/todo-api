@@ -32,8 +32,8 @@ impl TodoModel {
             description,
             status: self.status.into_entity(),
             todo_at: self.todo_at.map(Date::from),
-            created_at: Some(self.created_at.into()),
-            updated_at: Some(self.updated_at.into()),
+            created_at: self.created_at.into(),
+            updated_at: self.updated_at.into(),
         });
 
         Ok(entity)
